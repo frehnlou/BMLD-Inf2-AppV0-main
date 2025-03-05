@@ -4,6 +4,7 @@ Das leere Gerüst um eine App aufzubauen.
 
 ## Autor
 
-Samuel Wehrli (wehs@zhaw.ch)
+Cristiana Bastos (pereicri@students.zhaw.ch)
+Lou-Salomé Frehner (frehnlou@students.zhaw.ch)
 
 
