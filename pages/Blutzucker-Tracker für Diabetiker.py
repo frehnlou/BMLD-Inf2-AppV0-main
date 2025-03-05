@@ -3,7 +3,7 @@ import streamlit as st
 st.title("Blutzucker-Tracker für Diabetiker")
 
 st.write("""
-Diabetiker!🩸
+Liebe Diabetikerinnen und Diabetiker!🩸
 
 Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
 
@@ -15,62 +15,63 @@ Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? M
 - Automatische Warnhinweise, wenn dein Blutzucker zu hoch oder zu niedrig ist
 
 Warum diese App?
-        
+         
 ✔ Kein lästiges Papier-Tagebuch mehr
 
 ✔ Verfolge deine Werte langfristig & erkenne Muster
 
 ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
 
-Einfach testen & deine Blutzuckerwerte im Blick behalten! 🚀
+Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
 """)
 
-menu = ["Home", "Blutzucker-Tracker", "Passwort-Generator"]
-choice = st.sidebar.selectbox("Menu", menu)
+menu = ["Startseite", "Blutzucker-Tracker", "Passwort-Generator"]
+wahl = st.sidebar.selectbox("Menü", menu)
 
-if choice == "Home":
+if wahl == "Startseite":
     st.subheader("Willkommen zur App")
 
-elif choice == "Blutzucker-Tracker":
+elif wahl == "Blutzucker-Tracker":
     st.subheader("Blutzucker-Tracker")
     
-    # Blood Sugar Tracker
-    glucose_level = st.number_input("Enter your blood sugar level", min_value=0)
-    time_of_day = st.selectbox("Time of day", ["Fasting", "After Meal"])
+    # Blutzucker-Tracker
+    blutzuckerwert = st.number_input("Gib deinen Blutzuckerwert ein", min_value=0)
+    zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
     
-    if 'data' not in st.session_state:
-        st.session_state['data'] = []
+    if 'daten' not in st.session_state:
+        st.session_state['daten'] = []
 
-    if st.button("Add Entry"):
-        st.session_state['data'].append({"glucose_level": glucose_level, "time_of_day": time_of_day})
-        st.success("Entry added successfully")
+    if st.button("Eintrag hinzufügen"):
+        st.session_state['daten'].append({"blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt})
+        st.success("Eintrag erfolgreich hinzugefügt")
     
-    if st.session_state['data']:
-        df = pd.DataFrame(st.session_state['data'])
+    if st.session_state['daten']:
+        df = pd.DataFrame(st.session_state['daten'])
         st.write(df)
+        
         fig, ax = plt.subplots()
-        for label, df_group in df.groupby("time_of_day"):
-            df_group.plot(x="time_of_day", y="glucose_level", ax=ax, label=label, marker='o')
+        for label, df_group in df.groupby("zeitpunkt"):
+            df_group.plot(x="zeitpunkt", y="blutzuckerwert", ax=ax, label=label, marker='o')
         st.pyplot(fig)
 
-elif choice == "Passwort-Generator":
+elif wahl == "Passwort-Generator":
     st.subheader("Passwort-Generator")
     
-    # Password Generator
-    length = st.number_input("Password length", min_value=1, max_value=100, value=8)
-    options = st.multiselect("Options", ["Uppercase Letters", "Numbers", "Special Characters"])
+    # Passwort-Generator
+    länge = st.number_input("Passwortlänge", min_value=1, max_value=100, value=8)
+    optionen = st.multiselect("Optionen", ["Großbuchstaben", "Zahlen", "Sonderzeichen"])
     
-    if st.button("Generate Password"):
-        password = generate_password(length, options)
-        st.write(f"Generated Password: {password}")
+    if st.button("Passwort generieren"):
+        passwort = passwort_generieren(länge, optionen)
+        st.write(f"Generiertes Passwort: {passwort}")
 
-def generate_password(length, options):
-    char_pool = string.ascii_lowercase
-    if "Uppercase Letters" in options:
-        char_pool += string.ascii_uppercase
-    if "Numbers" in options:
-        char_pool += string.digits
-    if "Special Characters" in options:
-        char_pool += string.punctuation
+def passwort_generieren(länge, optionen):
+    zeichen_pool = string.ascii_lowercase
+    if "Großbuchstaben" in optionen:
+        zeichen_pool += string.ascii_uppercase
+    if "Zahlen" in optionen:
+        zeichen_pool += string.digits
+    if "Sonderzeichen" in optionen:
+        zeichen_pool += string.punctuation
     
-    return ''.join(random.choice(char_pool) for _ in range(length))
+    return ''.join(random.choice(zeichen_pool) for _ in range(länge))
