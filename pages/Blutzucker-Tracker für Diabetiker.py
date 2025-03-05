@@ -34,32 +34,37 @@ if wahl == "Startseite":
 elif wahl == "Blutzucker-Tracker":
     st.subheader("Blutzucker-Tracker")
     
-    # Blutzucker-Tracker
-    blutzuckerwert = st.number_input("Gib deinen Blutzuckerwert ein", min_value=0)
-    zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
-    
-    if 'daten' not in st.session_state:
-        st.session_state['daten'] = []
-
-    if st.button("Eintrag hinzufügen"):
-        st.session_state['daten'].append({"blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt})
-        st.success("Eintrag erfolgreich hinzugefügt")
-    
-    if st.session_state['daten']:
-        df = pd.DataFrame(st.session_state['daten'])
-        st.write(df)
+    # Passwort-Eingabe
+    password = st.text_input("Bitte Passwort eingeben", type="password")
+    if password == "dein_passwort":  # Ersetze "dein_passwort" durch das tatsächliche Passwort
+        # Blutzucker-Tracker
+        blutzuckerwert = st.number_input("Gib deinen Blutzuckerwert ein", min_value=0)
+        zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
         
-        fig, ax = plt.subplots()
-        for label, df_group in df.groupby("zeitpunkt"):
-            df_group.plot(x="zeitpunkt", y="blutzuckerwert", ax=ax, label=label, marker='o')
-        st.pyplot(fig)
+        if 'daten' not in st.session_state:
+            st.session_state['daten'] = []
+
+        if st.button("Eintrag hinzufügen"):
+            st.session_state['daten'].append({"blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt})
+            st.success("Eintrag erfolgreich hinzugefügt")
+        
+        if st.session_state['daten']:
+            df = pd.DataFrame(st.session_state['daten'])
+            st.write(df)
+            
+            fig, ax = plt.subplots()
+            for label, df_group in df.groupby("zeitpunkt"):
+                df_group.plot(x="zeitpunkt", y="blutzuckerwert", ax=ax, label=label, marker='o')
+            st.pyplot(fig)
+    else:
+        st.error("Falsches Passwort")
 
 elif wahl == "Passwort-Generator":
     st.subheader("Passwort-Generator")
     
     # Passwort-Generator
     länge = st.number_input("Passwortlänge", min_value=1, max_value=100, value=8)
-    optionen = st.multiselect("Optionen", ["Großbuchstaben", "Zahlen", "Sonderzeichen"])
+    optionen = st.multiselect("Optionen", ["Grossbuchstaben", "Zahlen", "Sonderzeichen"])
     
     if st.button("Passwort generieren"):
         passwort = passwort_generieren(länge, optionen)
