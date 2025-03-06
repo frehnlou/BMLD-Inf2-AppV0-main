@@ -84,6 +84,6 @@ wahl = st.sidebar.radio("Gehe zu", ["Startseite", "Passwort-Generator", "Blutzuc
 if wahl == "Startseite":
     startseite()
 elif wahl == "Passwort-Generator":
-    blutzucker_tracker()
-elif wahl == "Blutzucker-Tracker":
     passwort_generator()
+elif wahl == "Blutzucker-Tracker":
+    blutzucker_tracker()
