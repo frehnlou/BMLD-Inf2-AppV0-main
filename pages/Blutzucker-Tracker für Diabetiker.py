@@ -1,5 +1,6 @@
 import streamlit as st
-
+import pandas as pd
+import matplotlib.pyplot as plt
 def startseite():
     st.title("Blutzucker-Tracker für Diabetiker")
     st.write("""
