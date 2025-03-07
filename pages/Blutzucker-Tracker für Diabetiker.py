@@ -54,37 +54,12 @@ def blutzucker_tracker():
         for label, df_group in df.groupby("zeitpunkt"):
             df_group.plot(x="zeitpunkt", y="blutzuckerwert", ax=ax, label=label, marker='o')
         st.pyplot(fig)
-
-def passwort_generator():
-    st.subheader("Passwort-Generator")
-    
-    # Passwort-Generator
-    länge = st.number_input("Passwortlänge", min_value=1, max_value=100, value=8)
-    optionen = st.multiselect("Optionen", ["Grossbuchstaben", "Zahlen", "Sonderzeichen"])
-    
-    if st.button("Passwort generieren"):
-        passwort = passwort_generieren(länge, optionen)
-        st.write(f"Generiertes Passwort: {passwort}")
-
-def passwort_generieren(länge, optionen):
-    zeichen_pool = string.ascii_lowercase
-    if "Grossbuchstaben" in optionen:
-        zeichen_pool += string.ascii_uppercase
-    if "Zahlen" in optionen:
-        zeichen_pool += string.digits
-    if "Sonderzeichen" in optionen:
-        zeichen_pool += string.punctuation
-    
-    return ''.join(random.choice(zeichen_pool) for _ in range(länge))
-
 # Sidebar for navigation
 st.sidebar.title("Navigation")
-wahl = st.sidebar.radio("Gehe zu", ["Startseite", "Passwort-Generator", "Blutzucker-Tracker"])
+wahl = st.sidebar.radio("Gehe zu", ["Startseite", "Blutzucker-Tracker"])
 
 # Display the selected page
 if wahl == "Startseite":
     startseite()
-elif wahl == "Passwort-Generator":
-    passwort_generator()
 elif wahl == "Blutzucker-Tracker":
     blutzucker_tracker()
