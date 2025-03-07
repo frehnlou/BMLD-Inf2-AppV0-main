@@ -12,10 +12,7 @@ def startseite():
     - Was bringt dir die App?
     - Schnelle Eingabe deines Blutzuckers (mg/dL)
     - Messzeitpunkt wählen (Nüchtern oder nach dem Essen)
-    - Alle Werte speichern & jederzeit abrufen
-    - Tabelle & Diagramm, um deine Trends zu erkennen
-    - Automatische Warnhinweise, wenn dein Blutzucker zu hoch oder zu niedrig ist
-
+             
     Warum diese App?
              
     ✔ Kein lästiges Papier-Tagebuch mehr
@@ -50,7 +47,10 @@ def blutzucker_tracker():
         
         # Anzeige des letzten Eintrags
         letzter_eintrag = df.iloc[-1]
-        st.write(f"Letzter Eintrag: Blutzuckerwert = {letzter_eintrag['blutzuckerwert']}, Zeitpunkt = {letzter_eintrag['zeitpunkt']}, Datum & Zeit = {letzter_eintrag['datum_zeit']}")
+        st.write(f"Letzter Eintrag:")
+        st.write(f"Blutzuckerwert = {letzter_eintrag['blutzuckerwert']}")
+        st.write(f"Zeitpunkt = {letzter_eintrag['zeitpunkt']}")
+        st.write(f"Datum & Zeit = {letzter_eintrag['datum_zeit']}")
         
         # Berechnung des Durchschnitts
         durchschnitt = df['blutzuckerwert'].mean()
