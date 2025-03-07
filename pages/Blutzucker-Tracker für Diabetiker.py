@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import datetime
+from datetime import datetime
 
 def startseite():
     st.title("Blutzucker-Tracker für Diabetiker")
