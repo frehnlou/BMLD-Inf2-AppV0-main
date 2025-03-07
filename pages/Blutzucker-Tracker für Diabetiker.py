@@ -56,6 +56,10 @@ def blutzucker_tracker():
         durchschnitt = df['blutzuckerwert'].mean()
         st.write(f"Durchschnittlicher Blutzuckerwert: {durchschnitt:.2f} mg/dL")
         
+        # Anzeige des letzten Eintrags mit Datum und Uhrzeit
+        st.write(f"Blutzucker: {letzter_eintrag['blutzuckerwert']} mg/dL")
+        st.write(f"Berechnet am: {letzter_eintrag['datum_zeit']}")
+        
 # Sidebar for navigation
 st.sidebar.title("Navigation")
 wahl = st.sidebar.radio("Gehe zu", ["Startseite", "Blutzucker-Tracker"])
