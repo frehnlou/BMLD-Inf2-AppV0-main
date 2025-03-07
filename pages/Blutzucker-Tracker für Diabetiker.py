@@ -32,7 +32,7 @@ def startseite():
 def blutzucker_tracker():
     st.subheader("Blutzucker-Tracker")
     
-    # Blutzucker-Tracker
+    # Blutzucker-Tracker 
     blutzuckerwert = st.number_input("Gib deinen Blutzuckerwert ein", min_value=0)
     zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
     
