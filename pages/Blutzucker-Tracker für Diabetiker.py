@@ -9,9 +9,9 @@ def startseite():
 
     Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
 
-    Was bringt dir die App?
-        - Schnelle Eingabe deines Blutzuckers (mg/dL)
-        - Messzeitpunkt wählen (Nüchtern oder nach dem Essen)
+    - Was bringt dir die App?
+    - Schnelle Eingabe deines Blutzuckers (mg/dL)
+    - Messzeitpunkt wählen (Nüchtern oder nach dem Essen)
     
     Warum diese App?
              
