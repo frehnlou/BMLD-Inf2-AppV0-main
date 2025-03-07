@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 
 def startseite():
     st.title("Blutzucker-Tracker für Diabetiker")
@@ -39,7 +40,8 @@ def blutzucker_tracker():
         st.session_state['daten'] = []
 
     if submit_button:
-        st.session_state['daten'].append({"blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt})
+        datum_zeit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        st.session_state['daten'].append({"blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt, "datum_zeit": datum_zeit})
         st.success("Eintrag erfolgreich hinzugefügt")
         
     if st.session_state['daten']:
@@ -48,7 +50,7 @@ def blutzucker_tracker():
         
         # Anzeige des letzten Eintrags
         letzter_eintrag = df.iloc[-1]
-        st.write(f"Letzter Eintrag: Blutzuckerwert = {letzter_eintrag['blutzuckerwert']}, Zeitpunkt = {letzter_eintrag['zeitpunkt']}")
+        st.write(f"Letzter Eintrag: Blutzuckerwert = {letzter_eintrag['blutzuckerwert']}, Zeitpunkt = {letzter_eintrag['zeitpunkt']}, Datum & Zeit = {letzter_eintrag['datum_zeit']}")
         
         # Berechnung des Durchschnitts
         durchschnitt = df['blutzuckerwert'].mean()
