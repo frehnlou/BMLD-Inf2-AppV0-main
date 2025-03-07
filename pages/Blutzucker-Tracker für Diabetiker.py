@@ -30,19 +30,29 @@ def blutzucker_tracker():
     st.subheader("Blutzucker-Tracker")
     
     # Blutzucker-Tracker 
-    blutzuckerwert = st.number_input("Gib deinen Blutzuckerwert ein", min_value=0)
-    zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
+    with st.form(key='blutzucker_form'):
+        blutzuckerwert = st.number_input("Gib deinen Blutzuckerwert ein", min_value=0)
+        zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
+        submit_button = st.form_submit_button(label='Eintrag hinzufügen')
     
     if 'daten' not in st.session_state:
         st.session_state['daten'] = []
 
-    if st.button("Eintrag hinzufügen"):
+    if submit_button:
         st.session_state['daten'].append({"blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt})
         st.success("Eintrag erfolgreich hinzugefügt")
         
     if st.session_state['daten']:
         df = pd.DataFrame(st.session_state['daten'])
         st.write(df)
+        
+        # Anzeige des letzten Eintrags
+        letzter_eintrag = df.iloc[-1]
+        st.write(f"Letzter Eintrag: Blutzuckerwert = {letzter_eintrag['blutzuckerwert']}, Zeitpunkt = {letzter_eintrag['zeitpunkt']}")
+        
+        # Berechnung des Durchschnitts
+        durchschnitt = df['blutzuckerwert'].mean()
+        st.write(f"Durchschnittlicher Blutzuckerwert: {durchschnitt:.2f} mg/dL")
         
 # Sidebar for navigation
 st.sidebar.title("Navigation")
