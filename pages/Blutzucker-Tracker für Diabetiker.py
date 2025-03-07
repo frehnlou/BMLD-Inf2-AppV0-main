@@ -44,11 +44,6 @@ def blutzucker_tracker():
         df = pd.DataFrame(st.session_state['daten'])
         st.write(df)
         
-        fig, ax = plt.subplots()
-        for label, df_group in df.groupby("zeitpunkt"):
-            df_group.plot(x="zeitpunkt", y="blutzuckerwert", ax=ax, label=label, marker='o')
-        st.pyplot(fig)
-        
 # Sidebar for navigation
 st.sidebar.title("Navigation")
 wahl = st.sidebar.radio("Gehe zu", ["Startseite", "Blutzucker-Tracker"])
