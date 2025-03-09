@@ -95,6 +95,3 @@ if st.session_state.seite == "Startseite":
     startseite()
 elif st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
-    startseite()
-elif st.session_state.seite == "Blutzucker-Tracker":
-    blutzucker_tracker()
