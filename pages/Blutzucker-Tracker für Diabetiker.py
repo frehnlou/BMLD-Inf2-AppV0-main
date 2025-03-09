@@ -1,19 +1,9 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import os
-
-# Datei zum Speichern der Daten
-DATA_FILE = "blutzucker_daten.csv"
 
 def load_data():
-    if os.path.exists(DATA_FILE):
-        return pd.read_csv(DATA_FILE).to_dict('records')
     return []
-
-def save_data(data):
-    df = pd.DataFrame(data)
-    df.to_csv(DATA_FILE, index=False)
 
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
@@ -53,7 +43,6 @@ def blutzucker_tracker():
     if submit_button:
         datum_zeit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         st.session_state['daten'].append({"blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt, "datum_zeit": datum_zeit})
-        save_data(st.session_state['daten'])
         st.success("Eintrag erfolgreich hinzugefügt")
         
     if st.session_state['daten']:
@@ -79,7 +68,6 @@ def blutzucker_tracker():
         for i, eintrag in df.iterrows():
             if st.button(f"Löschen {i}"):
                 st.session_state['daten'].pop(i)
-                save_data(st.session_state['daten'])
                 st.experimental_rerun()
 
 # Session-State zur Steuerung der Ansicht
