@@ -1,9 +1,22 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import os
+
+# Datei zum Speichern der Daten
+DATA_FILE = "blutzucker_daten.csv"
+
+def load_data():
+    if os.path.exists(DATA_FILE):
+        return pd.read_csv(DATA_FILE).to_dict('records')
+    return []
+
+def save_data(data):
+    df = pd.DataFrame(data)
+    df.to_csv(DATA_FILE, index=False)
 
 def startseite():
-    st.title("Blutzucker-Tracker für Diabetiker")
+    st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
     Liebe Diabetikerinnen und Diabetiker!🩸
 
@@ -12,7 +25,10 @@ def startseite():
     - Was bringt dir die App?
     - Schnelle Eingabe deines Blutzuckers (mg/dL)
     - Messzeitpunkt wählen (Nüchtern oder nach dem Essen)
-    
+    - Alle Werte speichern & jederzeit abrufen
+    - Tabelle & Diagramm, um deine Trends zu erkennen
+    - Automatische Warnhinweise, wenn dein Blutzucker zu hoch oder zu niedrig ist
+
     Warum diese App?
              
     ✔ Kein lästiges Papier-Tagebuch mehr
@@ -25,6 +41,7 @@ def startseite():
     """)
 
 def blutzucker_tracker():
+    st.markdown("## 📈 Blutzucker-Tracker")
     st.subheader("Blutzucker-Tracker")
     
     # Blutzucker-Tracker 
@@ -34,11 +51,12 @@ def blutzucker_tracker():
         submit_button = st.form_submit_button(label='Eintrag hinzufügen')
     
     if 'daten' not in st.session_state:
-        st.session_state['daten'] = []
+        st.session_state['daten'] = load_data()
 
     if submit_button:
         datum_zeit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         st.session_state['daten'].append({"blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt, "datum_zeit": datum_zeit})
+        save_data(st.session_state['daten'])
         st.success("Eintrag erfolgreich hinzugefügt")
         
     if st.session_state['daten']:
@@ -58,13 +76,25 @@ def blutzucker_tracker():
         
         # Anzeige des letzten Eintrags mit Datum und Uhrzeit
         st.write(f"Blutzucker: {letzter_eintrag['blutzuckerwert']} mg/dL")
-        
-# Sidebar for navigation
-st.sidebar.title("Navigation")
-wahl = st.sidebar.radio("Gehe zu", ["Startseite", "Blutzucker-Tracker"])
 
-# Display the selected page
-if wahl == "Startseite":
+# Session-State zur Steuerung der Ansicht
+if "seite" not in st.session_state:
+    st.session_state.seite = "Startseite"
+
+# Navigation über Buttons
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("🏠 Startseite"):
+        st.session_state.seite = "Startseite"
+with col2:
+    if st.button("📈 Blutzucker-Tracker"):
+        st.session_state.seite = "Blutzucker-Tracker"
+
+# Anzeige der gewählten Seite
+if st.session_state.seite == "Startseite":
     startseite()
-elif wahl == "Blutzucker-Tracker":
+elif st.session_state.seite == "Blutzucker-Tracker":
+    blutzucker_tracker()
+    startseite()
+elif st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
