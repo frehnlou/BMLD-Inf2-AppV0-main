@@ -1,7 +1,12 @@
 import streamlit as st
 import pandas as pd
 
-st.title("Meine erste Streamlit App")
+st.title("Blutzucker-Tracker für Diabetiker")
+
+st.write("""
+Diese App hilft Diabetiker:innen, ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren.
+Sie bietet eine intuitive Benutzeroberfläche zur Eingabe der Werte sowie eine Übersicht der bisherigen Messungen.
+""")
 
 # !! WICHTIG: Eure Emails müssen in der App erscheinen!!
 
