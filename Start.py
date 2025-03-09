@@ -1,24 +1,25 @@
 import streamlit as st
 
-# Titel in gross und fett
-st.markdown("# Blutzucker-Tracker für Diabetiker")
+# Titel mit größerer Schrift
+st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
 
-# Kurze Einleitung
+# Beschreibung in normalem Text
 st.write("""
-Diese App hilft Ihnen, Ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren.
+Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren. So behalten Sie Ihre Werte stets im Blick und können langfristige Trends erkennen.
 """)
 
-# Infobox mit Hintergrundfarbe
+# Hinweis in einer dezenten farbigen Box
 st.markdown("""
-<blockquote style="background-color:#E8F0FE; padding:10px; border-radius:5px;">
-Diese App hilft Diabetiker:innen, ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren.
-Sie bietet eine intuitive Benutzeroberfläche zur Eingabe der Werte sowie eine Übersicht der bisherigen Messungen.
-</blockquote>
+<div style="border-left: 4px solid #4CAF50; background-color: #F0FFF0; padding: 10px; border-radius: 5px;">
+📌 **Hinweis:** Diese App ersetzt keine medizinische Diagnose. Bitte konsultieren Sie Ihren Arzt für eine professionelle Beurteilung.
+</div>
 """, unsafe_allow_html=True)
 
-# Autoren und E-Mails
+# Autoren und E-Mails in einer klaren Struktur
 st.write("""
-Diese App wurde von **Cristiana Bastos** (<pereicri@students.zhaw.ch>) und  
-**Lou-Salomé Frehner** (<frehnlou@students.zhaw.ch>) im Rahmen des Moduls  
-'BMLD Informatik 2' an der ZHAW entwickelt.
+### 📌 Autoren  
+Diese App wurde im Rahmen des Moduls *BMLD Informatik 2* an der ZHAW entwickelt von:
+
+- **Cristiana Bastos** ([pereicri@students.zhaw.ch](mailto:pereicri@students.zhaw.ch))  
+- **Lou-Salomé Frehner** ([frehnlou@students.zhaw.ch](mailto:frehnlou@students.zhaw.ch))
 """)
