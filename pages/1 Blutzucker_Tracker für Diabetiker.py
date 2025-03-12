@@ -1,7 +1,6 @@
 import streamlit as st
-import pandas as pd
 from datetime import datetime
- 
+
 # Abstand nach oben für bessere Platzierung
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -13,11 +12,11 @@ with col1:
         st.session_state.seite = "Startseite"
 
 with col2:
-    if st.button(" 📋 Blutzucker-Tracker"):
+    if st.button(" 🩸 Blutzucker-Tracker"):
         st.session_state.seite = "Blutzucker-Tracker"
 
 with col3:
-    if st.button(" 📉 Blutzucker-Werte"):
+    if st.button(" 📋 Blutzucker-Werte"):
         st.session_state.seite = "Blutzucker-Werte"
 
 with col4:
@@ -34,6 +33,8 @@ def startseite():
     - Was bringt dir die App?
     - Schnelle Eingabe deines Blutzuckers (mg/dL)
     - Messzeitpunkt wählen (Nüchtern oder nach dem Essen)
+    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
+    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
 
     Warum diese App?
              
@@ -47,7 +48,7 @@ def startseite():
     """)
 
 def blutzucker_tracker():
-    st.markdown("## 📋 Blutzucker-Tracker")
+    st.markdown("## 🩸Blutzucker-Tracker")
     st.subheader("Blutzucker-Tracker")
     
     # Blutzucker-Tracker 
@@ -65,44 +66,42 @@ def blutzucker_tracker():
         st.success("Eintrag erfolgreich hinzugefügt")
         
     if st.session_state['daten']:
-        df = pd.DataFrame(st.session_state['daten'])
-        st.write(df)
+        st.write(st.session_state['daten'])
         
         # Anzeige des letzten Eintrags
-        letzter_eintrag = df.iloc[-1]
+        letzter_eintrag = st.session_state['daten'][-1]
         st.write("Letzter Eintrag:")
         st.write(f"Blutzuckerwert = {letzter_eintrag['blutzuckerwert']}")
         st.write(f"Zeitpunkt = {letzter_eintrag['zeitpunkt']}")
         st.write(f"Datum & Zeit = {letzter_eintrag['datum_zeit']}")
         
         # Berechnung des Durchschnitts
-        durchschnitt = df['blutzuckerwert'].mean()
+        durchschnitt = sum(d['blutzuckerwert'] for d in st.session_state['daten']) / len(st.session_state['daten'])
         st.write(f"Durchschnittlicher Blutzuckerwert: {durchschnitt:.2f} mg/dL")
-        
-        # Anzeige des letzten Eintrags mit Datum und Uhrzeit
-        st.write(f"Blutzucker: {letzter_eintrag['blutzuckerwert']} mg/dL")
         
         # Löschfunktion
         st.write("### Eintrag löschen")
-        index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(df)-1, step=1)
+        index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(st.session_state['daten'])-1, step=1)
         if st.button("Eintrag löschen"):
             del st.session_state['daten'][index_to_delete]
             st.success("Eintrag erfolgreich gelöscht")
-            st.rerun()
+            st.experimental_rerun()
 
 def blutzucker_werte():
-    st.markdown("## 📉 Blutzucker-Werte")
+    st.markdown("## 📋 Blutzucker-Werte")
     if 'daten' in st.session_state and st.session_state['daten']:
-        df = pd.DataFrame(st.session_state['daten'])
-        st.write(df)
+        st.write(st.session_state['daten'])
     else:
         st.write("Keine Daten vorhanden.")
 
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
     if 'daten' in st.session_state and st.session_state['daten']:
-        df = pd.DataFrame(st.session_state['daten'])
-        st.line_chart(df.set_index('datum_zeit')['blutzuckerwert'])
+        daten = st.session_state['daten']
+        daten.sort(key=lambda x: x['datum_zeit'])
+        blutzuckerwerte = [d['blutzuckerwert'] for d in daten]
+        datum_zeiten = [d['datum_zeit'] for d in daten]
+        st.line_chart({"Datum & Zeit": datum_zeiten, "Blutzuckerwert": blutzuckerwerte})
     else:
         st.write("Keine Daten vorhanden.")
 
