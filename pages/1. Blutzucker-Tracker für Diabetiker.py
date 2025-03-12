@@ -13,7 +13,7 @@ with col1:
         st.session_state.seite = "Startseite"
 
 with col2:
-    if st.button("📊 Blutzucker-Tracker"):
+    if st.button(" 📉 Blutzucker-Tracker"):
         st.session_state.seite = "Blutzucker-Tracker"
 
 with col3:
@@ -21,7 +21,7 @@ with col3:
         st.session_state.seite = "Blutzucker-Werte"
 
 with col4:
-    if st.button("📉 Blutzucker-Grafik"):
+    if st.button(" 📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
 def startseite():
