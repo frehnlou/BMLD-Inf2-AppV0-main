@@ -2,6 +2,28 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+# Abstand nach oben für bessere Platzierung
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Vier Spalten für die Buttons
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    if st.button("🏠 Startseite"):
+        st.session_state.seite = "Startseite"
+
+with col2:
+    if st.button("📊 Blutzucker-Tracker"):
+        st.session_state.seite = "Blutzucker-Tracker"
+
+with col3:
+    if st.button("📈 Blutzucker-Werte"):
+        st.session_state.seite = "Blutzucker-Werte"
+
+with col4:
+    if st.button("📉 Blutzucker-Grafik"):
+        st.session_state.seite = "Blutzucker-Grafik"
+
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
@@ -71,15 +93,6 @@ def blutzucker_tracker():
 # Session-State zur Steuerung der Ansicht
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
-
-# Navigation über Buttons
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("🏠 Startseite"):
-        st.session_state.seite = "Startseite"
-with col2:
-    if st.button("📈 Blutzucker-Tracker"):
-        st.session_state.seite = "Blutzucker-Tracker"
 
 # Anzeige der gewählten Seite
 if st.session_state.seite == "Startseite":
