@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-
+ 
 # Abstand nach oben für bessere Platzierung
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -47,7 +47,7 @@ def startseite():
     """)
 
 def blutzucker_tracker():
-    st.markdown("## 📈 Blutzucker-Tracker")
+    st.markdown("## 📉 Blutzucker-Tracker")
     st.subheader("Blutzucker-Tracker")
     
     # Blutzucker-Tracker 
@@ -99,7 +99,7 @@ def blutzucker_werte():
         st.write("Keine Daten vorhanden.")
 
 def blutzucker_grafik():
-    st.markdown("## 📉 Blutzucker-Grafik")
+    st.markdown("## 📊 Blutzucker-Grafik")
     if 'daten' in st.session_state and st.session_state['daten']:
         df = pd.DataFrame(st.session_state['daten'])
         st.line_chart(df.set_index('datum_zeit')['blutzuckerwert'])
