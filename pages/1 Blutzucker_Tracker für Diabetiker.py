@@ -70,12 +70,23 @@ def blutzucker_tracker():
     if st.session_state['daten']:
         letzter_eintrag = st.session_state['daten'][-1]
         st.markdown(f"""
-        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f9f9f9; text-align: left;">
-            <strong>Ihr Blutzuckerwert ist:</strong> {letzter_eintrag['blutzuckerwert']} mg/dL<br>
-            <strong>Messzeitpunkt:</strong> {letzter_eintrag['zeitpunkt']}<br>
-            <strong>Berechnet am:</strong> {letzter_eintrag['datum_zeit']}<br>
-        </div>
-        """, unsafe_allow_html=True)
+        **Ihr Blutzuckerwert ist:** {letzter_eintrag['blutzuckerwert']} mg/dL  
+        **Messzeitpunkt:** {letzter_eintrag['zeitpunkt']}  
+        **Berechnet am:** {letzter_eintrag['datum_zeit']}  
+        """)
+
+        # Durchschnitt berechnen
+        durchschnitt = sum(d['blutzuckerwert'] for d in st.session_state['daten']) / len(st.session_state['daten'])
+        st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
+
+        # Löschfunktion für Einträge
+        st.markdown("### Eintrag löschen")
+        index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=1, max_value=len(st.session_state['daten']), step=1) - 1
+        if st.button("Eintrag löschen"):
+            if 0 <= index_to_delete < len(st.session_state['daten']):
+                del st.session_state['daten'][index_to_delete]
+                st.success("Eintrag erfolgreich gelöscht")
+                st.rerun()
 
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
@@ -85,12 +96,34 @@ def blutzucker_werte():
     else:
         st.warning("Noch keine Daten vorhanden.")
 
+def blutzucker_grafik():
+    st.markdown("## 📊 Blutzucker-Grafik")
+    
+    if 'daten' in st.session_state and st.session_state['daten']:
+        st.markdown("### Verlauf der Blutzuckerwerte")
+        
+        # Sortieren nach Datum
+        st.session_state['daten'].sort(key=lambda x: x['datum_zeit'])
+        
+        # X- und Y-Daten für das Diagramm vorbereiten
+        blutzuckerwerte = [d['blutzuckerwert'] for d in st.session_state['daten']]
+        datum_zeiten = [d['datum_zeit'] for d in st.session_state['daten']]
+        
+        # Streamlit Diagramm
+        st.line_chart({"Blutzuckerwert": blutzuckerwerte})
+    else:
+        st.warning("Noch keine Daten vorhanden.")
+
+# Session-State zur Steuerung der Navigation
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
+# Auswahl der aktuellen Seite
 if st.session_state.seite == "Startseite":
     startseite()
 elif st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
 elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
+elif st.session_state.seite == "Blutzucker-Grafik":
+    blutzucker_grafik()
