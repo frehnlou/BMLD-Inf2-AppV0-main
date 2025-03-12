@@ -2,9 +2,6 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-def load_data():
-    return []
-
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
@@ -38,7 +35,7 @@ def blutzucker_tracker():
         submit_button = st.form_submit_button(label='Eintrag hinzufügen')
     
     if 'daten' not in st.session_state:
-        st.session_state['daten'] = load_data()
+        st.session_state['daten'] = []
 
     if submit_button:
         datum_zeit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -63,12 +60,13 @@ def blutzucker_tracker():
         # Anzeige des letzten Eintrags mit Datum und Uhrzeit
         st.write(f"Blutzucker: {letzter_eintrag['blutzuckerwert']} mg/dL")
         
-        # Einträge löschen
-        st.write("Einträge löschen:")
-        for i, eintrag in df.iterrows():
-            if st.button(f"Löschen {i}"):
-                st.session_state['daten'].pop(i)
-                st.experimental_rerun()
+        # Löschfunktion
+        st.write("### Eintrag löschen")
+        index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(df)-1, step=1)
+        if st.button("Eintrag löschen"):
+            del st.session_state['daten'][index_to_delete]
+            st.success("Eintrag erfolgreich gelöscht")
+            st.rerun()
 
 # Session-State zur Steuerung der Ansicht
 if "seite" not in st.session_state:
