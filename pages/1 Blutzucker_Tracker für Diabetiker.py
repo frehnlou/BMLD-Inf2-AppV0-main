@@ -90,7 +90,7 @@ def blutzucker_tracker():
             if 0 <= index_to_delete - 1 < len(st.session_state['daten']):
                 del st.session_state['daten'][index_to_delete - 1]
                 st.success("Eintrag erfolgreich gelöscht")
-                st.experimental_rerun()
+                st.rerun()
 
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
