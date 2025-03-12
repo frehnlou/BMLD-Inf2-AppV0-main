@@ -2,6 +2,28 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
+# Abstand nach oben für bessere Platzierung
+st.markdown("<br>", unsafe_allow_html=True)
+
+# Vier Spalten für die Buttons
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    if st.button("🏠 Startseite"):
+        st.session_state.seite = "Startseite"
+
+with col2:
+    if st.button("📊 Blutzucker-Tracker"):
+        st.session_state.seite = "Blutzucker-Tracker"
+
+with col3:
+    if st.button("📈 Blutzucker-Werte"):
+        st.session_state.seite = "Blutzucker-Werte"
+
+with col4:
+    if st.button("📉 Blutzucker-Grafik"):
+        st.session_state.seite = "Blutzucker-Grafik"
+
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
@@ -68,6 +90,22 @@ def blutzucker_tracker():
             st.success("Eintrag erfolgreich gelöscht")
             st.rerun()
 
+def blutzucker_werte():
+    st.markdown("## 📈 Blutzucker-Werte")
+    if 'daten' in st.session_state and st.session_state['daten']:
+        df = pd.DataFrame(st.session_state['daten'])
+        st.write(df)
+    else:
+        st.write("Keine Daten vorhanden.")
+
+def blutzucker_grafik():
+    st.markdown("## 📉 Blutzucker-Grafik")
+    if 'daten' in st.session_state and st.session_state['daten']:
+        df = pd.DataFrame(st.session_state['daten'])
+        st.line_chart(df.set_index('datum_zeit')['blutzuckerwert'])
+    else:
+        st.write("Keine Daten vorhanden.")
+
 # Session-State zur Steuerung der Ansicht
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
@@ -77,3 +115,7 @@ if st.session_state.seite == "Startseite":
     startseite()
 elif st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
+elif st.session_state.seite == "Blutzucker-Werte":
+    blutzucker_werte()
+elif st.session_state.seite == "Blutzucker-Grafik":
+    blutzucker_grafik()
