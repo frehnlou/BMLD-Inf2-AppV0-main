@@ -17,7 +17,7 @@ with col2:
         st.session_state.seite = "Blutzucker-Tracker"
 
 with col3:
-    if st.button("📈 Blutzucker-Werte"):
+    if st.button(" 📉 Blutzucker-Werte"):
         st.session_state.seite = "Blutzucker-Werte"
 
 with col4:
@@ -91,7 +91,7 @@ def blutzucker_tracker():
             st.rerun()
 
 def blutzucker_werte():
-    st.markdown("## 📈 Blutzucker-Werte")
+    st.markdown("## 📉 Blutzucker-Werte")
     if 'daten' in st.session_state and st.session_state['daten']:
         df = pd.DataFrame(st.session_state['daten'])
         st.write(df)
