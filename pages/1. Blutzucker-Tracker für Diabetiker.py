@@ -47,7 +47,7 @@ def startseite():
     """)
 
 def blutzucker_tracker():
-    st.markdown("## 📉 Blutzucker-Tracker")
+    st.markdown("## 📋 Blutzucker-Tracker")
     st.subheader("Blutzucker-Tracker")
     
     # Blutzucker-Tracker 
