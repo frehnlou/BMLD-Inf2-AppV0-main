@@ -50,10 +50,12 @@ def startseite():
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
     
-    with st.form(key='blutzucker_form'):
-        blutzuckerwert = st.number_input("Gib deinen Blutzuckerwert ein", min_value=0, step=1)
-        zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
-        submit_button = st.form_submit_button(label='Eintrag hinzufügen')
+    with st.container():
+        st.markdown("### Blutzuckerwert eingeben")
+        with st.form(key='blutzucker_form'):
+            blutzuckerwert = st.number_input("Gib deinen Blutzuckerwert ein", min_value=0, step=1)
+            zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
+            submit_button = st.form_submit_button(label='Eintrag hinzufügen')
     
     if 'daten' not in st.session_state:
         st.session_state['daten'] = []
@@ -69,24 +71,27 @@ def blutzucker_tracker():
 
     if st.session_state['daten']:
         letzter_eintrag = st.session_state['daten'][-1]
+        st.markdown("### Letzter Eintrag")
         st.markdown(f"""
-        **Ihr Blutzuckerwert ist:** {letzter_eintrag['blutzuckerwert']} mg/dL  
-        **Messzeitpunkt:** {letzter_eintrag['zeitpunkt']}  
-        **Berechnet am:** {letzter_eintrag['datum_zeit']}  
-        """)
-
+        <div style="border: 2px solid #4CAF50; padding: 15px; border-radius: 8px; background-color: #f0fff0; text-align: left; font-size: 18px;">
+            <strong>Ihr Blutzuckerwert ist:</strong> {letzter_eintrag['blutzuckerwert']} mg/dL<br>
+            <strong>Messzeitpunkt:</strong> {letzter_eintrag['zeitpunkt']}<br>
+            <strong>Berechnet am:</strong> {letzter_eintrag['datum_zeit']}<br>
+        </div>
+        """, unsafe_allow_html=True)
+        
         # Durchschnitt berechnen
         durchschnitt = sum(d['blutzuckerwert'] for d in st.session_state['daten']) / len(st.session_state['daten'])
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
-
+        
         # Löschfunktion für Einträge
-        st.markdown("### Eintrag löschen")
-        index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=1, max_value=len(st.session_state['daten']), step=1) - 1
-        if st.button("Eintrag löschen"):
-            if 0 <= index_to_delete < len(st.session_state['daten']):
-                del st.session_state['daten'][index_to_delete]
-                st.success("Eintrag erfolgreich gelöscht")
-                st.rerun()
+        with st.expander("Eintrag löschen"):
+            index_to_delete = st.selectbox("Wähle einen Eintrag zum Löschen", list(range(1, len(st.session_state['daten']) + 1)))
+            if st.button("Eintrag löschen"):
+                if 0 <= index_to_delete - 1 < len(st.session_state['daten']):
+                    del st.session_state['daten'][index_to_delete - 1]
+                    st.success("Eintrag erfolgreich gelöscht")
+                    st.rerun()
 
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
@@ -114,11 +119,9 @@ def blutzucker_grafik():
     else:
         st.warning("Noch keine Daten vorhanden.")
 
-# Session-State zur Steuerung der Navigation
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
-# Auswahl der aktuellen Seite
 if st.session_state.seite == "Startseite":
     startseite()
 elif st.session_state.seite == "Blutzucker-Tracker":
