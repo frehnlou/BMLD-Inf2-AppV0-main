@@ -70,22 +70,24 @@ def blutzucker_tracker():
         st.success("Eintrag erfolgreich hinzugefügt")
 
     if st.session_state['daten']:
-        st.markdown("### Gespeicherte Blutzuckerwerte")
+        st.markdown("### Letzter Eintrag")
         
-        # Tabelle der Daten
-        daten = st.session_state['daten']
-        st.table(daten)
+        # Anzeige des letzten Eintrags
+        letzter_eintrag = st.session_state['daten'][-1]
+        st.write(f"Ihr Blutzuckerwert ist: {letzter_eintrag['blutzuckerwert']} mg/dL")
+        st.write(f"Messzeitpunkt: {letzter_eintrag['zeitpunkt']}")
+        st.write(f"Berechnet am: {letzter_eintrag['datum_zeit']}")
 
         # Durchschnitt berechnen
-        durchschnitt = sum(d['blutzuckerwert'] for d in daten) / len(daten)
+        durchschnitt = sum(d['blutzuckerwert'] for d in st.session_state['daten']) / len(st.session_state['daten'])
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
 
         # Löschfunktion für Einträge
         st.markdown("### Eintrag löschen")
-        index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=1, max_value=len(daten), step=1) - 1
+        index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=1, max_value=len(st.session_state['daten']), step=1) - 1
         if st.button("Eintrag löschen"):
-            if 0 <= index_to_delete < len(daten):
-                del daten[index_to_delete]
+            if 0 <= index_to_delete < len(st.session_state['daten']):
+                del st.session_state['daten'][index_to_delete]
                 st.success("Eintrag erfolgreich gelöscht")
                 st.experimental_rerun()
 
