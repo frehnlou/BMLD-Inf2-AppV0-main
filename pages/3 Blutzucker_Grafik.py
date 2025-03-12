@@ -2,7 +2,7 @@ import streamlit as st
 
 st.title('Blutzucker Verlauf')
 
-# Prüfen, ob Blutzucker-Daten vorhanden sind
+# Sicherstellen, dass die Session-State-Daten existieren
 if 'blutzucker_df' not in st.session_state or st.session_state['blutzucker_df'].empty:
     st.info('Keine Blutzucker-Daten vorhanden. Bitte geben Sie neue Werte ein.')
     st.stop()
@@ -18,6 +18,6 @@ if 'timestamp' not in blutzucker_df.columns or 'blood_sugar' not in blutzucker_d
 # Daten nach Zeitstempel sortieren
 blutzucker_df = blutzucker_df.sort_values('timestamp', ascending=True)
 
-# Blutzucker über Zeit
+# Blutzucker über Zeit anzeigen
 st.line_chart(data=blutzucker_df.set_index('timestamp')['blood_sugar'], use_container_width=True)
 st.caption('Blutzuckerwerte über Zeit (mg/dL oder mmol/L)')
