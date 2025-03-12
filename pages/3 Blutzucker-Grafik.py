@@ -1,6 +1,5 @@
 import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
+import altair as alt
 
 st.title('Blutzucker Verlauf')
 
@@ -12,30 +11,16 @@ if 'blutzucker_df' not in st.session_state or st.session_state['blutzucker_df'].
 # Blutzucker-Daten abrufen und nach Zeitstempel sortieren
 blutzucker_df = st.session_state['blutzucker_df'].sort_values('timestamp', ascending=True)
 
-# Blutzucker über die Zeit als Liniendiagramm mit roter Linie
-fig, ax = plt.subplots()
-ax.plot(blutzucker_df['timestamp'], blutzucker_df['blood_sugar'], color='red')
-ax.set_xlabel('Zeit')
-ax.set_ylabel('Blutzucker (mg/dL oder mmol/L)')
-ax.set_title('Blutzuckerwerte über Zeit')
-st.pyplot(fig)
+# Blutzucker-Grafik mit roter Linie und Diagrammbeschriftung
+chart = alt.Chart(blutzucker_df).mark_line(color='red').encode(
+    x=alt.X('timestamp:T', title='Zeitstempel'),
+    y=alt.Y('blood_sugar:Q', title='Blutzuckerwert (mg/dL oder mmol/L)'),
+    tooltip=['timestamp:T', 'blood_sugar:Q']
+).properties(
+    title="Blutzuckerwerte über Zeit"
+)
+
+# Diagramm in Streamlit anzeigen
+st.altair_chart(chart, use_container_width=True)
+
 st.caption('Blutzuckerwerte über Zeit (mg/dL oder mmol/L)')
-
-# Falls weitere Werte (z. B. Insulin oder Kohlenhydrate) gespeichert werden:
-if 'insulin' in blutzucker_df.columns:
-    fig, ax = plt.subplots()
-    ax.plot(blutzucker_df['timestamp'], blutzucker_df['insulin'], color='red')
-    ax.set_xlabel('Zeit')
-    ax.set_ylabel('Insulin (Einheiten)')
-    ax.set_title('Insulin-Dosis über Zeit')
-    st.pyplot(fig)
-    st.caption('Insulin-Dosis über Zeit (Einheiten)')
-
-if 'carbs' in blutzucker_df.columns:
-    fig, ax = plt.subplots()
-    ax.plot(blutzucker_df['timestamp'], blutzucker_df['carbs'], color='red')
-    ax.set_xlabel('Zeit')
-    ax.set_ylabel('Kohlenhydrate (g)')
-    ax.set_title('Kohlenhydrate über Zeit')
-    st.pyplot(fig)
-    st.caption('Kohlenhydrate über Zeit (g)')
