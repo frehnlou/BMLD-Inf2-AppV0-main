@@ -33,7 +33,7 @@ def startseite():
 
     - Was bringt dir die App?
     - Schnelle Eingabe deines Blutzuckers (mg/dL)
-    - Messzeitpunkt wählen (Nüchtern oder nach dem Essen)
+    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
     - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
     - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
 
@@ -61,12 +61,16 @@ def blutzucker_tracker():
 
     if submit_button:
         datum_zeit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        st.session_state['daten'].append({
+        result = {
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt,
             "datum_zeit": datum_zeit
-        })
+        }
+        st.session_state['daten'].append(result)
         st.success("Eintrag erfolgreich hinzugefügt")
+        
+        # Daten im Session State aktualisieren und im persistenten Speicher speichern
+        DataManager().append_record(session_state_key='data_df', record_dict=result)
     
     if st.session_state['daten']:
         st.markdown("### Gespeicherte Blutzuckerwerte")
@@ -121,6 +125,3 @@ elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
     blutzucker_grafik()
-
-    # update data in session state and save to persistent storage
-    DataManager().append_record(session_state_key='data_df', record_dict=result)
