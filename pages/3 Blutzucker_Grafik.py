@@ -1,9 +1,13 @@
 import streamlit as st
 
-def blutzucker_werte():
-    st.markdown("## 📋 Blutzucker-Werte")
+def blutzucker_grafik():
+    st.markdown("## 📊 Blutzucker-Grafik")
     if 'daten' in st.session_state and st.session_state['daten']:
-        st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(st.session_state['daten'])
+        st.markdown("### Verlauf der Blutzuckerwerte")
+        blutzuckerwerte = [d['blutzuckerwert'] for d in st.session_state['daten']]
+        st.line_chart({"Blutzuckerwert": blutzuckerwerte})
     else:
         st.warning("Noch keine Daten vorhanden.")
+
+if _name_ == "_main_":
+    blutzucker_grafik()
