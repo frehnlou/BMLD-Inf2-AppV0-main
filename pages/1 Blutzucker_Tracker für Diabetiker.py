@@ -69,8 +69,13 @@ def blutzucker_tracker():
         st.session_state['daten'].append(result)
         st.success("Eintrag erfolgreich hinzugefügt")
         
-        # Daten im Session State aktualisieren und im persistenten Speicher speichern
-        DataManager().append_record(session_state_key='data_df', record_dict=result)
+        try:
+            dm = DataManager()
+            dm.append_record(session_state_key='data_df', record_dict=result)
+        except AttributeError as e:
+            st.error(f"Fehler: {e}")
+        except Exception as e:
+            st.error(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
     
     if st.session_state['daten']:
         st.markdown("### Gespeicherte Blutzuckerwerte")
