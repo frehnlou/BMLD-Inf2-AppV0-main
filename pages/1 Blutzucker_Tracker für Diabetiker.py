@@ -100,6 +100,23 @@ def blutzucker_tracker():
                 st.success("Eintrag erfolgreich gelöscht")
                 st.rerun()
 
+def blutzucker_werte():
+    st.markdown("## 📋 Blutzucker-Werte")
+    if 'daten' in st.session_state and st.session_state['daten']:
+        st.markdown("### Gespeicherte Blutzuckerwerte")
+        st.table(st.session_state['daten'])
+    else:
+        st.warning("Noch keine Daten vorhanden.")
+
+def blutzucker_grafik():
+    st.markdown("## 📊 Blutzucker-Grafik")
+    if 'daten' in st.session_state and st.session_state['daten']:
+        st.markdown("### Verlauf der Blutzuckerwerte")
+        blutzuckerwerte = [d['blutzuckerwert'] for d in st.session_state['daten']]
+        st.line_chart({"Blutzuckerwert": blutzuckerwerte})
+    else:
+        st.warning("Noch keine Daten vorhanden.")
+
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
