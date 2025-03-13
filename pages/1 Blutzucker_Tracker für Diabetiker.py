@@ -60,7 +60,7 @@ def blutzucker_tracker():
         st.session_state['daten'] = []
 
     if submit_button:
-        datum_zeit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        datum_zeit = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
         result = {
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt,
@@ -69,13 +69,8 @@ def blutzucker_tracker():
         st.session_state['daten'].append(result)
         st.success("Eintrag erfolgreich hinzugefügt")
         
-        try:
-            dm = DataManager()
-            dm.append_record(session_state_key='data_df', record_dict=result)
-        except AttributeError as e:
-            st.error(f"Fehler: {e}")
-        except Exception as e:
-            st.error(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
+        dm = DataManager()
+        dm.append_record(session_state_key='data_df', record_dict=result)
     
     if st.session_state['daten']:
         st.markdown("### Gespeicherte Blutzuckerwerte")
@@ -114,4 +109,4 @@ elif st.session_state.seite == "Blutzucker-Werte":
     Blutzucker_Werte.blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
     from pages import Blutzucker_Grafik
-    Blutzucker_Grafik.blutzucker_grafik() 
+    Blutzucker_Grafik.blutzucker_grafik()
