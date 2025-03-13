@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from utils.data_manager import DataManager
 
+# Set the page configuration
+st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
+
 # Initialisierung des Data Managers
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 
