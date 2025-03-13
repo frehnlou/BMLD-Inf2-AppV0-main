@@ -210,3 +210,9 @@ class DataManager:
         keys = [key for key in st.data_reg.key() if key in self.session_state]
         for key in keys:
             self.save_data(key)
+
+    def append_record(self, session_state_key, record_dict):
+        if session_state_key not in st.session_state:
+            st.session_state[session_state_key] = []
+        st.session_state[session_state_key].append(record_dict)
+        # Add code to persist the data if necessary
