@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from utils.data_manager import DataManager
 import pandas as pd
 
@@ -64,7 +65,7 @@ def blutzucker_tracker():
         st.session_state['daten'] = []
 
     if submit_button:
-        datum_zeit = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+        datum_zeit = datetime.now(ZoneInfo("Europa/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
         result = {
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt,
