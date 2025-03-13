@@ -8,5 +8,5 @@ def blutzucker_werte():
     else:
         st.warning("Noch keine Daten vorhanden.")
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     blutzucker_werte()

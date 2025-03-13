@@ -9,5 +9,5 @@ def blutzucker_grafik():
     else:
         st.warning("Noch keine Daten vorhanden.")
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     blutzucker_grafik()
