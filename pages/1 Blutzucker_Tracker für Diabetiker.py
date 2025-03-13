@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime
 from utils.data_manager import DataManager
+import pandas as pd
 
 # Abstand nach oben für bessere Platzierung
 st.markdown("<br>", unsafe_allow_html=True)
@@ -70,7 +71,9 @@ def blutzucker_tracker():
         st.success("Eintrag erfolgreich hinzugefügt")
         
         dm = DataManager()
-        dm.append_record(session_state_key='data_df', record_dict=result)
+        if 'data_df' not in st.session_state:
+            st.session_state['data_df'] = pd.DataFrame()
+        st.session_state['data_df'] = pd.concat([st.session_state['data_df'], pd.DataFrame([result])], ignore_index=True)
     
     if st.session_state['daten']:
         st.markdown("### Gespeicherte Blutzuckerwerte")
