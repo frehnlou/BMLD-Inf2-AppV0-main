@@ -7,3 +7,6 @@ def blutzucker_werte():
         st.table(st.session_state['daten'])
     else:
         st.warning("Noch keine Daten vorhanden.")
+
+if _name_ == "_main_":
+    blutzucker_werte()
