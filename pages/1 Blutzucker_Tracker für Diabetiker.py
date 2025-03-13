@@ -129,3 +129,5 @@ elif st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
 elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
+elif st.session_state.seite == "Blutzucker-Grafik":
+    blutzucker_grafik()
