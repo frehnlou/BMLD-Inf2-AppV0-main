@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime
+from utils.data_manager import DataManager
 
 # Abstand nach oben für bessere Platzierung
 st.markdown("<br>", unsafe_allow_html=True)
@@ -120,3 +121,6 @@ elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
     blutzucker_grafik()
+
+    # update data in session state and save to persistent storage
+    DataManager().append_record(session_state_key='data_df', record_dict=result)

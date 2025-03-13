@@ -1,4 +1,17 @@
 import streamlit as st
+import pandas as pd
+from utils.data_manager import DataManager
+
+# Initialisierung des Data Managers
+data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
+
+# Laden der Daten aus dem persistenten Speicher in den Session State
+data_manager.load_app_data(
+    session_state_key='data_df', 
+    file_name='data.csv', 
+    initial_value=pd.DataFrame(), 
+    parse_dates=['timestamp']
+)
 
 # Titel mit grösserer Schrift
 st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
