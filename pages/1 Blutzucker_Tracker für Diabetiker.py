@@ -60,7 +60,7 @@ def blutzucker_tracker():
         st.session_state['daten'] = []
 
     if submit_button:
-        datum_zeit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        datum_zeit = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
         result = {
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt,
