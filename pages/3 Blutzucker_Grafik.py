@@ -1,10 +1,5 @@
 import streamlit as st
 
-# ====== Start Login Block ======
-from utils.login_manager import LoginManager
-LoginManager().go_to_login('Start.py')  
-# ====== End Login Block ======
-
 # Abstand nach oben für bessere Platzierung
 st.markdown("<br>", unsafe_allow_html=True)
 

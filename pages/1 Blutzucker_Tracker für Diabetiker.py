@@ -4,14 +4,6 @@ from zoneinfo import ZoneInfo
 from utils.data_manager import DataManager
 import pandas as pd
 
-# ====== Start Login Block ======
-from utils.login_manager import LoginManager
-LoginManager().go_to_login('Start.py') 
-# ====== End Login Block ======
-
-# ------------------------------------------------------------
-# Here starts the actual app code
-
 # Set page configuration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
