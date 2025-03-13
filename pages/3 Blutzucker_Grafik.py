@@ -1,6 +1,9 @@
 import streamlit as st
 
-st.set_page_config(page_title="Blutzucker Grafik", layout="wide")
+def set_page_config():
+    st.set_page_config(page_title="Blutzucker Grafik", layout="wide")
+
+set_page_config()
 
 # Abstand nach oben für bessere Platzierung
 st.markdown("<br>", unsafe_allow_html=True)
