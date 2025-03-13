@@ -60,7 +60,7 @@ def blutzucker_tracker():
         st.session_state['daten'] = []
 
     if submit_button:
-        datum_zeit = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
+        datum_zeit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         result = {
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt,
@@ -114,4 +114,4 @@ elif st.session_state.seite == "Blutzucker-Werte":
     Blutzucker_Werte.blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
     from pages import Blutzucker_Grafik
-    Blutzucker_Grafik.blutzucker_grafik()
+    Blutzucker_Grafik.blutzucker_grafik() 
