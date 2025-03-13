@@ -128,14 +128,4 @@ if st.session_state.seite == "Startseite":
 elif st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
 elif st.session_state.seite == "Blutzucker-Werte":
-    try:
-        from pages import Blutzucker_Werte
-        Blutzucker_Werte.blutzucker_werte()
-    except ImportError as e:
-        st.error(f"Fehler beim Importieren von Blutzucker_Werte: {e}")
-elif st.session_state.seite == "Blutzucker-Grafik":
-    try:
-        from pages import Blutzucker_Grafik
-        Blutzucker_Grafik.blutzucker_grafik()
-    except ImportError as e:
-        st.error(f"Fehler beim Importieren von Blutzucker_Grafik: {e}")
+    blutzucker_werte()
