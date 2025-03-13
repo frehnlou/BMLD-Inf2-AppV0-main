@@ -50,24 +50,63 @@ def startseite():
 
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
-    st.write("Hier können Sie Ihre Blutzuckerwerte verwalten und neue Werte eingeben.")
     
-    if "daten" not in st.session_state:
-        st.session_state.daten = []
+    with st.form(key='blutzucker_form'):
+        blutzuckerwert = st.number_input("Gib deinen Blutzuckerwert ein", min_value=0, step=1)
+        zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
+        submit_button = st.form_submit_button(label='Eintrag hinzufügen')
     
-    blutzuckerwert = st.number_input("Blutzuckerwert eingeben:", min_value=0.0, max_value=500.0, step=0.1)
+    if 'daten' not in st.session_state:
+        st.session_state['daten'] = []
+
+    if submit_button:
+        datum_zeit = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        result = {
+            "blutzuckerwert": blutzuckerwert,
+            "zeitpunkt": zeitpunkt,
+            "datum_zeit": datum_zeit
+        }
+        st.session_state['daten'].append(result)
+        st.success("Eintrag erfolgreich hinzugefügt")
+        
+        # Daten im Session State aktualisieren und im persistenten Speicher speichern
+        DataManager().append_record(session_state_key='data_df', record_dict=result)
     
-    if st.button("Speichern"):
-        st.session_state.daten.append({"blutzuckerwert": blutzuckerwert})
-        st.success("Blutzuckerwert gespeichert!")
-    
-    st.markdown("---")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    if col1.button("Blutzucker-Werte anzeigen"):
-        st.session_state.seite = "Blutzucker-Werte"
-    if col2.button("Blutzucker-Grafik anzeigen"):
-        st.session_state.seite = "Blutzucker-Grafik"
-    if col3.button("Zurück zur Startseite"):
-        st.session_state.seite = "Startseite"
+    if st.session_state['daten']:
+        st.markdown("### Gespeicherte Blutzuckerwerte")
+        
+        # Durchschnitt berechnen
+        durchschnitt = sum(d['blutzuckerwert'] for d in st.session_state['daten']) / len(st.session_state['daten'])
+        
+        # Daten als Tabelle anzeigen
+        daten_anzeige = st.session_state['daten'][:]
+        st.table(daten_anzeige)
+        
+        # Durchschnittswert anzeigen
+        st.markdown(f"*Durchschnittlicher Blutzuckerwert:* {durchschnitt:.2f} mg/dL")
+
+        # Löschoption
+        st.markdown("### Eintrag löschen")
+        with st.form(key='delete_form'):
+            index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=1, max_value=len(st.session_state['daten']), step=1)
+            delete_button = st.form_submit_button(label='Eintrag löschen')
+        
+        if delete_button:
+            if 0 <= index_to_delete - 1 < len(st.session_state['daten']):
+                del st.session_state['daten'][index_to_delete - 1]
+                st.success("Eintrag erfolgreich gelöscht")
+                st.rerun()
+
+if "seite" not in st.session_state:
+    st.session_state.seite = "Startseite"
+
+if st.session_state.seite == "Startseite":
+    startseite()
+elif st.session_state.seite == "Blutzucker-Tracker":
+    blutzucker_tracker()
+elif st.session_state.seite == "Blutzucker-Werte":
+    from pages import Blutzucker_Werte
+    Blutzucker_Werte.blutzucker_werte()
+elif st.session_state.seite == "Blutzucker-Grafik":
+    from pages import Blutzucker_Grafik
+    Blutzucker_Grafik.blutzucker_grafik()
