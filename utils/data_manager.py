@@ -1,218 +1,142 @@
-import fsspec, posixpath
+import secrets
 import streamlit as st
-from utils.data_handler import DataHandler
+import streamlit_authenticator as stauth
+from utils.data_manager import DataManager
 
-class DataManager:
+
+class LoginManager:
     """
-    A singleton class for managing application data persistence and user-specific storage.
-    This class provides a centralized interface for handling both application-wide and
-    user-specific data storage operations. It implements a singleton pattern using
-    Streamlit's session state to maintain consistency across app reruns.
-    Key Features:
-        - Singleton implementation for consistent state management
-        - Flexible filesystem support (local and WebDAV)
-        - Separate handling of application and user-specific data
-        - Integration with Streamlit's session state
-        - Automatic data persistence
-        >>> data_manager = DataManager()
-        >>> data_manager.load_app_data("settings", "settings.json", initial_value={})
-        >>> data_manager.load_user_data("user_prefs.json", initial_value={})
-        >>> data_manager.save_all_data()
-
-    Attributes:
-        fs (fsspec.AbstractFileSystem): The filesystem interface for data storage
-        fs_root_folder (str): Root directory for all file operations
-        app_data_reg (dict): Registry of application-wide data files
-        user_data_reg (dict): Registry of user-specific data files
-        - Uses fsspec for filesystem operations
-        - Requires Streamlit session state for persistence
-        - Automatically manages user data separation
-        - Implements data registry for tracking stored files
+    Singleton-Klasse für die Verwaltung von Anwendungszustand, Speicherung und Benutzer-Authentifizierung.
+    
+    Verwaltet Dateisystemzugriff, Benutzeranmeldeinformationen und Authentifizierungsstatus mit Streamlit's
+    Sitzungszustand für die Persistenz zwischen Neuladen der Seite.
     """
-
     def __new__(cls, *args, **kwargs):
-        """
-        Implements singleton pattern by returning existing instance from session state if available.
-
-        Returns:
-            AppManager: The singleton instance, either existing or newly created
-        """
-        if 'data_manager' in st.session_state:
-            return st.session_state.data_manager
+        """ Singleton-Pattern: Gibt die bestehende Instanz zurück, falls vorhanden. """
+        if 'login_manager' in st.session_state:
+            return st.session_state.login_manager
         else:
-            instance = super(DataManager, cls).__new__(cls)
-            st.session_state.data_manager = instance
+            instance = super(LoginManager, cls).__new__(cls)
+            st.session_state.login_manager = instance
             return instance
     
-    def __init__(self, fs_protocol = 'file', fs_root_folder = 'app_data'):
+    def __init__(self, data_manager: DataManager = None,
+                 auth_credentials_file: str = 'credentials.yaml',
+                 auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
         """
-        Initialize the data manager with filesystem configuration.
-        Sets up the filesystem interface and initializes data registries for the application.
-        If the instance is already initialized (has 'fs' attribute), the initialization is skipped.
-            fs_protocol (str, optional): Protocol to use for filesystem operations.
-                Can be 'file' or 'webdav'. Defaults to 'file'.
-            fs_root_folder (str, optional): Base directory path for all file operations.
-                Defaults to 'app_data'.
-        Attributes:
-            fs_root_folder (str): Base directory path for file operations
-            fs: Filesystem interface instance
-            app_data_reg (dict): Registry for application-wide data
-            user_data_reg (dict): Registry for user-specific data
-        """
-        if hasattr(self, 'fs'):  # check if instance is already initialized
-            return
-            
-        # initialize filesystem stuff
-        self.fs_root_folder = fs_root_folder
-        self.fs = self._init_filesystem(fs_protocol)
-        self.app_data_reg = {}
-        self.user_data_reg = {}
+        Initialisiert Dateisystem- und Authentifizierungskomponenten, falls noch nicht geschehen.
 
-    @staticmethod
-    def _init_filesystem(protocol: str):
-        """
-        Creates and configures an fsspec filesystem instance.
-
-        Supports WebDAV protocol using credentials from Streamlit secrets, and local filesystem access.
-        
         Args:
-            protocol: The filesystem protocol to initialize ('webdav' or 'file')
-            
-        Returns:
-            fsspec.AbstractFileSystem: Configured filesystem instance
-            
-        Raises:
-            ValueError: If an unsupported protocol is specified
+            data_manager: Die DataManager-Instanz für die Datenspeicherung.
+            auth_credentials_file (str): Die Datei für die Speicherung der Benutzerdaten.
+            auth_cookie_name (str): Name des Cookies für die Sitzungsverwaltung.
         """
-        if protocol == 'webdav':
-            secrets = st.secrets['webdav']
-            return fsspec.filesystem('webdav', 
-                                     base_url=secrets['base_url'], 
-                                     auth=(secrets['username'], secrets['password']))
-        elif protocol == 'file':
-            return fsspec.filesystem('file')
+        if hasattr(self, 'authenticator'):  # Falls bereits initialisiert, nicht erneut ausführen
+            return
+        
+        if data_manager is None:
+            return
+
+        # Initialisierung der Authentifizierung
+        self.data_manager = data_manager
+        self.auth_credentials_file = auth_credentials_file
+        self.auth_cookie_name = auth_cookie_name
+        self.auth_cookie_key = secrets.token_urlsafe(32)
+        self.auth_credentials = self._load_auth_credentials()
+        self.authenticator = stauth.Authenticate(self.auth_credentials, self.auth_cookie_name, self.auth_cookie_key)
+
+
+    def _load_auth_credentials(self):
+        """ Lädt Benutzeranmeldeinformationen aus der Konfigurationsdatei. """
+        dh = self.data_manager._get_data_handler()
+        return dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
+
+    def _save_auth_credentials(self):
+        """ Speichert die aktuellen Benutzeranmeldeinformationen in die Datei. """
+        dh = self.data_manager._get_data_handler()
+        dh.save(self.auth_credentials_file, self.auth_credentials)
+
+    def login_register(self, login_title="Anmeldung", register_title="Neuen Benutzer registrieren"):
+        """
+        Zeigt das Anmelde- und Registrierungsformular an.
+
+        Args:
+            login_title (str): Titel für den Login-Tab.
+            register_title (str): Titel für den Registrierungs-Tab.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
         else:
-            raise ValueError(f"AppManager: Invalid filesystem protocol: {protocol}")
+            login_tab, register_tab = st.tabs((login_title, register_title))
+            with login_tab:
+                self.login(stop=False)
+            with register_tab:
+                self.register()
 
-    def _get_data_handler(self, subfolder: str = None):
-        """
-        Creates a DataHandler instance for the specified subfolder.
-
-        Args:
-            subfolder: Optional subfolder path relative to root folder
-
-        Returns:
-            DataHandler: Configured for operations in the specified folder
-        """
-        if subfolder is None:
-            return DataHandler(self.fs, self.fs_root_folder)
+    def login(self, stop=True):
+        """ Zeigt das Anmeldeformular an und verarbeitet die Authentifizierung. """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
         else:
-            return DataHandler(self.fs, posixpath.join(self.fs_root_folder, subfolder))
+            self.authenticator.login()
+            if st.session_state["authentication_status"] is False:
+                st.error("❌ Benutzername oder Passwort ist falsch!")
+            else:
+                st.warning("Bitte geben Sie Ihren Benutzernamen und Ihr Passwort ein.")
+            if stop:
+                st.stop()
 
-    def load_app_data(self, session_state_key, file_name, initial_value=None, **load_args):
+    def register(self, stop=True):
         """
-        Load application data from a file and store it in the Streamlit session state.
+        Zeigt das Registrierungsformular an und setzt deutsche Labels.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
+        else:
+            st.info("""
+            🔒 **Passwortanforderungen:**  
+            - **8-20 Zeichen lang**  
+            - Mindestens **1 Großbuchstabe**  
+            - Mindestens **1 Kleinbuchstabe**  
+            - Mindestens **1 Zahl**  
+            - Mindestens **1 Sonderzeichen** (@$!%*?&)  
+            """)
+
+            # Streamlit-Authenticator Register-Funktion aufrufen und Labels überschreiben
+            res = self.authenticator.register_user(
+                form_name="Registrierung",
+                form_labels={
+                    "Register user": "Benutzer registrieren",
+                    "First name": "Vorname",
+                    "Last name": "Nachname",
+                    "Email": "E-Mail",
+                    "Username": "Benutzername",
+                    "Password": "Passwort",
+                    "Repeat password": "Passwort wiederholen",
+                    "Password hint": "Passworthinweis",
+                    "Captcha": "Sicherheitscode"
+                }
+            )
+
+            if res[1] is not None:
+                st.success(f"✅ Benutzer {res[1]} wurde erfolgreich registriert!")
+                try:
+                    self._save_auth_credentials()
+                    st.success("✅ Zugangsdaten wurden gespeichert.")
+                except Exception as e:
+                    st.error(f"⚠️ Fehler beim Speichern der Zugangsdaten: {e}")
+
+            if stop:
+                st.stop()
+
+    def go_to_login(self, login_page_py_file):
+        """
+        Erstellt einen Logout-Button, der den Benutzer abmeldet und zur Login-Seite umleitet.
 
         Args:
-            session_state_key (str): Key under which the data will be stored in Streamlit's session state
-            file_name (str): Name of the file to load data from
-            initial_value (Any, optional): Default value if file doesn't exist. Defaults to None.
-            **load_args: Additional keyword arguments to pass to the data handler's load method
-
-        Returns:
-            None: The loaded data is stored directly in Streamlit's session state
-
-        Note:
-            The method also registers the file name in the app_data_reg dictionary using the session_state_key
+            login_page_py_file (str): Der Name der Python-Datei mit der Login-Seite.
         """
-        if session_state_key in st.session_state:
-            return
-        
-        dh = self._get_data_handler()
-        data = dh.load(file_name, initial_value, **load_args)
-        st.session_state[session_state_key] = data
-        self.app_data_reg[session_state_key] = file_name
-
-    def load_user_data(self, session_state_key, file_name, initial_value=None, **load_args):
-        """
-        Load user-specific data from a file in the user's data folder.
-
-        Args:
-            session_state_key (str): Key under which the data will be stored in Streamlit's session state
-            file_name (str): Name of the file to load data from
-            initial_value: Default value to return if file doesn't exist (default: None)
-            **load_args: Additional arguments to pass to the data handler's load method
-
-        Returns:
-            The loaded data from the file
-
-        Raises:
-            ValueError: If no user is currently logged in
-
-        Notes:
-            - The method registers the file name in the user_data_reg dictionary
-            - The user's data folder is named 'user_data_<username>'
-            - If no user is logged in, all user data is cleared from session state
-        """
-        username = st.session_state.get('username', None)
-        if username is None:
-            for key in self.user_data_reg:  # delete all user data
-                st.session_state.pop(key)
-            self.user_data_reg = {}
-            return
-            # raise ValueError(f"DataManager: No user logged in, cannot load user data {file_name}")
-        elif session_state_key in st.session_state:
-            return
-
-        user_data_folder = 'user_data_' + username
-
-        dh = self._get_data_handler(user_data_folder)
-        data = dh.load(file_name, initial_value, **load_args)
-        st.session_state[session_state_key] = data
-        self.user_data_reg[session_state_key] = dh.join(user_data_folder, file_name)
-
-    @property
-    def data_reg(self):
-        return {**self.app_data_reg, **self.user_data_reg}
-
-    def save_data(self, session_state_key):
-        """
-        Saves data from session state to persistent storage using the registered data handler.
-
-        Args:
-            session_state_key (str): Key identifying the data in both session state and data registry
-
-        Raises:
-            ValueError: If the session_state_key is not registered in data_reg
-            ValueError: If the session_state_key is not found in session state
-
-        Example:
-            >>> data_manager.save_data("user_settings")
-        """
-        if session_state_key not in self.data_reg:
-            raise ValueError(f"DataManager: No data registered for session state key {session_state_key}")
-        
-        if session_state_key not in st.session_state:
-            raise ValueError(f"DataManager: Key {session_state_key} not found in session state")
-        
-        dh = self._get_data_handler()
-        dh.save(self.data_reg[session_state_key], st.session_state[session_state_key])
-
-    def save_all_data(self):
-        """
-        Saves all valid data from the session state to the persistent storage.
-
-        This method iterates through all registered data keys and saves the corresponding 
-        data if it exists in the current session state.
-
-        Uses the save_data() method internally for each individual key.
-        """
-        keys = [key for key in st.data_reg.key() if key in self.session_state]
-        for key in keys:
-            self.save_data(key)
-
-    def append_record(self, session_state_key, record_dict):
-        if session_state_key not in st.session_state:
-            st.session_state[session_state_key] = []
-        st.session_state[session_state_key].append(record_dict)
-        # Add code to persist the data if necessary
+        if st.session_state.get("authentication_status") is not True:
+            st.switch_page(login_page_py_file)
+        else:
+            self.authenticator.logout()  # Logout-Button anzeigen
