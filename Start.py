@@ -25,7 +25,7 @@ data_manager.load_app_data(
 # Set the page configuration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
-# Titel mit grösserer Schrift
+# Titel mit größerer Schrift
 st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
 
 # Beschreibung in normalem Text
@@ -39,7 +39,7 @@ st.info(f"👋 Eingeloggt als: **{st.session_state.username}**")
 # Zusätzliche Information in einer dezenten farbigen Box
 st.markdown("""
 <div style="border-left: 4px solid #4CAF50; background-color: #F0FFF0; padding: 10px; border-radius: 5px;">
-Nutzen Sie die App regelmässig, um Ihre Blutzuckerwerte besser im Blick zu behalten und langfristige Muster zu erkennen.
+Nutzen Sie die App regelmäßig, um Ihre Blutzuckerwerte besser im Blick zu behalten und langfristige Muster zu erkennen.
 </div>
 """, unsafe_allow_html=True)
 
