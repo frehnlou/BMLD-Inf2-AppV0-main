@@ -95,8 +95,8 @@ class LoginManager:
         else:
             st.info("""
             🔒 **Passwortanforderungen:**  
-            - **8-20 Zeichen lang**  
-            - Mindestens **1 Großbuchstabe**  
+            - **8-15 Zeichen lang**  
+            - Mindestens **1 Grossbuchstabe**  
             - Mindestens **1 Kleinbuchstabe**  
             - Mindestens **1 Zahl**  
             - Mindestens **1 Sonderzeichen** (@$!%*?&)  
