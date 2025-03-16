@@ -5,13 +5,13 @@ from utils.data_manager import DataManager
 from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
 import pandas as pd
 
+# ✅ `st.set_page_config` MUSS als erstes Streamlit-Kommando stehen!
+st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
+
 # ====== Start Login Block ======
 login_manager = LoginManager()
 login_manager.go_to_login('Start.py') 
 # ====== End Login Block ======
-
-# Set page configuration
-st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # Abstand nach oben für bessere Platzierung
 st.markdown("<br>", unsafe_allow_html=True)
@@ -127,6 +127,7 @@ def blutzucker_grafik():
     else:
         st.warning("Noch keine Daten vorhanden.")
 
+# 🔄 Seite dynamisch wechseln
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
