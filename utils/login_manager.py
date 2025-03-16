@@ -6,19 +6,13 @@ from utils.data_manager import DataManager
 
 class LoginManager:
     """
-    Singleton class that manages application state, storage, and user authentication.
+    Singleton-Klasse für die Verwaltung von Anwendungszustand, Speicherung und Benutzer-Authentifizierung.
     
-    Handles filesystem access, user credentials, and authentication state using Streamlit's
-    session state for persistence across reruns. Provides interfaces for accessing user-specific
-    and application-wide data storage.
+    Verwaltet Dateisystemzugriff, Benutzeranmeldeinformationen und Authentifizierungsstatus mit Streamlit's
+    Sitzungszustand für die Persistenz zwischen Neuladen der Seite.
     """
     def __new__(cls, *args, **kwargs):
-        """
-        Implements singleton pattern by returning existing instance from session state if available.
-
-        Returns:
-            AppManager: The singleton instance, either existing or newly created
-        """
+        """ Singleton-Pattern: Gibt die bestehende Instanz zurück, falls vorhanden. """
         if 'login_manager' in st.session_state:
             return st.session_state.login_manager
         else:
@@ -30,23 +24,20 @@ class LoginManager:
                  auth_credentials_file: str = 'credentials.yaml',
                  auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
         """
-        Initializes filesystem and authentication components if not already initialized.
-
-        Sets up filesystem access using the specified protocol and configures authentication
-        with cookie-based session management.
+        Initialisiert Dateisystem- und Authentifizierungskomponenten, falls noch nicht geschehen.
 
         Args:
-            Data_manager: The DataManager instance to use for data storage
-            auth_credentials_file (str): The filename to use for storing user credentials
-            auth_cookie_name (str): The name of the cookie to use for session management
+            data_manager: Die DataManager-Instanz für die Datenspeicherung.
+            auth_credentials_file (str): Die Datei für die Speicherung der Benutzerdaten.
+            auth_cookie_name (str): Name des Cookies für die Sitzungsverwaltung.
         """
-        if hasattr(self, 'authenticator'):  # check if instance is already initialized
+        if hasattr(self, 'authenticator'):  # Falls bereits initialisiert, nicht erneut ausführen
             return
         
         if data_manager is None:
             return
 
-        # initialize streamlit authentication stuff
+        # Initialisierung der Authentifizierung
         self.data_manager = data_manager
         self.auth_credentials_file = auth_credentials_file
         self.auth_cookie_name = auth_cookie_name
@@ -56,31 +47,22 @@ class LoginManager:
 
 
     def _load_auth_credentials(self):
-        """
-        Loads user credentials from the configured credentials file.
-
-        Returns:
-            dict: User credentials, defaulting to empty usernames dict if file not found
-        """
+        """ Lädt Benutzeranmeldeinformationen aus der Konfigurationsdatei. """
         dh = self.data_manager._get_data_handler()
-        return dh.load(self.auth_credentials_file, initial_value= {"usernames": {}})
+        return dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
 
     def _save_auth_credentials(self):
-        """
-        Saves current user credentials to the credentials file.
-        """
+        """ Speichert die aktuellen Benutzeranmeldeinformationen in die Datei. """
         dh = self.data_manager._get_data_handler()
         dh.save(self.auth_credentials_file, self.auth_credentials)
 
-    def login_register(self, login_title = 'Login', register_title = 'Register new user'):
+    def login_register(self, login_title="Anmeldung", register_title="Neuen Benutzer registrieren"):
         """
-        Renders the authentication interface.
-        
-        Displays login form and optional registration form. Handles user authentication
-        and registration flows. Stops further execution after rendering.
-        
+        Zeigt das Anmelde- und Registrierungsformular an.
+
         Args:
-            show_register_tab: If True, shows registration option alongside login
+            login_title (str): Titel für den Login-Tab.
+            register_title (str): Titel für den Registrierungs-Tab.
         """
         if st.session_state.get("authentication_status") is True:
             self.authenticator.logout()
@@ -92,55 +74,55 @@ class LoginManager:
                 self.register()
 
     def login(self, stop=True):
-        """
-        Renders the login form and handles authentication status messages.
-        """
+        """ Zeigt das Anmeldeformular an und verarbeitet die Authentifizierung. """
         if st.session_state.get("authentication_status") is True:
             self.authenticator.logout()
         else:
             self.authenticator.login()
             if st.session_state["authentication_status"] is False:
-                st.error("Username/password is incorrect")
+                st.error("❌ Benutzername oder Passwort ist falsch!")
             else:
-                st.warning("Please enter your username and password")
+                st.warning("Bitte geben Sie Ihren Benutzernamen und Ihr Passwort ein.")
             if stop:
                 st.stop()
 
-    def register(self,stop=True):
+    def register(self, stop=True):
         """
-        Renders the registration form and handles user registration flow.
-        
-        Displays password requirements, processes registration attempts,
-        and saves credentials on successful registration.
-        """
+        Zeigt das Registrierungsformular an und verarbeitet die Registrierung.
 
+        Zeigt Anforderungen an das Passwort und speichert neue Benutzeranmeldedaten.
+        """
         if st.session_state.get("authentication_status") is True:
             self.authenticator.logout()
         else:
             st.info("""
-            The password must be 8-20 characters long and include at least one uppercase letter, 
-            one lowercase letter, one digit, and one special character from @$!%*?&.
+            🔒 **Passwortanforderungen:**  
+            - **8-20 Zeichen lang**  
+            - Mindestens **1 Großbuchstabe**  
+            - Mindestens **1 Kleinbuchstabe**  
+            - Mindestens **1 Zahl**  
+            - Mindestens **1 Sonderzeichen** (@$!%*?&)  
             """)
+
             res = self.authenticator.register_user()
             if res[1] is not None:
-                st.success(f"User {res[1]} registered successfully")
+                st.success(f"✅ Benutzer {res[1]} wurde erfolgreich registriert!")
                 try:
                     self._save_auth_credentials()
-                    st.success("Credentials saved successfully")
+                    st.success("✅ Zugangsdaten wurden gespeichert.")
                 except Exception as e:
-                    st.error(f"Failed to save credentials: {e}")
+                    st.error(f"⚠️ Fehler beim Speichern der Zugangsdaten: {e}")
             if stop:
                 st.stop()
 
     def go_to_login(self, login_page_py_file):
         """
-        Create a logout button that logs the user out and redirects to the login page.
-        If the user is not logged in, the login page is displayed.
+        Erstellt einen Logout-Button, der den Benutzer abmeldet und zur Login-Seite umleitet.
 
-        Parameters
-        - login_page_py_file (str): The path to the Python file that contains the login page
+        Args:
+            login_page_py_file (str): Der Name der Python-Datei mit der Login-Seite.
         """
         if st.session_state.get("authentication_status") is not True:
             st.switch_page(login_page_py_file)
         else:
-            self.authenticator.logout() # create logout button
+            self.authenticator.logout()  # Logout-Button anzeigen
