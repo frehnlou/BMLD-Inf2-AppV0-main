@@ -2,7 +2,13 @@ import streamlit as st
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from utils.data_manager import DataManager
+from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
 import pandas as pd
+
+# ====== Start Login Block ======
+login_manager = LoginManager()
+login_manager.go_to_login('Start.py') 
+# ====== End Login Block ======
 
 # Set page configuration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
