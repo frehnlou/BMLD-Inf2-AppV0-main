@@ -1,4 +1,10 @@
 import streamlit as st
+from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
+
+# ====== Start Login Block ======
+login_manager = LoginManager()
+login_manager.go_to_login('Start.py') 
+# ====== End Login Block ======
 
 def blutzucker_werte():
     # Abstand nach oben für bessere Platzierung
