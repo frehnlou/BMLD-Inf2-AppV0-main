@@ -1,12 +1,16 @@
 import streamlit as st
 import pandas as pd
 from utils.data_manager import DataManager
+from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
 
-# Set the page configuration
-st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
+# ====== Start Init Block (Login & Datenmanagement) ======
 
 # Initialisierung des Data Managers
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
+
+# Initialisierung des Login Managers
+login_manager = LoginManager(data_manager)
+login_manager.login_register()  # Öffnet Login-/Registrierungsseite
 
 # Laden der Daten aus dem persistenten Speicher in den Session State
 data_manager.load_app_data(
@@ -16,6 +20,11 @@ data_manager.load_app_data(
     parse_dates=['timestamp']
 )
 
+# ====== End Init Block ======
+
+# Set the page configuration
+st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
+
 # Titel mit grösserer Schrift
 st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
 
@@ -23,6 +32,9 @@ st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
 st.write("""
 Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren. So behalten Sie Ihre Werte stets im Blick und können langfristige Trends erkennen.
 """)
+
+# 👤 Zeigt den eingeloggten Benutzer an
+st.info(f"👋 Eingeloggt als: **{st.session_state.username}**")
 
 # Zusätzliche Information in einer dezenten farbigen Box
 st.markdown("""
