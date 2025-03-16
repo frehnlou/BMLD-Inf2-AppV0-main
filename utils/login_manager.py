@@ -96,7 +96,7 @@ class LoginManager:
             st.info("""
             🔒 **Passwortanforderungen:**  
             - **8-20 Zeichen lang**  
-            - Mindestens **1 Großbuchstabe**  
+            - Mindestens **1 Grossbuchstabe**  
             - Mindestens **1 Kleinbuchstabe**  
             - Mindestens **1 Zahl**  
             - Mindestens **1 Sonderzeichen** (@$!%*?&)  
@@ -118,7 +118,7 @@ class LoginManager:
                 }
             )
 
-            if res[1] is not None:
+            if res and res[1] is not None:
                 st.success(f"✅ Benutzer {res[1]} wurde erfolgreich registriert!")
                 try:
                     self._save_auth_credentials()
