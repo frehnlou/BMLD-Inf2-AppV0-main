@@ -136,7 +136,7 @@ class LoginManager:
                             label.innerText = labels[text];
                         }
                     });
-                }, 500);
+                }, 1000);  // Erhöhte Verzögerung auf 1000ms
                 </script>
                 """,
                 unsafe_allow_html=True
