@@ -88,9 +88,7 @@ class LoginManager:
 
     def register(self, stop=True):
         """
-        Zeigt das Registrierungsformular an und verarbeitet die Registrierung.
-
-        Zeigt Anforderungen an das Passwort und speichert neue Benutzeranmeldedaten.
+        Zeigt das Registrierungsformular an und setzt deutsche Labels.
         """
         if st.session_state.get("authentication_status") is True:
             self.authenticator.logout()
@@ -104,7 +102,23 @@ class LoginManager:
             - Mindestens **1 Sonderzeichen** (@$!%*?&)  
             """)
 
-            res = self.authenticator.register_user()
+            # Streamlit-Authenticator Register-Funktion aufrufen und Labels überschreiben
+            res = self.authenticator.register_user(
+                pre_authorization=False,  # Falls du eine Vorautorisierung brauchst, setze auf True
+                name="Registrierung",
+                form_labels={
+                    "Register user": "Benutzer registrieren",
+                    "First name": "Vorname",
+                    "Last name": "Nachname",
+                    "Email": "E-Mail",
+                    "Username": "Benutzername",
+                    "Password": "Passwort",
+                    "Repeat password": "Passwort wiederholen",
+                    "Password hint": "Passworthinweis",
+                    "Captcha": "Sicherheitscode"
+                }
+            )
+
             if res[1] is not None:
                 st.success(f"✅ Benutzer {res[1]} wurde erfolgreich registriert!")
                 try:
@@ -112,6 +126,7 @@ class LoginManager:
                     st.success("✅ Zugangsdaten wurden gespeichert.")
                 except Exception as e:
                     st.error(f"⚠️ Fehler beim Speichern der Zugangsdaten: {e}")
+
             if stop:
                 st.stop()
 
