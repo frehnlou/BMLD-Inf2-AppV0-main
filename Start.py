@@ -3,6 +3,9 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
 
+# ✅ `st.set_page_config` MUSS als erstes Streamlit-Kommando stehen!
+st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
+
 # ====== Start Init Block (Login & Datenmanagement) ======
 
 # Initialisierung des Data Managers
@@ -22,9 +25,6 @@ data_manager.load_app_data(
 
 # ====== End Init Block ======
 
-# Set the page configuration
-st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
-
 # Titel mit größerer Schrift
 st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
 
@@ -33,8 +33,11 @@ st.write("""
 Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren. So behalten Sie Ihre Werte stets im Blick und können langfristige Trends erkennen.
 """)
 
-# 👤 Zeigt den eingeloggten Benutzer an
-st.info(f"👋 Eingeloggt als: **{st.session_state.username}**")
+# 👤 Zeigt den eingeloggten Benutzer an (Falls Session State korrekt gesetzt ist)
+if "username" in st.session_state:
+    st.info(f"👋 Eingeloggt als: **{st.session_state.username}**")
+else:
+    st.warning("⚠️ Kein Benutzer eingeloggt!")
 
 # Zusätzliche Information in einer dezenten farbigen Box
 st.markdown("""
