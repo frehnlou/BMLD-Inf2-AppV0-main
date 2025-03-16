@@ -95,8 +95,8 @@ class LoginManager:
         else:
             st.info("""
             🔒 **Passwortanforderungen:**  
-            - **8-15 Zeichen lang**  
-            - Mindestens **1 Grossbuchstabe**  
+            - **8-20 Zeichen lang**  
+            - Mindestens **1 Großbuchstabe**  
             - Mindestens **1 Kleinbuchstabe**  
             - Mindestens **1 Zahl**  
             - Mindestens **1 Sonderzeichen** (@$!%*?&)  
@@ -104,8 +104,7 @@ class LoginManager:
 
             # Streamlit-Authenticator Register-Funktion aufrufen und Labels überschreiben
             res = self.authenticator.register_user(
-                pre_authorization=False,  # Falls du eine Vorautorisierung brauchst, setze auf True
-                name="Registrierung",
+                form_name="Registrierung",
                 form_labels={
                     "Register user": "Benutzer registrieren",
                     "First name": "Vorname",
