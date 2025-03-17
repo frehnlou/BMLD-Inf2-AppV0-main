@@ -82,7 +82,7 @@ def blutzucker_tracker():
     with st.form(key='blutzucker_form'):
         blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
         zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
-        submit_button = st.form_submit_button(label='✅ Eintrag hinzufügen')
+        submit_button = st.form_submit_button(label=' Eintrag hinzufügen')
 
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")  # 🔥 Einheitliches Datum-Format
@@ -92,7 +92,7 @@ def blutzucker_tracker():
         # ✅ Speichert die Werte nur für den aktuellen Benutzer
         data_manager.save_user_data("user_data", username)
 
-        st.success("✅ Eintrag hinzugefügt!")
+        st.success(" Eintrag hinzugefügt!")
         st.rerun()
 
     if not user_data.empty:
@@ -102,7 +102,7 @@ def blutzucker_tracker():
         st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
 
         durchschnitt = user_data["blutzuckerwert"].mean()
-        st.markdown(f"**📊 Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
+        st.markdown(f"** Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
         st.warning("Noch keine Daten vorhanden.")
 
