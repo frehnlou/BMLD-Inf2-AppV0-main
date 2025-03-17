@@ -5,7 +5,7 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# ✅ MUSS als erstes Kommando bleiben!
+# ✅ MUSS erstes Kommando bleiben!
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
@@ -89,8 +89,8 @@ def blutzucker_tracker():
         new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
         st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
 
-        # ✅ Korrekte Speicherung
-        data_manager.save_user_data("user_data", "data.csv", st.session_state.user_data)
+        # ✅ Korrekte Speicherung mit `save_data()`
+        data_manager.save_data("user_data")
         
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
