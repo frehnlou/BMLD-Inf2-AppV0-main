@@ -27,20 +27,25 @@ def blutzucker_werte():
         parse_dates=["datum_zeit"]
     )
 
-    if not user_data.empty:
-        st.markdown("###  Gespeicherte Blutzuckerwerte")
+    if user_data is not None and not user_data.empty:
+        st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
 
         # 🔥 Sicherstellen, dass die Spalten existieren
-        if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert", "zeitpunkt"]):
+        required_columns = {"datum_zeit", "blutzuckerwert", "zeitpunkt"}
+        if required_columns.issubset(user_data.columns):
+            # 🔥 Falls `datum_zeit` nicht als `Datetime` erkannt wird, umwandeln
+            if not pd.api.types.is_datetime64_any_dtype(user_data["datum_zeit"]):
+                user_data["datum_zeit"] = pd.to_datetime(user_data["datum_zeit"], errors='coerce')
+
             st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
-            
+
             # ✅ Durchschnitt berechnen
             durchschnitt = user_data["blutzuckerwert"].mean()
-            st.markdown(f"** Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
+            st.markdown(f"**📊 Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
         else:
             st.warning("⚠️ Datenformat fehlerhaft oder Spalten fehlen!")
     else:
-        st.warning("Noch keine Daten vorhanden.")
+        st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte geben Sie einen neuen Wert ein.")
 
 if __name__ == "__main__":
     blutzucker_werte()
