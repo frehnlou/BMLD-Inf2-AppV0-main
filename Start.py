@@ -11,13 +11,16 @@ data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App"
 login_manager = LoginManager(data_manager)
 login_manager.login_register()  # Login-/Registrierungsseite anzeigen
 
-# ✅ Nutzerbezogene Daten laden (automatisch erstellt, wenn nicht vorhanden)
-data_manager.load_user_data(
-    session_state_key='data_df',
-    file_name='data.csv',
-    initial_value=pd.DataFrame(columns=["username", "datum_zeit", "blutzuckerwert", "zeitpunkt"]),
-    parse_dates=['datum_zeit']
-)
+# ✅ Prüfe, ob ein Benutzer eingeloggt ist, bevor Daten geladen werden
+if "username" in st.session_state and st.session_state["username"]:
+    data_manager.load_user_data(
+        session_state_key='data_df',
+        file_name='data.csv',
+        initial_value=pd.DataFrame(columns=["username", "datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+        parse_dates=['datum_zeit']
+    )
+else:
+    st.warning("⚠️ Kein Benutzer eingeloggt! Daten können nicht geladen werden.")
 
 # ====== Ende Login & Daten Block ======
 
