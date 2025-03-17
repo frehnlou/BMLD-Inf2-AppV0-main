@@ -10,7 +10,7 @@ class DataManager:
     Diese Klasse verwendet das Streamlit Session-State für Konsistenz zwischen Reruns.
     """
 
-    def _new_(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
         """ Singleton-Pattern: Gibt die bestehende Instanz zurück, falls vorhanden. """
         if 'data_manager' in st.session_state:
             return st.session_state.data_manager
