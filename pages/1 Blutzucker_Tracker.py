@@ -74,6 +74,10 @@ def startseite():
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
+    # Debugging: Prüfe, ob die Daten geladen wurden
+    st.write("Session State Keys:", list(st.session_state.keys()))
+    st.write("Geladene Daten:", st.session_state.get("user_data", "Keine Daten gefunden"))
+
     with st.form(key='blutzucker_form'):
         blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
         zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
@@ -107,5 +111,5 @@ def seitenwechsel():
     elif st.session_state.seite == "Startseite":
         startseite()
 
-# 🔄 Starte die App
-seitenwechsel()
+
+
