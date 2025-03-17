@@ -39,7 +39,7 @@ username = st.session_state.get("username", "Gast")
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
     file_name="data.csv",
-    initial_value=pd.DataFrame(columns=["username", "datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+    initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
     parse_dates=["datum_zeit"]
 )
 
@@ -49,7 +49,23 @@ def startseite():
     st.write("""
     Liebe Diabetikerinnen und Diabetiker! 🩸
 
-    Mit diesem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!  
+    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
+
+    - Was bringt dir die App?
+    - Schnelle Eingabe deines Blutzuckers (mg/dL)
+    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
+    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
+    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
+
+    Warum diese App?
+             
+    ✔ Kein lästiges Papier-Tagebuch mehr
+
+    ✔ Verfolge deine Werte langfristig & erkenne Muster
+
+    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
+
+    Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
     """)
 
 # 🔥 Blutzucker-Tracker
@@ -64,7 +80,6 @@ def blutzucker_tracker():
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
         result = {
-            "username": username,
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt,
             "datum_zeit": datum_zeit
@@ -73,23 +88,21 @@ def blutzucker_tracker():
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
 
-    user_data_filtered = user_data[user_data["username"] == username].drop(columns=["username"], errors='ignore')
-
-    if not user_data_filtered.empty:
+    if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data_filtered.reset_index(drop=True))
+        st.table(user_data.reset_index(drop=True))
 
-        durchschnitt = user_data_filtered["blutzuckerwert"].mean()
+        durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
 
         st.markdown("### Eintrag löschen")
         with st.form(key='delete_form'):
-            index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(user_data_filtered)-1, step=1)
+            index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(user_data)-1, step=1)
             delete_button = st.form_submit_button(label='Eintrag löschen')
 
         if delete_button:
-            user_data_filtered = user_data_filtered.drop(user_data_filtered.index[index_to_delete]).reset_index(drop=True)
-            data_manager.save_user_data("user_data", "data.csv", user_data_filtered)
+            user_data = user_data.drop(user_data.index[index_to_delete]).reset_index(drop=True)
+            data_manager.save_data("user_data")
             st.success("Eintrag erfolgreich gelöscht.")
             st.rerun()
     else:
@@ -99,11 +112,9 @@ def blutzucker_tracker():
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
-    user_data_filtered = user_data[user_data["username"] == username].drop(columns=["username"], errors='ignore')
-
-    if not user_data_filtered.empty:
+    if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data_filtered.reset_index(drop=True))
+        st.table(user_data.reset_index(drop=True))
     else:
         st.warning("Noch keine Werte gespeichert.")
 
@@ -111,11 +122,9 @@ def blutzucker_werte():
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
-    user_data_filtered = user_data[user_data["username"] == username].drop(columns=["username"], errors='ignore')
-
-    if not user_data_filtered.empty:
+    if not user_data.empty:
         st.markdown("### Verlauf der Blutzuckerwerte")
-        chart_data = user_data_filtered.set_index("datum_zeit")[["blutzuckerwert"]]
+        chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
         st.line_chart(chart_data)
     else:
         st.warning("Noch keine Werte vorhanden.")
