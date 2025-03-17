@@ -5,7 +5,7 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# ✅ MUSS erstes Kommando bleiben!
+# ✅ MUSS als erstes Kommando bleiben!
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
@@ -33,9 +33,14 @@ with col4:
         st.session_state.seite = "Blutzucker-Grafik"
 
 # 📌 Nutzername holen
-username = st.session_state.get("username", "Gast")
+username = st.session_state.get("username", None)
 
-# 📌 Daten laden
+# ❗ Falls kein Benutzer eingeloggt ist, Abbruch
+if not username:
+    st.warning("⚠️ Kein Benutzer eingeloggt! Bitte zuerst anmelden.")
+    st.stop()
+
+# 📌 Daten laden (damit alle Funktionen dieselben Daten nutzen)
 if "user_data" not in st.session_state:
     st.session_state.user_data = data_manager.load_user_data(
         session_state_key="user_data",
@@ -83,13 +88,16 @@ def blutzucker_tracker():
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
         new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
         st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
-        data_manager.save_data("user_data")
+
+        # ✅ Korrekte Speicherung
+        data_manager.save_user_data("user_data", "data.csv", st.session_state.user_data)
+        
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data.drop(columns=["username"]).reset_index(drop=True))
+        st.table(user_data.reset_index(drop=True))
         durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
@@ -101,7 +109,7 @@ def blutzucker_werte():
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data.drop(columns=["username"]).reset_index(drop=True))
+        st.table(user_data.reset_index(drop=True))
     else:
         st.warning("Noch keine Werte gespeichert.")
 
@@ -116,7 +124,7 @@ def blutzucker_grafik():
     else:
         st.warning("Noch keine Werte vorhanden.")
 
-# 🔄 Seitenwechsel (DEINE VERSION!)
+# 🔄 Seitenwechsel
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
