@@ -111,7 +111,7 @@ def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
     if not user_data.empty:
-        st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
+        st.markdown("###  Gespeicherte Blutzuckerwerte")
         st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
     else:
         st.warning("Noch keine Werte gespeichert.")
@@ -121,7 +121,7 @@ def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
     if not user_data.empty:
-        st.markdown("### 📈 Verlauf der Blutzuckerwerte")
+        st.markdown("###  Verlauf der Blutzuckerwerte")
         chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
         st.line_chart(chart_data)
     else:
