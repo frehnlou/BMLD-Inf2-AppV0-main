@@ -47,3 +47,50 @@ class DataManager:
     def _get_data_handler(self):
         """ Erstellt und gibt einen Daten-Handler zurück. """
         return DataHandler(self.fs, self.fs_root_folder)
+
+    def load_user_data(self, session_state_key, file_name, initial_value=None, parse_dates=None):
+        """
+        Lädt die Benutzerdaten aus einer Datei oder erstellt eine neue Datei, falls sie nicht existiert.
+        
+        Args:
+            session_state_key (str): Der Key im Streamlit Session-State für die Daten.
+            file_name (str): Der Name der Datei, die geladen wird.
+            initial_value (pd.DataFrame, optional): Der Standardwert, falls die Datei nicht existiert.
+            parse_dates (list, optional): Spaltennamen, die als Datetime geparst werden sollen.
+
+        Returns:
+            pd.DataFrame: Die geladenen Benutzerdaten.
+        """
+        dh = self._get_data_handler()
+        
+        # Prüfe, ob die Datei existiert
+        if not dh.exists(file_name):
+            # Falls nicht, speichere initiale leere Daten
+            df = initial_value if initial_value is not None else pd.DataFrame()
+            dh.save(file_name, df)
+            return df
+        
+        # Lade die Datei
+        df = dh.load(file_name, initial_value=initial_value)
+        
+        # Falls `parse_dates` definiert ist, konvertiere Spalten zu Datetime
+        if parse_dates:
+            for col in parse_dates:
+                if col in df.columns:
+                    df[col] = pd.to_datetime(df[col])
+        
+        return df
+
+    def save_user_data(self, session_state_key, file_name):
+        """
+        Speichert die Benutzerdaten aus dem Session-State in die Datei.
+        
+        Args:
+            session_state_key (str): Der Key im Streamlit Session-State für die Daten.
+            file_name (str): Der Name der Datei, in die die Daten gespeichert werden.
+        """
+        if session_state_key in st.session_state:
+            df = st.session_state[session_state_key]
+            dh = self._get_data_handler()
+            dh.save(file_name, df)
+            st.success("✅ Daten erfolgreich gespeichert!")
