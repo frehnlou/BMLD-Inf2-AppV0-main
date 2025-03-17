@@ -68,7 +68,7 @@ def startseite():
     Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
     """)
 
-# 🔥 Blutzucker-Tracker (GENAU SO GELASSEN)
+# 🔥 Blutzucker-Tracker (GENAU SO GELASSEN, aber Tabelle verbessert)
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -89,19 +89,19 @@ def blutzucker_tracker():
         st.success("✅ Eintrag wurde gespeichert.")
         st.rerun()
 
-    # 📌 Daten filtern NUR für den aktuellen Benutzer (Icons entfernt)
+    # 📌 Daten filtern NUR für den aktuellen Benutzer
     user_data_filtered = user_data[user_data["username"] == username]
 
     if not user_data_filtered.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+        st.dataframe(user_data_filtered.style.set_properties(**{'text-align': 'left'}))
 
         durchschnitt = user_data_filtered["blutzuckerwert"].mean()
-        st.markdown(f"**Durchschnittlicher Wert:** `{durchschnitt:.2f} mg/dL`")
+        st.markdown(f"<span style='background-color:#d4edda; color:#155724; padding:5px; border-radius:5px;'>Durchschnittlicher Wert: {durchschnitt:.2f} mg/dL</span>", unsafe_allow_html=True)
     else:
         st.warning("Noch keine Daten vorhanden.")
 
-# 🔥 Blutzucker-Werte (Icons entfernt)
+# 🔥 Blutzucker-Werte (Tabelle verbessert)
 def blutzucker_werte():
     st.markdown("## Blutzucker-Werte")
 
@@ -109,11 +109,11 @@ def blutzucker_werte():
 
     if not user_data_filtered.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+        st.dataframe(user_data_filtered.style.set_properties(**{'text-align': 'left'}))
     else:
         st.warning("Noch keine Werte gespeichert.")
 
-# 🔥 Blutzucker-Grafik (Icons entfernt)
+# 🔥 Blutzucker-Grafik (Keine Änderung nötig)
 def blutzucker_grafik():
     st.markdown("## Blutzucker-Grafik")
 
