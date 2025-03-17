@@ -32,18 +32,18 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
-# 📌 Nutzername holen (GENAU SO GELASSEN WIE GEWÜNSCHT)
+# 📌 Nutzername holen 
 username = st.session_state.get("username", "Gast")
 
 # 📌 Daten laden
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
     file_name="data.csv",
-    initial_value=pd.DataFrame(columns=["username", "datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+    initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
     parse_dates=["datum_zeit"]
 )
 
-# 🔥 Startseite (Aktualisiert)
+# 🔥 Startseite 
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
@@ -68,7 +68,7 @@ def startseite():
     Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
     """)
 
-# 🔥 Blutzucker-Tracker (GENAU SO GELASSEN, aber Tabelle verbessert)
+# 🔥 Blutzucker-Tracker 
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -80,7 +80,6 @@ def blutzucker_tracker():
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")
         result = {
-            "username": username,
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt,
             "datum_zeit": datum_zeit
@@ -90,13 +89,11 @@ def blutzucker_tracker():
         st.rerun()
 
     # 📌 Daten filtern NUR für den aktuellen Benutzer
-    user_data_filtered = user_data[user_data["username"] == username]
-
-    if not user_data_filtered.empty:
+    if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.dataframe(user_data_filtered.style.set_properties(**{'text-align': 'left'}))
+        st.dataframe(user_data.style.set_properties(**{'text-align': 'left'}))
 
-        durchschnitt = user_data_filtered["blutzuckerwert"].mean()
+        durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"<span style='background-color:#d4edda; color:#155724; padding:5px; border-radius:5px;'>Durchschnittlicher Wert: {durchschnitt:.2f} mg/dL</span>", unsafe_allow_html=True)
     else:
         st.warning("Noch keine Daten vorhanden.")
@@ -105,11 +102,9 @@ def blutzucker_tracker():
 def blutzucker_werte():
     st.markdown("## Blutzucker-Werte")
 
-    user_data_filtered = user_data[user_data["username"] == username]
-
-    if not user_data_filtered.empty:
+    if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.dataframe(user_data_filtered.style.set_properties(**{'text-align': 'left'}))
+        st.dataframe(user_data.style.set_properties(**{'text-align': 'left'}))
     else:
         st.warning("Noch keine Werte gespeichert.")
 
@@ -117,16 +112,14 @@ def blutzucker_werte():
 def blutzucker_grafik():
     st.markdown("## Blutzucker-Grafik")
 
-    user_data_filtered = user_data[user_data["username"] == username]
-
-    if not user_data_filtered.empty:
+    if not user_data.empty:
         st.markdown("### Verlauf der Blutzuckerwerte")
-        chart_data = user_data_filtered.set_index("datum_zeit")[["blutzuckerwert"]]
+        chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
         st.line_chart(chart_data)
     else:
         st.warning("Noch keine Werte vorhanden.")
 
-# 🔄 Seitenwechsel OHNE `st.switch_page()` (GENAU SO GELASSEN)
+# 🔄 Seitenwechsel OHNE `st.switch_page()` 
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
@@ -138,3 +131,4 @@ elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
     blutzucker_grafik()
+
