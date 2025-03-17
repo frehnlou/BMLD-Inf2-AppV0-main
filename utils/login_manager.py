@@ -46,26 +46,30 @@ class LoginManager:
 
     def login_register(self):
         """
-        Zeigt die Login- und Registrierungsoberfläche an.
+        Zeigt die Login- und Registrierungsoberfläche **im Hauptfenster** an.
         """
+        st.markdown("## 🔐 Anmeldung")
+
         if "authentication_status" not in st.session_state:
             st.session_state["authentication_status"] = None
 
         if st.session_state["authentication_status"]:
-            st.sidebar.success(f"✅ Eingeloggt als {st.session_state.username}")
-            if st.sidebar.button("Logout"):
+            st.success(f"✅ Eingeloggt als {st.session_state.username}")
+            if st.button("Logout"):
                 self.authenticator.logout()
                 st.session_state["authentication_status"] = None
                 st.experimental_rerun()
         else:
-            with st.sidebar:
-                st.subheader("🔐 Anmeldung")
+            st.markdown("### Bitte melden Sie sich an")
+            user = st.text_input("Benutzername", key="username_input")
+            passwd = st.text_input("Passwort", type="password", key="password_input")
+            
+            if st.button("Login"):
                 self.authenticator.login()
                 
                 if st.session_state["authentication_status"] is False:
                     st.error("❌ Benutzername oder Passwort falsch!")
-                
-                if st.session_state["authentication_status"] is None:
+                elif st.session_state["authentication_status"] is None:
                     st.warning("⚠️ Bitte anmelden.")
 
     def go_to_login(self, login_page_py_file):
