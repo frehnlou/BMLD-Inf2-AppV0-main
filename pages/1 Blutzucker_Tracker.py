@@ -5,7 +5,7 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# ✅ MUSS erstes Kommando bleiben!
+# MUSS erstes Kommando bleiben!
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
@@ -33,14 +33,9 @@ with col4:
         st.session_state.seite = "Blutzucker-Grafik"
 
 # 📌 Nutzername holen
-username = st.session_state.get("username", None)
+username = st.session_state.get("username", "Gast")
 
-# ❗ Falls kein Benutzer eingeloggt ist, Abbruch
-if not username:
-    st.warning("⚠️ Kein Benutzer eingeloggt! Bitte zuerst anmelden.")
-    st.stop()
-
-# 📌 Daten laden (damit alle Funktionen dieselben Daten nutzen)
+# 📌 Benutzerdaten laden oder initialisieren
 if "user_data" not in st.session_state:
     st.session_state.user_data = data_manager.load_user_data(
         session_state_key="user_data",
@@ -54,7 +49,7 @@ user_data = st.session_state.user_data
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
-    Liebe Diabetikerinnen und Diabetiker!🩸
+    Liebe Diabetikerinnen und Diabetiker! 🩸
 
     Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
 
@@ -66,11 +61,9 @@ def startseite():
 
     Warum diese App?
              
-    ✔ Kein lästiges Papier-Tagebuch mehr
-
-    ✔ Verfolge deine Werte langfristig & erkenne Muster
-
-    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
+    ✔ Kein lästiges Papier-Tagebuch mehr  
+    ✔ Verfolge deine Werte langfristig & erkenne Muster  
+    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes  
 
     Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
     """)
@@ -86,19 +79,20 @@ def blutzucker_tracker():
 
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
-        new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
+        new_entry = pd.DataFrame([{
+            "datum_zeit": datum_zeit,
+            "blutzuckerwert": blutzuckerwert,
+            "zeitpunkt": zeitpunkt
+        }])
         st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
-
-        # ✅ Korrekte Speicherung mit `save_data()`
-        data_manager.save_data("user_data")
-        
+        data_manager.save_user_data("user_data", "data.csv", st.session_state.user_data)
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
 
-    if not user_data.empty:
+    if not st.session_state.user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data.reset_index(drop=True))
-        durchschnitt = user_data["blutzuckerwert"].mean()
+        st.table(st.session_state.user_data.reset_index(drop=True))
+        durchschnitt = st.session_state.user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
         st.warning("Noch keine Daten vorhanden.")
@@ -107,9 +101,9 @@ def blutzucker_tracker():
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
-    if not user_data.empty:
+    if not st.session_state.user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data.reset_index(drop=True))
+        st.table(st.session_state.user_data.reset_index(drop=True))
     else:
         st.warning("Noch keine Werte gespeichert.")
 
@@ -117,9 +111,11 @@ def blutzucker_werte():
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
-    if not user_data.empty:
+    if not st.session_state.user_data.empty:
         st.markdown("### Verlauf der Blutzuckerwerte")
-        chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
+        chart_data = st.session_state.user_data.copy()
+        chart_data["datum_zeit"] = pd.to_datetime(chart_data["datum_zeit"], dayfirst=True)
+        chart_data = chart_data.set_index("datum_zeit")[["blutzuckerwert"]]
         st.line_chart(chart_data)
     else:
         st.warning("Noch keine Werte vorhanden.")
