@@ -43,7 +43,9 @@ if "user_data" not in st.session_state:
         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
         parse_dates=["datum_zeit"]
     )
-user_data = st.session_state.user_data
+
+# Sicherstellen, dass `user_data` existiert
+user_data = st.session_state.get("user_data", pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]))
 
 # 🔥 Startseite
 def startseite():
@@ -82,10 +84,15 @@ def blutzucker_tracker():
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
         new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
-        st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
-        data_manager.save_data("user_data")
-        st.success("✅ Eintrag hinzugefügt!")
-        st.rerun()
+        st.session_state.user_data = pd.concat([user_data, new_entry], ignore_index=True)
+
+        # ✅ Speichern in der Datenbank
+        try:
+            data_manager.save_user_data("user_data", "data.csv", st.session_state.user_data)
+            st.success("✅ Eintrag hinzugefügt!")
+            st.rerun()
+        except Exception as e:
+            st.error(f"❌ Fehler beim Speichern der Daten: {str(e)}")
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
@@ -102,9 +109,14 @@ def blutzucker_tracker():
 
         if delete_button:
             st.session_state.user_data = user_data.drop(user_data.index[index_to_delete]).reset_index(drop=True)
-            data_manager.save_data("user_data")
-            st.success("✅ Eintrag erfolgreich gelöscht.")
-            st.rerun()
+
+            # ✅ Speichern nach dem Löschen
+            try:
+                data_manager.save_user_data("user_data", "data.csv", st.session_state.user_data)
+                st.success("✅ Eintrag erfolgreich gelöscht.")
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ Fehler beim Speichern der Daten nach dem Löschen: {str(e)}")
     else:
         st.warning("⚠️ Noch keine Daten vorhanden.")
 
