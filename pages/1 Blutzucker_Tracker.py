@@ -73,11 +73,11 @@ def blutzucker_tracker():
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
 
-    user_data_filtered = user_data[user_data["username"] == username]
+    user_data_filtered = user_data[user_data["username"] == username].drop(columns=["username"], errors='ignore')
 
     if not user_data_filtered.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+        st.table(user_data_filtered.reset_index(drop=True))
 
         durchschnitt = user_data_filtered["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
@@ -88,7 +88,7 @@ def blutzucker_tracker():
             delete_button = st.form_submit_button(label='Eintrag löschen')
 
         if delete_button:
-            user_data_filtered = user_data_filtered.drop(user_data_filtered.index[index_to_delete])
+            user_data_filtered = user_data_filtered.drop(user_data_filtered.index[index_to_delete]).reset_index(drop=True)
             data_manager.save_user_data("user_data", "data.csv", user_data_filtered)
             st.success("Eintrag erfolgreich gelöscht.")
             st.rerun()
@@ -99,11 +99,11 @@ def blutzucker_tracker():
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
-    user_data_filtered = user_data[user_data["username"] == username]
+    user_data_filtered = user_data[user_data["username"] == username].drop(columns=["username"], errors='ignore')
 
     if not user_data_filtered.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+        st.table(user_data_filtered.reset_index(drop=True))
     else:
         st.warning("Noch keine Werte gespeichert.")
 
@@ -111,7 +111,7 @@ def blutzucker_werte():
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
-    user_data_filtered = user_data[user_data["username"] == username]
+    user_data_filtered = user_data[user_data["username"] == username].drop(columns=["username"], errors='ignore')
 
     if not user_data_filtered.empty:
         st.markdown("### Verlauf der Blutzuckerwerte")
