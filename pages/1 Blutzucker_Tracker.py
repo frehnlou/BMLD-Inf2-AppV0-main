@@ -5,7 +5,7 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# MUSS erstes Kommando bleiben!
+# ✅ MUSS als erstes stehen
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
@@ -13,7 +13,7 @@ data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App"
 login_manager = LoginManager(data_manager)
 login_manager.go_to_login('Start.py')
 
-# Navigation
+# 🔹 Navigation
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -35,7 +35,7 @@ with col4:
 # 📌 Nutzername holen
 username = st.session_state.get("username", "Gast")
 
-# 📌 Daten laden (damit alle Funktionen dieselben Daten nutzen)
+# 📌 Daten laden
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
     file_name="data.csv",
@@ -47,25 +47,17 @@ user_data = data_manager.load_user_data(
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
-    Liebe Diabetikerinnen und Diabetiker!🩸
+    Liebe Diabetikerinnen und Diabetiker! 🩸
 
-    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
+    Mit diesem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!  
+    """)
 
-    - Was bringt dir die App?
-    - Schnelle Eingabe deines Blutzuckers (mg/dL)
-    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
-    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
-    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
-
-    Warum diese App?
-             
-    ✔ Kein lästiges Papier-Tagebuch mehr
-
-    ✔ Verfolge deine Werte langfristig & erkenne Muster
-
-    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
-
-    Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
+    st.markdown("""
+    **✅ Funktionen:**  
+    - ✏️ **Eingabe deiner Blutzuckerwerte (mg/dL)**  
+    - ⏰ **Messzeitpunkt wählen:** (Nüchtern oder nach dem Essen)  
+    - 📋 **Übersichtliche Tabelle mit all deinen Werten**  
+    - 📊 **Grafische Auswertung zur besseren Analyse**  
     """)
 
 # 🔥 Blutzucker-Tracker
@@ -78,7 +70,7 @@ def blutzucker_tracker():
         submit_button = st.form_submit_button(label='Eintrag hinzufügen')
 
     if submit_button:
-        datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
+        datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")
         result = {
             "username": username,
             "blutzuckerwert": blutzuckerwert,
@@ -138,4 +130,3 @@ elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
     blutzucker_grafik()
-
