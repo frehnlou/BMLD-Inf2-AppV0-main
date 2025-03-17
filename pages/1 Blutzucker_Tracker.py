@@ -32,10 +32,10 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
-# 📌 Nutzername holen
+#Nutzername holen
 username = st.session_state.get("username", "Gast")
 
-# 📌 Daten laden
+#Daten laden
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
     file_name="data.csv",
@@ -43,7 +43,7 @@ user_data = data_manager.load_user_data(
     parse_dates=["datum_zeit"]
 )
 
-# 🔥 Startseite
+#Startseite
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
@@ -68,8 +68,10 @@ def startseite():
     Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
     """)
 
-# 🔥 Blutzucker-Tracker
+# Blutzucker-Tracker
 def blutzucker_tracker():
+    global user_data
+
     st.markdown("## 🩸 Blutzucker-Tracker")
 
     with st.form(key='blutzucker_form'):
@@ -88,7 +90,7 @@ def blutzucker_tracker():
         st.success("✅ Eintrag wurde gespeichert.")
         st.rerun()
 
-    # 📌 Daten filtern & anzeigen
+    #  Daten filtern & anzeigen
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
         st.dataframe(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
@@ -98,8 +100,8 @@ def blutzucker_tracker():
     else:
         st.warning("Noch keine Daten vorhanden.")
     
-    # 🗑️ Löschoption für Einträge
-    st.markdown("### 🗑️ Eintrag löschen")
+    # Löschoption für Einträge
+    st.markdown("### Eintrag löschen")
     with st.form(key='delete_form'):
         index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(user_data)-1 if not user_data.empty else 0, step=1)
         delete_button = st.form_submit_button(label='Eintrag löschen')
@@ -107,31 +109,10 @@ def blutzucker_tracker():
     if delete_button and not user_data.empty:
         user_data = user_data.drop(index=index_to_delete).reset_index(drop=True)
         data_manager.save_data("user_data")
-        st.success("Eintrag erfolgreich gelöscht.")
+        st.success("🗑️ Eintrag erfolgreich gelöscht.")
         st.rerun()
 
-# 🔥 Blutzucker-Werte
-def blutzucker_werte():
-    st.markdown("## 📋 Blutzucker-Werte")
-
-    if not user_data.empty:
-        st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.dataframe(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
-    else:
-        st.warning("Noch keine Werte gespeichert.")
-
-# 🔥 Blutzucker-Grafik
-def blutzucker_grafik():
-    st.markdown("## 📊 Blutzucker-Grafik")
-
-    if not user_data.empty:
-        st.markdown("### Verlauf der Blutzuckerwerte")
-        chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
-        st.line_chart(chart_data)
-    else:
-        st.warning("Noch keine Werte vorhanden.")
-
-# 🔄 Seitenwechsel OHNE `st.switch_page()`
+# Seitenwechsel OHNE `st.switch_page()`
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
@@ -139,7 +120,3 @@ if st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
 elif st.session_state.seite == "Startseite":
     startseite()
-elif st.session_state.seite == "Blutzucker-Werte":
-    blutzucker_werte()
-elif st.session_state.seite == "Blutzucker-Grafik":
-    blutzucker_grafik()
