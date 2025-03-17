@@ -86,7 +86,7 @@ class DataManager:
             raise ValueError("Kein Benutzer angemeldet!")
 
         user_folder = f"user_data_{username}"
-        dh = self._get_data_handler(user_folder=user_folder)
+        dh = self._get_data_handler(subfolder=user_folder)
 
         if not dh.exists(file_name):
             dh.save(file_name, initial_value)
