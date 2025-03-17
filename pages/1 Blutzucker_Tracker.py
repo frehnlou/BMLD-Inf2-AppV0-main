@@ -45,14 +45,27 @@ user_data = data_manager.load_user_data(
 
 # 🔥 Startseite
 def startseite():
-    st.markdown("## 🏡 Willkommen auf der Startseite!")  # Überschrift
+    st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
-    Diese App hilft Ihnen, Ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren.
-    
-    **Funktionen:**
-    - 🩸 **Blutzucker-Tracker**: Eingabe und Speicherung Ihrer Werte  
-    - 📋 **Blutzucker-Werte**: Übersicht über gespeicherte Daten  
-    - 📊 **Blutzucker-Grafik**: Grafische Darstellung der Werte  
+    Liebe Diabetikerinnen und Diabetiker!🩸
+
+    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
+
+    - Was bringt dir die App?
+    - Schnelle Eingabe deines Blutzuckers (mg/dL)
+    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
+    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
+    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
+
+    Warum diese App?
+             
+    ✔ Kein lästiges Papier-Tagebuch mehr
+
+    ✔ Verfolge deine Werte langfristig & erkenne Muster
+
+    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
+
+    Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
     """)
 
 # 🔥 Blutzucker-Tracker
@@ -95,6 +108,7 @@ def blutzucker_werte():
     user_data_filtered = user_data[user_data["username"] == username]
 
     if not user_data_filtered.empty:
+        st.markdown("### 📄 Gespeicherte Blutzuckerwerte")
         st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
     else:
         st.warning("⚠️ Noch keine Werte gespeichert.")
