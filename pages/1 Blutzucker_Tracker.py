@@ -13,7 +13,7 @@ data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App"
 login_manager = LoginManager(data_manager)
 login_manager.go_to_login('Start.py')
 
-# 🔹 Navigation
+# 🔹 Navigation (GENAU SO GELASSEN WIE GEWÜNSCHT)
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -32,7 +32,7 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
-# 📌 Nutzername holen
+# 📌 Nutzername holen (GENAU SO GELASSEN WIE GEWÜNSCHT)
 username = st.session_state.get("username", "Gast")
 
 # 📌 Daten laden
@@ -43,24 +43,32 @@ user_data = data_manager.load_user_data(
     parse_dates=["datum_zeit"]
 )
 
-# 🔥 Startseite
+# 🔥 Startseite (Aktualisiert)
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
     Liebe Diabetikerinnen und Diabetiker! 🩸
 
-    Mit diesem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!  
+    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
+
+    - Was bringt dir die App?
+    - Schnelle Eingabe deines Blutzuckers (mg/dL)
+    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
+    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
+    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
+
+    Warum diese App?
+             
+    ✔ Kein lästiges Papier-Tagebuch mehr
+
+    ✔ Verfolge deine Werte langfristig & erkenne Muster
+
+    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
+
+    Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
     """)
 
-    st.markdown("""
-    **✅ Funktionen:**  
-    - ✏️ **Eingabe deiner Blutzuckerwerte (mg/dL)**  
-    - ⏰ **Messzeitpunkt wählen:** (Nüchtern oder nach dem Essen)  
-    - 📋 **Übersichtliche Tabelle mit all deinen Werten**  
-    - 📊 **Grafische Auswertung zur besseren Analyse**  
-    """)
-
-# 🔥 Blutzucker-Tracker
+# 🔥 Blutzucker-Tracker (GENAU SO GELASSEN)
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -78,47 +86,47 @@ def blutzucker_tracker():
             "datum_zeit": datum_zeit
         }
         data_manager.append_record("data.csv", result)
-        st.success("✅ Eintrag hinzugefügt!")
+        st.success("✅ Eintrag wurde gespeichert.")
         st.rerun()
 
-    # 📌 Daten filtern NUR für den aktuellen Benutzer
+    # 📌 Daten filtern NUR für den aktuellen Benutzer (Icons entfernt)
     user_data_filtered = user_data[user_data["username"] == username]
 
     if not user_data_filtered.empty:
-        st.markdown("### 🔢 Gespeicherte Blutzuckerwerte")
+        st.markdown("### Gespeicherte Blutzuckerwerte")
         st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
 
         durchschnitt = user_data_filtered["blutzuckerwert"].mean()
-        st.markdown(f"📊 **Durchschnittlicher Wert:** `{durchschnitt:.2f} mg/dL`")
+        st.markdown(f"**Durchschnittlicher Wert:** `{durchschnitt:.2f} mg/dL`")
     else:
-        st.warning("⚠️ Noch keine Daten vorhanden.")
+        st.warning("Noch keine Daten vorhanden.")
 
-# 🔥 Blutzucker-Werte
+# 🔥 Blutzucker-Werte (Icons entfernt)
 def blutzucker_werte():
-    st.markdown("## 📋 Blutzucker-Werte")
+    st.markdown("## Blutzucker-Werte")
 
     user_data_filtered = user_data[user_data["username"] == username]
 
     if not user_data_filtered.empty:
-        st.markdown("### 📄 Gespeicherte Blutzuckerwerte")
+        st.markdown("### Gespeicherte Blutzuckerwerte")
         st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
     else:
-        st.warning("⚠️ Noch keine Werte gespeichert.")
+        st.warning("Noch keine Werte gespeichert.")
 
-# 🔥 Blutzucker-Grafik
+# 🔥 Blutzucker-Grafik (Icons entfernt)
 def blutzucker_grafik():
-    st.markdown("## 📊 Blutzucker-Grafik")
+    st.markdown("## Blutzucker-Grafik")
 
     user_data_filtered = user_data[user_data["username"] == username]
 
     if not user_data_filtered.empty:
-        st.markdown("### 📈 Verlauf der Blutzuckerwerte")
+        st.markdown("### Verlauf der Blutzuckerwerte")
         chart_data = user_data_filtered.set_index("datum_zeit")[["blutzuckerwert"]]
         st.line_chart(chart_data)
     else:
-        st.warning("⚠️ Noch keine Werte vorhanden.")
+        st.warning("Noch keine Werte vorhanden.")
 
-# 🔄 Seitenwechsel OHNE `st.switch_page()`
+# 🔄 Seitenwechsel OHNE `st.switch_page()` (GENAU SO GELASSEN)
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
