@@ -5,7 +5,7 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# ✅ MUSS erstes Kommando bleiben!
+# MUSS erstes Kommando bleiben!
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
@@ -43,9 +43,7 @@ if "user_data" not in st.session_state:
         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
         parse_dates=["datum_zeit"]
     )
-
-# Sicherstellen, dass `user_data` existiert
-user_data = st.session_state.get("user_data", pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]))
+user_data = st.session_state.user_data
 
 # 🔥 Startseite
 def startseite():
@@ -84,24 +82,18 @@ def blutzucker_tracker():
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
         new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
-        st.session_state.user_data = pd.concat([user_data, new_entry], ignore_index=True)
-
-        # ✅ Speichern in der Datenbank
-        try:
-            data_manager.save_user_data("user_data", "data.csv", st.session_state.user_data)
-            st.success("✅ Eintrag hinzugefügt!")
-            st.rerun()
-        except Exception as e:
-            st.error(f"❌ Fehler beim Speichern der Daten: {str(e)}")
+        st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
+        data_manager.save_data("user_data")
+        st.success("✅ Eintrag hinzugefügt!")
+        st.rerun()
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]].reset_index(drop=True))
+        st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
 
         durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
 
-        # 🔥 Eintrag löschen
         st.markdown("### Eintrag löschen")
         with st.form(key='delete_form'):
             index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(user_data)-1, step=1)
@@ -109,22 +101,17 @@ def blutzucker_tracker():
 
         if delete_button:
             st.session_state.user_data = user_data.drop(user_data.index[index_to_delete]).reset_index(drop=True)
-
-            # ✅ Speichern nach dem Löschen
-            try:
-                data_manager.save_user_data("user_data", "data.csv", st.session_state.user_data)
-                st.success("✅ Eintrag erfolgreich gelöscht.")
-                st.rerun()
-            except Exception as e:
-                st.error(f"❌ Fehler beim Speichern der Daten nach dem Löschen: {str(e)}")
+            data_manager.save_data("user_data")
+            st.success("Eintrag erfolgreich gelöscht.")
+            st.rerun()
     else:
-        st.warning("⚠️ Noch keine Daten vorhanden.")
+        st.warning("Noch keine Daten vorhanden.")
 
 # 🔄 Seitenwechsel
 def seitenwechsel():
     if "seite" not in st.session_state:
         st.session_state.seite = "Startseite"
-    
+
     if st.session_state.seite == "Blutzucker-Tracker":
         blutzucker_tracker()
     elif st.session_state.seite == "Startseite":
@@ -132,3 +119,4 @@ def seitenwechsel():
 
 # 🔄 Starte die App
 seitenwechsel()
+
