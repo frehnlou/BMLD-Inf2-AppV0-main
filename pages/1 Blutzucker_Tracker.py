@@ -5,7 +5,7 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# MUSS erstes Kommando bleiben!
+# ✅ MUSS erstes Kommando bleiben!
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
@@ -89,10 +89,12 @@ def blutzucker_tracker():
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data.drop(columns=["username"]).reset_index(drop=True))
+        st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]].reset_index(drop=True))
+
         durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
 
+        # 🔥 Eintrag löschen
         st.markdown("### Eintrag löschen")
         with st.form(key='delete_form'):
             index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(user_data)-1, step=1)
@@ -101,20 +103,20 @@ def blutzucker_tracker():
         if delete_button:
             st.session_state.user_data = user_data.drop(user_data.index[index_to_delete]).reset_index(drop=True)
             data_manager.save_data("user_data")
-            st.success("Eintrag erfolgreich gelöscht.")
+            st.success("✅ Eintrag erfolgreich gelöscht.")
             st.rerun()
     else:
-        st.warning("Noch keine Daten vorhanden.")
+        st.warning("⚠️ Noch keine Daten vorhanden.")
 
-# 🔄 Seitenwechsel OHNE `st.switch_page()`
-if "seite" not in st.session_state:
-    st.session_state.seite = "Startseite"
+# 🔄 Seitenwechsel
+def seitenwechsel():
+    if "seite" not in st.session_state:
+        st.session_state.seite = "Startseite"
+    
+    if st.session_state.seite == "Blutzucker-Tracker":
+        blutzucker_tracker()
+    elif st.session_state.seite == "Startseite":
+        startseite()
 
-if st.session_state.seite == "Blutzucker-Tracker":
-    blutzucker_tracker()
-elif st.session_state.seite == "Startseite":
-    startseite()
-elif st.session_state.seite == "Blutzucker-Werte":
-    blutzucker_werte()
-elif st.session_state.seite == "Blutzucker-Grafik":
-    blutzucker_grafik()
+# 🔄 Starte die App
+seitenwechsel()
