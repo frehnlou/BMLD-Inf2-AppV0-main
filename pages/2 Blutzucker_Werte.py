@@ -28,12 +28,17 @@ def blutzucker_werte():
     )
 
     if not user_data.empty:
-        st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+        st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
 
-        # Durchschnitt berechnen
-        durchschnitt = user_data["blutzuckerwert"].mean()
-        st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
+        # 🔥 Sicherstellen, dass die Spalten existieren
+        if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert", "zeitpunkt"]):
+            st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+            
+            # ✅ Durchschnitt berechnen
+            durchschnitt = user_data["blutzuckerwert"].mean()
+            st.markdown(f"**📊 Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
+        else:
+            st.warning("⚠️ Datenformat fehlerhaft oder Spalten fehlen!")
     else:
         st.warning("Noch keine Daten vorhanden.")
 

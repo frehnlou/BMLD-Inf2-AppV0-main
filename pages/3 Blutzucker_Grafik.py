@@ -28,12 +28,23 @@ user_data = data_manager.load_user_data(
 )
 
 if not user_data.empty:
-    st.markdown("### Verlauf der Blutzuckerwerte")
-    
-    # Werte extrahieren
-    blutzuckerwerte = user_data[["datum_zeit", "blutzuckerwert"]].set_index("datum_zeit")
-    
-    # 🔥 Grafische Darstellung
-    st.line_chart(blutzuckerwerte)
+    st.markdown("### 📈 Verlauf der Blutzuckerwerte")
+
+    # 🔥 Sicherstellen, dass die benötigten Spalten existieren
+    if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert"]):
+        try:
+            # Werte extrahieren
+            blutzuckerwerte = user_data[["datum_zeit", "blutzuckerwert"]].set_index("datum_zeit")
+
+            # Überprüfung: Mindestens zwei Datenpunkte nötig für eine Linie
+            if len(blutzuckerwerte) > 1:
+                st.line_chart(blutzuckerwerte)
+            else:
+                st.warning("⚠️ Mindestens zwei Werte erforderlich, um eine Grafik darzustellen.")
+        except Exception as e:
+            st.error(f"⚠️ Fehler bei der Grafikerstellung: {e}")
+    else:
+        st.warning("⚠️ Datenformat fehlerhaft oder Spalten fehlen!")
 else:
     st.warning("Noch keine Daten vorhanden.")
+

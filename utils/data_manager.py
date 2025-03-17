@@ -25,14 +25,14 @@ class DataManager:
             return  # Verhindert erneutes Initialisieren
 
         self.fs_root_folder = fs_root_folder
+        self.fs_protocol = fs_protocol
         self.fs = self._init_filesystem(fs_protocol)
         self.app_data_reg = {}
         self.user_data_reg = {}
 
         self._initialized = True  # Markiere als initialisiert
 
-    @staticmethod
-    def _init_filesystem(protocol: str):
+    def _init_filesystem(self, protocol: str):
         """ Erstellt ein Dateisystem (lokal oder WebDAV). """
         if protocol == 'webdav':
             secrets = st.secrets['webdav']
@@ -65,15 +65,19 @@ class DataManager:
             st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
             return pd.DataFrame()
 
-        file_name = f"{username}_data.csv"  # 🔥 Benutzer bekommt eigene Datei!
+        file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")  # 🔥 Speichert in WebDAV
         dh = self._get_data_handler()
         
-        # Prüfe, ob die Datei existiert
-        if not dh.exists(file_name):
-            df = initial_value if initial_value is not None else pd.DataFrame()
-            dh.save(file_name, df)
-            return df
-        
+        # Prüfe, ob die Datei existiert (Fehlerbehandlung für WebDAV)
+        try:
+            if not self.fs.exists(file_name):
+                df = initial_value if initial_value is not None else pd.DataFrame()
+                dh.save(file_name, df)
+                return df
+        except Exception as e:
+            st.error(f"⚠️ Fehler beim Zugriff auf WebDAV: {e}")
+            return pd.DataFrame()
+
         # Lade die Datei
         df = dh.load(file_name, initial_value=initial_value)
         
@@ -97,10 +101,15 @@ class DataManager:
             st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
             return
 
-        file_name = f"{username}_data.csv"  # 🔥 Benutzer bekommt eigene Datei!
-        
+        file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")  # 🔥 Speichert in WebDAV
+
         if session_state_key in st.session_state:
             df = st.session_state[session_state_key]
             dh = self._get_data_handler()
-            dh.save(file_name, df)
-            st.success(f"✅ Daten für {username} erfolgreich gespeichert!")
+
+            # Speichern mit Fehlerbehandlung für WebDAV
+            try:
+                dh.save(file_name, df)
+                st.toast(f"✅ Daten für {username} erfolgreich gespeichert!", icon="💾")  # 🔥 Diskretere Meldung
+            except Exception as e:
+                st.error(f"⚠️ Fehler beim Speichern in WebDAV: {e}")
