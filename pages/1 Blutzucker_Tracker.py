@@ -5,16 +5,15 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# ✅ MUSS erstes Streamlit-Kommando bleiben!
+# MUSS erstes Kommando bleiben!
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
-# ====== Start Login Block ======
+# ====== Login-Check ======
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 login_manager = LoginManager(data_manager)
-login_manager.go_to_login('Start.py') 
-# ====== End Login Block ======
+login_manager.go_to_login('Start.py')
 
-# Navigation über vier Spalten
+# Navigation
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -33,32 +32,7 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
-# Nutzername holen
-username = st.session_state.get("username", "Gast")
-
-def startseite():
-    st.markdown("## 🏠 Willkommen auf der Startseite!")
-    st.write("""
-    Liebe Diabetikerinnen und Diabetiker!🩸
-
-    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
-
-    - Was bringt dir die App?
-    - Schnelle Eingabe deines Blutzuckers (mg/dL)
-    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
-    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
-    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
-
-    Warum diese App?
-             
-    ✔ Kein lästiges Papier-Tagebuch mehr
-
-    ✔ Verfolge deine Werte langfristig & erkenne Muster
-
-    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
-
-    Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
-    """)
+# Tracker-Funktion
 
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
@@ -89,9 +63,11 @@ def blutzucker_tracker():
         st.success("Eintrag hinzugefügt!")
         st.rerun()
 
-    if user_data is not None and not user_data.empty:
-        st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
-        durchschnitt = user_data["blutzuckerwert"].mean()
+    user_data_filtered = user_data[user_data["username"] == username]
+
+    if not user_data_filtered.empty:
+        st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+        durchschnitt = user_data_filtered["blutzuckerwert"].mean()
         st.write(f"Durchschnittlicher Wert: {durchschnitt:.2f} mg/dL")
     else:
         st.warning("Keine Daten vorhanden.")
@@ -100,13 +76,11 @@ def blutzucker_tracker():
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
-if st.session_state.seite == "Startseite":
-    startseite()
-elif st.session_state.seite == "Blutzucker-Tracker":
+if st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
+elif st.session_state.seite == "Startseite":
+    st.switch_page("Start.py")
 elif st.session_state.seite == "Blutzucker-Werte":
-    from Blutzucker_Werte import blutzucker_werte
-    blutzucker_werte()
+    st.switch_page("pages/2_Blutzucker_Werte.py")
 elif st.session_state.seite == "Blutzucker-Grafik":
-    from Blutzucker_Grafik import blutzucker_grafik
-    blutzucker_grafik()
+    st.switch_page("pages/3_Blutzucker_Grafik.py")
