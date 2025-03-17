@@ -13,36 +13,22 @@ data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App"
 login_manager = LoginManager(data_manager)
 login_manager.go_to_login('Start.py')
 
-# Navigation
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    if st.button("🏠 Startseite"):
-        st.session_state.seite = "Startseite"
-
-with col2:
-    if st.button("🩸 Blutzucker-Tracker"):
-        st.session_state.seite = "Blutzucker-Tracker"
-
-with col3:
-    if st.button("📋 Blutzucker-Werte"):
-        st.session_state.seite = "Blutzucker-Werte"
-
-with col4:
-    if st.button("📊 Blutzucker-Grafik"):
-        st.session_state.seite = "Blutzucker-Grafik"
-
 # 📌 Nutzername holen
-username = st.session_state.get("username", "Gast")
+username = st.session_state.get("username")
 
-# 📌 Daten laden
+if not username:
+    st.error("⚠️ Kein Benutzer eingeloggt! Anmeldung erforderlich.")
+    st.stop()
+
+# 📌 Benutzerspezifische Daten laden
 if "user_data" not in st.session_state:
     st.session_state.user_data = data_manager.load_user_data(
         session_state_key="user_data",
-        file_name="data.csv",
+        username=username,  # 🔥 Jeder Benutzer bekommt seine eigene Datei
         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
         parse_dates=["datum_zeit"]
     )
+
 user_data = st.session_state.user_data
 
 # 🔥 Startseite
@@ -84,8 +70,8 @@ def blutzucker_tracker():
         new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
         st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
 
-        # ✅ Korrektur: Richtige Methode zum Speichern
-        data_manager.save_user_data("user_data", "data.csv")
+        # ✅ Speichert die Werte nur für den aktuellen Benutzer
+        data_manager.save_user_data("user_data", username)
 
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
