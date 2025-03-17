@@ -5,7 +5,7 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# ✅ MUSS als erstes Streamlit-Kommando stehen!
+# ✅ MUSS erstes Kommando bleiben!
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
@@ -83,16 +83,19 @@ def blutzucker_tracker():
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
         new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
         st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
-        data_manager.save_data("user_data")
+
+        # ✅ Korrektur: Richtige Methode zum Speichern
+        data_manager.save_user_data("user_data", "data.csv")
+
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        # **Username-Spalte entfernen**
-        st.table(user_data.drop(columns=["username"], errors='ignore').reset_index(drop=True))
         
-        # Durchschnitt berechnen
+        # ✅ Entferne 'username' aus der Tabelle
+        st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
+
         durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
@@ -104,8 +107,7 @@ def blutzucker_werte():
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        # **Username-Spalte entfernen**
-        st.table(user_data.drop(columns=["username"], errors='ignore').reset_index(drop=True))
+        st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
     else:
         st.warning("Noch keine Werte gespeichert.")
 
@@ -120,7 +122,7 @@ def blutzucker_grafik():
     else:
         st.warning("Noch keine Werte vorhanden.")
 
-# 🔄 Seitenwechsel (DEINE VERSION!)
+# 🔄 Seitenwechsel
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
