@@ -25,8 +25,8 @@ class LoginManager:
             return
         
         if data_manager is None:
-            raise ValueError("❌ DataManager darf nicht None sein! Stelle sicher, dass er richtig initialisiert wurde.")
-        
+            return
+
         self.data_manager = data_manager
         self.auth_credentials_file = auth_credentials_file
         self.auth_cookie_name = auth_cookie_name
@@ -41,44 +41,77 @@ class LoginManager:
 
     def _save_auth_credentials(self):
         """ Speichert die aktuellen Benutzeranmeldeinformationen in die Datei. """
-        dh = self.data_manager._get_data_handler()  # 🔥 Fix: Richtige Methode aufrufen
+        dh = self.data_manager._get_data_handler()
         dh.save(self.auth_credentials_file, self.auth_credentials)
 
-    def login_register(self):
+    def login_register(self, login_title="Login", register_title="Neuen Benutzer registrieren"):
         """
-        Zeigt die Login- und Registrierungsoberfläche **im Hauptfenster** an.
+        Zeigt das Anmelde- und Registrierungsformular in Tabs an.
+
+        Args:
+            login_title (str): Titel für den Login-Tab.
+            register_title (str): Titel für den Registrierungs-Tab.
         """
-        st.markdown("## 🔐 Anmeldung")
-
-        if "authentication_status" not in st.session_state:
-            st.session_state["authentication_status"] = None
-
-        if st.session_state["authentication_status"]:
-            st.success(f"✅ Eingeloggt als {st.session_state.username}")
-            if st.button("Logout"):
-                self.authenticator.logout()
-                st.session_state["authentication_status"] = None
-                st.experimental_rerun()
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
         else:
-            st.markdown("### Bitte melden Sie sich an")
-            user = st.text_input("Benutzername", key="username_input")
-            passwd = st.text_input("Passwort", type="password", key="password_input")
-            
-            if st.button("Login"):
-                self.authenticator.login()
-                
-                if st.session_state["authentication_status"] is False:
-                    st.error("❌ Benutzername oder Passwort falsch!")
-                elif st.session_state["authentication_status"] is None:
-                    st.warning("⚠️ Bitte anmelden.")
+            login_tab, register_tab = st.tabs((login_title, register_title))
+            with login_tab:
+                self.login(stop=False)
+            with register_tab:
+                self.register()
+
+    def login(self, stop=True):
+        """ Zeigt das Anmeldeformular an und verarbeitet die Authentifizierung. """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
+        else:
+            self.authenticator.login()
+            if st.session_state["authentication_status"] is False:
+                st.error("❌ Benutzername oder Passwort ist falsch!")
+            else:
+                st.warning("Bitte geben Sie Ihren Benutzernamen und Ihr Passwort ein.")
+            if stop:
+                st.stop()
+
+    def register(self, stop=True):
+        """
+        Zeigt das Registrierungsformular an und setzt neue Benutzer in die Datenbank.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
+        else:
+            st.info("""
+            🔒 **Passwortanforderungen:**  
+            - **8-15 Zeichen lang**  
+            - Mindestens **1 Grossbuchstabe**  
+            - Mindestens **1 Kleinbuchstabe**  
+            - Mindestens **1 Zahl**  
+            - Mindestens **1 Sonderzeichen** (@$!%*?&)  
+            """)
+
+            # ✅ Registrierungsformular
+            res = self.authenticator.register_user()
+
+            if res and res[1] is not None:
+                st.success(f"✅ Benutzer {res[1]} wurde erfolgreich registriert!")
+                try:
+                    self._save_auth_credentials()
+                    st.success("✅ Zugangsdaten wurden gespeichert.")
+                except Exception as e:
+                    st.error(f"⚠️ Fehler beim Speichern der Zugangsdaten: {e}")
+
+            if stop:
+                st.stop()
 
     def go_to_login(self, login_page_py_file):
         """
-        Falls der Benutzer nicht eingeloggt ist, wird er zur Login-Seite weitergeleitet.
-        
+        Erstellt einen Logout-Button, der den Benutzer abmeldet und zur Login-Seite umleitet.
+
         Args:
             login_page_py_file (str): Der Name der Python-Datei mit der Login-Seite.
         """
-        if "authentication_status" not in st.session_state or not st.session_state["authentication_status"]:
-            st.warning("⚠️ Sie sind nicht eingeloggt! Weiterleitung zur Login-Seite...")
-            st.switch_page(login_page_py_file)  # Diese Funktion erfordert Streamlit Experimental Features
+        if st.session_state.get("authentication_status") is not True:
+            st.switch_page(login_page_py_file)
+        else:
+            self.authenticator.logout()  # Logout-Button anzeigen
