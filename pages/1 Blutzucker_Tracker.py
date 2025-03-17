@@ -83,6 +83,7 @@ def blutzucker_tracker():
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
         new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
         st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
+
         data_manager.save_data("user_data")
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
@@ -93,17 +94,6 @@ def blutzucker_tracker():
 
         durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
-
-        st.markdown("### Eintrag löschen")
-        with st.form(key='delete_form'):
-            index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(user_data)-1, step=1)
-            delete_button = st.form_submit_button(label='Eintrag löschen')
-
-        if delete_button:
-            st.session_state.user_data = user_data.drop(user_data.index[index_to_delete]).reset_index(drop=True)
-            data_manager.save_data("user_data")
-            st.success("Eintrag erfolgreich gelöscht.")
-            st.rerun()
     else:
         st.warning("Noch keine Daten vorhanden.")
 
@@ -119,4 +109,3 @@ def seitenwechsel():
 
 # 🔄 Starte die App
 seitenwechsel()
-
