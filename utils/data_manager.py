@@ -10,12 +10,12 @@ class DataManager:
     Diese Klasse verwendet das Streamlit Session-State für Konsistenz zwischen Reruns.
     """
 
-    def __new__(cls, *args, **kwargs):
+    def _new_(cls, *args, **kwargs):
         """ Singleton-Pattern: Gibt die bestehende Instanz zurück, falls vorhanden. """
         if 'data_manager' in st.session_state:
             return st.session_state.data_manager
         else:
-            instance = super(DataManager, cls).__new__(cls)
+            instance = super(DataManager, cls)._new_(cls)
             st.session_state.data_manager = instance
             return instance
     
@@ -41,6 +41,3 @@ class DataManager:
             return fsspec.filesystem('file')
         else:
             raise ValueError(f"Unsupported protocol: {protocol}")
-
-# Beispiel für die Verwendung der DataManager-Klasse
-data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
