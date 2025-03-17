@@ -13,7 +13,7 @@ data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App"
 login_manager = LoginManager(data_manager)
 login_manager.go_to_login('Start.py')
 
-# 🔹 Navigation
+# Navigation
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -49,23 +49,7 @@ def startseite():
     st.write("""
     Liebe Diabetikerinnen und Diabetiker! 🩸
 
-    Mit diesem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
-
-    - Was bringt dir die App?
-    - Schnelle Eingabe deines Blutzuckers (mg/dL)
-    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
-    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
-    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
-
-    Warum diese App?
-
-    ✔ Kein lästiges Papier-Tagebuch mehr
-
-    ✔ Verfolge deine Werte langfristig & erkenne Muster
-
-    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
-
-    Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
+    Mit diesem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!  
     """)
 
 # 🔥 Blutzucker-Tracker
@@ -89,7 +73,6 @@ def blutzucker_tracker():
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
 
-    # 📌 Daten filtern & anzeigen
     user_data_filtered = user_data[user_data["username"] == username]
 
     if not user_data_filtered.empty:
@@ -100,19 +83,44 @@ def blutzucker_tracker():
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
 
         st.markdown("### Eintrag löschen")
-        with st.form("delete_entry"):
+        with st.form(key='delete_form'):
             index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(user_data_filtered)-1, step=1)
-            delete_button = st.form_submit_button("Eintrag löschen")
+            delete_button = st.form_submit_button(label='Eintrag löschen')
 
         if delete_button:
-            user_data_filtered = user_data_filtered.drop(index=index_to_delete)
+            user_data_filtered = user_data_filtered.drop(user_data_filtered.index[index_to_delete])
             data_manager.save_user_data("user_data", "data.csv", user_data_filtered)
             st.success("Eintrag erfolgreich gelöscht.")
             st.rerun()
     else:
-        st.warning("⚠️ Noch keine Daten vorhanden.")
+        st.warning("Noch keine Daten vorhanden.")
 
-# Seiten dynamisch verwalten
+# 🔥 Blutzucker-Werte
+def blutzucker_werte():
+    st.markdown("## 📋 Blutzucker-Werte")
+
+    user_data_filtered = user_data[user_data["username"] == username]
+
+    if not user_data_filtered.empty:
+        st.markdown("### Gespeicherte Blutzuckerwerte")
+        st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+    else:
+        st.warning("Noch keine Werte gespeichert.")
+
+# 🔥 Blutzucker-Grafik
+def blutzucker_grafik():
+    st.markdown("## 📊 Blutzucker-Grafik")
+
+    user_data_filtered = user_data[user_data["username"] == username]
+
+    if not user_data_filtered.empty:
+        st.markdown("### Verlauf der Blutzuckerwerte")
+        chart_data = user_data_filtered.set_index("datum_zeit")[["blutzuckerwert"]]
+        st.line_chart(chart_data)
+    else:
+        st.warning("Noch keine Werte vorhanden.")
+
+# 🔄 Seitenwechsel OHNE `st.switch_page()`
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
