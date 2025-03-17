@@ -10,13 +10,21 @@ st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 try:
     data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 except Exception as e:
-    st.error(f"Ein Fehler ist aufgetreten: {e}")
+    st.error(f"❌ Fehler beim Initialisieren von DataManager: {e}")
+    data_manager = None  # Sicherstellen, dass `data_manager` nicht undefiniert bleibt
 
-login_manager = LoginManager(data_manager)
-login_manager.login_register()  # Login-/Registrierungsseite anzeigen
+if data_manager is not None:
+    login_manager = LoginManager(data_manager)
+    login_manager.login_register()  # Login-/Registrierungsseite anzeigen
+else:
+    st.stop()  # Stoppe die App, falls `DataManager` nicht geladen werden konnte
+
+# ✅ Prüfe, ob `username` im `session_state` existiert
+if "username" not in st.session_state:
+    st.session_state["username"] = None
 
 # ✅ Prüfe, ob ein Benutzer eingeloggt ist, bevor Daten geladen werden
-if "username" in st.session_state and st.session_state["username"]:
+if st.session_state["username"]:
     data_manager.load_user_data(
         session_state_key='data_df',
         file_name='data.csv',
@@ -37,7 +45,7 @@ Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzu
 """)
 
 # 👤 Benutzerinfo
-if "username" in st.session_state:
+if st.session_state["username"]:
     st.info(f"👋 Eingeloggt als: *{st.session_state.username}*")
 else:
     st.warning("⚠️ Kein Benutzer eingeloggt!")
