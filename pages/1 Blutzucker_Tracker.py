@@ -13,7 +13,7 @@ data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App"
 login_manager = LoginManager(data_manager)
 login_manager.go_to_login('Start.py')
 
-# 🔹 Navigation (GENAU SO GELASSEN WIE GEWÜNSCHT)
+# 🔹 Navigation
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -32,9 +32,6 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
-# 📌 Nutzername holen (GENAU SO GELASSEN WIE GEWÜNSCHT)
-username = st.session_state.get("username", "Gast")
-
 # 📌 Daten laden
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
@@ -43,7 +40,7 @@ user_data = data_manager.load_user_data(
     parse_dates=["datum_zeit"]
 )
 
-# 🔥 Startseite (Aktualisiert)
+# 🔥 Startseite
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
@@ -68,7 +65,7 @@ def startseite():
     Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
     """)
 
-# 🔥 Blutzucker-Tracker (GENAU SO GELASSEN, aber Tabelle verbessert)
+# 🔥 Blutzucker-Tracker
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -80,35 +77,47 @@ def blutzucker_tracker():
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")
         result = {
+            "datum_zeit": datum_zeit,
             "blutzuckerwert": blutzuckerwert,
-            "zeitpunkt": zeitpunkt,
-            "datum_zeit": datum_zeit
+            "zeitpunkt": zeitpunkt
         }
         data_manager.append_record("data.csv", result)
         st.success("✅ Eintrag wurde gespeichert.")
         st.rerun()
 
-    # 📌 Daten filtern NUR für den aktuellen Benutzer
+    # 📌 Daten filtern
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.dataframe(user_data.style.set_properties(**{'text-align': 'left'}))
+        st.dataframe(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
 
         durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"<span style='background-color:#d4edda; color:#155724; padding:5px; border-radius:5px;'>Durchschnittlicher Wert: {durchschnitt:.2f} mg/dL</span>", unsafe_allow_html=True)
     else:
         st.warning("Noch keine Daten vorhanden.")
+    
+    # 🗑️ Löschoption für Einträge
+    st.markdown("### 🗑️ Eintrag löschen")
+    with st.form(key='delete_form'):
+        index_to_delete = st.number_input("Index des zu löschenden Eintrags", min_value=0, max_value=len(user_data)-1 if not user_data.empty else 0, step=1)
+        delete_button = st.form_submit_button(label='Eintrag löschen')
+    
+    if delete_button and not user_data.empty:
+        user_data.drop(index=index_to_delete, inplace=True)
+        data_manager.save_data("data.csv")
+        st.success("🗑️ Eintrag erfolgreich gelöscht.")
+        st.rerun()
 
-# 🔥 Blutzucker-Werte (Tabelle verbessert)
+# 🔥 Blutzucker-Werte
 def blutzucker_werte():
     st.markdown("## Blutzucker-Werte")
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.dataframe(user_data.style.set_properties(**{'text-align': 'left'}))
+        st.dataframe(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
     else:
         st.warning("Noch keine Werte gespeichert.")
 
-# 🔥 Blutzucker-Grafik (Keine Änderung nötig)
+# 🔥 Blutzucker-Grafik
 def blutzucker_grafik():
     st.markdown("## Blutzucker-Grafik")
 
@@ -119,7 +128,7 @@ def blutzucker_grafik():
     else:
         st.warning("Noch keine Werte vorhanden.")
 
-# 🔄 Seitenwechsel OHNE `st.switch_page()` (GENAU SO GELASSEN)
+# 🔄 Seitenwechsel OHNE `st.switch_page()`
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
