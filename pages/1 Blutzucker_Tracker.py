@@ -33,7 +33,6 @@ with col4:
         st.session_state.seite = "Blutzucker-Grafik"
 
 # Tracker-Funktion
-
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -72,15 +71,25 @@ def blutzucker_tracker():
     else:
         st.warning("Keine Daten vorhanden.")
 
-# Seiten dynamisch verwalten
+# Platzhalter-Funktionen für andere Seiten
+def startseite():
+    st.markdown("## 🏠 Willkommen auf der Startseite!")
+
+def blutzucker_werte():
+    st.markdown("## 📋 Blutzucker-Werte")
+
+def blutzucker_grafik():
+    st.markdown("## 📊 Blutzucker-Grafik")
+
+# Seiten dynamisch verwalten (OHNE st.switch_page())
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
 if st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
 elif st.session_state.seite == "Startseite":
-    st.switch_page("Start.py")
+    startseite()
 elif st.session_state.seite == "Blutzucker-Werte":
-    st.switch_page("pages/2_Blutzucker_Werte.py")
+    blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
-    st.switch_page("pages/3_Blutzucker_Grafik.py")
+    blutzucker_grafik()
