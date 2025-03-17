@@ -96,7 +96,7 @@ def blutzucker_tracker():
         st.rerun()
 
     if not user_data.empty:
-        st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
+        st.markdown("###  Gespeicherte Blutzuckerwerte")
         
         # ✅ Entferne 'username' aus der Tabelle (falls vorhanden)
         st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
