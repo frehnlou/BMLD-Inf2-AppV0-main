@@ -35,13 +35,15 @@ with col4:
 # 📌 Nutzername holen
 username = st.session_state.get("username", "Gast")
 
-# 📌 Daten laden (damit alle Funktionen dieselben Daten nutzen)
-user_data = data_manager.load_user_data(
-    session_state_key="user_data",
-    file_name="data.csv",
-    initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
-    parse_dates=["datum_zeit"]
-)
+# 📌 Daten laden
+if "user_data" not in st.session_state:
+    st.session_state.user_data = data_manager.load_user_data(
+        session_state_key="user_data",
+        file_name="data.csv",
+        initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+        parse_dates=["datum_zeit"]
+    )
+user_data = st.session_state.user_data
 
 # 🔥 Startseite
 def startseite():
@@ -79,19 +81,15 @@ def blutzucker_tracker():
 
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
-        result = {
-            "blutzuckerwert": blutzuckerwert,
-            "zeitpunkt": zeitpunkt,
-            "datum_zeit": datum_zeit
-        }
-        data_manager.append_record("data.csv", result)
+        new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
+        st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
+        data_manager.save_data("user_data")
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data.reset_index(drop=True))
-
+        st.table(user_data.drop(columns=["username"]).reset_index(drop=True))
         durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
 
@@ -101,33 +99,12 @@ def blutzucker_tracker():
             delete_button = st.form_submit_button(label='Eintrag löschen')
 
         if delete_button:
-            user_data = user_data.drop(user_data.index[index_to_delete]).reset_index(drop=True)
+            st.session_state.user_data = user_data.drop(user_data.index[index_to_delete]).reset_index(drop=True)
             data_manager.save_data("user_data")
             st.success("Eintrag erfolgreich gelöscht.")
             st.rerun()
     else:
         st.warning("Noch keine Daten vorhanden.")
-
-# 🔥 Blutzucker-Werte
-def blutzucker_werte():
-    st.markdown("## 📋 Blutzucker-Werte")
-
-    if not user_data.empty:
-        st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data.reset_index(drop=True))
-    else:
-        st.warning("Noch keine Werte gespeichert.")
-
-# 🔥 Blutzucker-Grafik
-def blutzucker_grafik():
-    st.markdown("## 📊 Blutzucker-Grafik")
-
-    if not user_data.empty:
-        st.markdown("### Verlauf der Blutzuckerwerte")
-        chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
-        st.line_chart(chart_data)
-    else:
-        st.warning("Noch keine Werte vorhanden.")
 
 # 🔄 Seitenwechsel OHNE `st.switch_page()`
 if "seite" not in st.session_state:
