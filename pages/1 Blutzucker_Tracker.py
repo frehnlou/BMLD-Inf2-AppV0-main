@@ -31,6 +31,25 @@ if "user_data" not in st.session_state:
 
 user_data = st.session_state.user_data
 
+# ====== Navigation ======
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    if st.button("🏠 Startseite"):
+        st.session_state.seite = "Startseite"
+
+with col2:
+    if st.button("🩸 Blutzucker-Tracker"):
+        st.session_state.seite = "Blutzucker-Tracker"
+
+with col3:
+    if st.button("📋 Blutzucker-Werte"):
+        st.session_state.seite = "Blutzucker-Werte"
+
+with col4:
+    if st.button("📊 Blutzucker-Grafik"):
+        st.session_state.seite = "Blutzucker-Grafik"
+
 # 🔥 Startseite
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
