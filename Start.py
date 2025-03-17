@@ -7,7 +7,11 @@ from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Start Login Block ======
-data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
+try:
+    data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
+except Exception as e:
+    st.error(f"Ein Fehler ist aufgetreten: {e}")
+
 login_manager = LoginManager(data_manager)
 login_manager.login_register()  # Login-/Registrierungsseite anzeigen
 
@@ -34,7 +38,7 @@ Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzu
 
 # 👤 Benutzerinfo
 if "username" in st.session_state:
-    st.info(f"👋 Eingeloggt als: **{st.session_state.username}**")
+    st.info(f"👋 Eingeloggt als: *{st.session_state.username}*")
 else:
     st.warning("⚠️ Kein Benutzer eingeloggt!")
 
@@ -48,8 +52,8 @@ Nutzen Sie die App regelmässig, um Ihre Blutzuckerwerte besser im Blick zu beha
 # Autoreninfo
 st.write("""
 ### Autoren  
-Diese App wurde im Rahmen des Moduls *BMLD Informatik 2* an der ZHAW entwickelt von:
+Diese App wurde im Rahmen des Moduls BMLD Informatik 2 an der ZHAW entwickelt von:
 
-- **Cristiana Bastos** ([pereicri@students.zhaw.ch](mailto:pereicri@students.zhaw.ch))  
-- **Lou-Salomé Frehner** ([frehnlou@students.zhaw.ch](mailto:frehnlou@students.zhaw.ch))
+- *Cristiana Bastos* (pereicri@students.zhaw.ch)  
+- *Lou-Salomé Frehner* (frehnlou@students.zhaw.ch)
 """)
