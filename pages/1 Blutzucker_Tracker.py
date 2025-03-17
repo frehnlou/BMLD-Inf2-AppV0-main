@@ -84,7 +84,7 @@ def blutzucker_tracker():
         new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
         st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
 
-        data_manager.save_data("user_data")
+        data_manager.save_user_data("user_data", st.session_state.user_data)
         st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
 
