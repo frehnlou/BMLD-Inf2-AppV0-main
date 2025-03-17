@@ -41,7 +41,7 @@ else:
 # Infobox
 st.markdown("""
 <div style="border-left: 4px solid #4CAF50; background-color: #F0FFF0; padding: 10px; border-radius: 5px;">
-Nutzen Sie die App regelmäßig, um Ihre Blutzuckerwerte besser im Blick zu behalten und langfristige Muster zu erkennen.
+Nutzen Sie die App regelmässig, um Ihre Blutzuckerwerte besser im Blick zu behalten und langfristige Muster zu erkennen.
 </div>
 """, unsafe_allow_html=True)
 
