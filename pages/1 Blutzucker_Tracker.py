@@ -32,6 +32,9 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
+# 📌 Nutzername holen
+username = st.session_state.get("username", "Gast")
+
 # 📌 Daten laden
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
@@ -81,17 +84,17 @@ def blutzucker_tracker():
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt
         }
-        data_manager.append_record("data.csv", result)
+        data_manager.append_record("user_data", result)
         st.success("✅ Eintrag wurde gespeichert.")
         st.rerun()
 
-    # 📌 Daten filtern
+    # 📌 Daten filtern & anzeigen
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
         st.dataframe(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
 
         durchschnitt = user_data["blutzuckerwert"].mean()
-        st.markdown(f"<span style='background-color:#d4edda; color:#155724; padding:5px; border-radius:5px;'>Durchschnittlicher Wert: {durchschnitt:.2f} mg/dL</span>", unsafe_allow_html=True)
+        st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
         st.warning("Noch keine Daten vorhanden.")
     
@@ -102,14 +105,14 @@ def blutzucker_tracker():
         delete_button = st.form_submit_button(label='Eintrag löschen')
     
     if delete_button and not user_data.empty:
-        user_data.drop(index=index_to_delete, inplace=True)
-        data_manager.save_data("data.csv")
-        st.success("🗑️ Eintrag erfolgreich gelöscht.")
+        user_data = user_data.drop(index=index_to_delete).reset_index(drop=True)
+        data_manager.save_data("user_data")
+        st.success("Eintrag erfolgreich gelöscht.")
         st.rerun()
 
 # 🔥 Blutzucker-Werte
 def blutzucker_werte():
-    st.markdown("## Blutzucker-Werte")
+    st.markdown("## 📋 Blutzucker-Werte")
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
@@ -119,7 +122,7 @@ def blutzucker_werte():
 
 # 🔥 Blutzucker-Grafik
 def blutzucker_grafik():
-    st.markdown("## Blutzucker-Grafik")
+    st.markdown("## 📊 Blutzucker-Grafik")
 
     if not user_data.empty:
         st.markdown("### Verlauf der Blutzuckerwerte")
