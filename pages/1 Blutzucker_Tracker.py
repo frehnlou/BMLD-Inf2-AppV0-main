@@ -13,7 +13,7 @@ data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App"
 login_manager = LoginManager(data_manager)
 login_manager.go_to_login('Start.py')
 
-# 🔹 Navigation 
+# 🔹 Navigation (GENAU SO GELASSEN WIE GEWÜNSCHT)
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
@@ -32,7 +32,7 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
-# 📌 Nutzername holen 
+# 📌 Nutzername holen (GENAU SO GELASSEN WIE GEWÜNSCHT)
 username = st.session_state.get("username", "Gast")
 
 # 📌 Daten laden
@@ -43,7 +43,7 @@ user_data = data_manager.load_user_data(
     parse_dates=["datum_zeit"]
 )
 
-# 🔥 Startseite 
+# 🔥 Startseite (Aktualisiert)
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
@@ -68,7 +68,7 @@ def startseite():
     Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
     """)
 
-# 🔥 Blutzucker-Tracker 
+# 🔥 Blutzucker-Tracker (GENAU SO GELASSEN, aber Tabelle verbessert)
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -98,7 +98,7 @@ def blutzucker_tracker():
     else:
         st.warning("Noch keine Daten vorhanden.")
 
-# 🔥 Blutzucker-Werte 
+# 🔥 Blutzucker-Werte (Tabelle verbessert)
 def blutzucker_werte():
     st.markdown("## Blutzucker-Werte")
 
@@ -108,7 +108,7 @@ def blutzucker_werte():
     else:
         st.warning("Noch keine Werte gespeichert.")
 
-# 🔥 Blutzucker-Grafik 
+# 🔥 Blutzucker-Grafik (Keine Änderung nötig)
 def blutzucker_grafik():
     st.markdown("## Blutzucker-Grafik")
 
@@ -119,7 +119,7 @@ def blutzucker_grafik():
     else:
         st.warning("Noch keine Werte vorhanden.")
 
-# 🔄 Seitenwechsel OHNE `st.switch_page()` 
+# 🔄 Seitenwechsel OHNE `st.switch_page()` (GENAU SO GELASSEN)
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
@@ -131,5 +131,3 @@ elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
     blutzucker_grafik()
-
-
