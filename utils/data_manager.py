@@ -27,7 +27,7 @@ class DataManager:
         Setzt die Dateisystemschnittstelle und initialisiert Datenregister für die Anwendung.
         Falls die Instanz bereits initialisiert ist (hat 'fs' Attribut), wird die Initialisierung übersprungen.
         """
-        if hasattr(self, 'fs'):  # Überprüfen, ob die Instanz bereits initialisiert ist
+        if hasattr(self, 'fs'):  # Falls schon initialisiert, überspringen
             return
             
         # Initialisierung der Dateisystemkomponenten
@@ -76,30 +76,60 @@ class DataManager:
             return DataHandler(self.fs, self.fs_root_folder)
         else:
             folder_path = posixpath.join(self.fs_root_folder, subfolder)
-            if not self.fs.exists(folder := posixpath.join(self.fs_root_folder, subfolder)):
-                self.fs.mkdir(folder)
+            
+            # 🔥 Falls Benutzerverzeichnis nicht existiert → Erstellen
+            if not self.fs.exists(folder_path):
+                self.fs.mkdir(folder_path)
+                
             return DataHandler(self.fs, folder_path)
 
     def load_user_data(self, session_state_key, file_name, initial_value=pd.DataFrame(), **load_args):
+        """
+        Lädt benutzerspezifische Daten aus einer Datei im Benutzerordner.
+        Falls die Datei nicht existiert, wird sie mit initialen Werten erstellt.
+
+        Args:
+            session_state_key (str): Schlüssel im Sitzungszustand
+            file_name (str): Name der Datei
+            initial_value: Standardwert, falls Datei nicht existiert
+            **load_args: Zusätzliche Parameter für das Laden
+
+        Returns:
+            Geladene Daten als Pandas DataFrame
+        """
         username = st.session_state.get('username', None)
         if username is None:
-            raise ValueError("Kein Benutzer angemeldet!")
+            raise ValueError("❌ Kein Benutzer angemeldet!")
 
         user_folder = f"user_data_{username}"
         dh = self._get_data_handler(subfolder=user_folder)
 
+        # Falls Datei nicht existiert, erstelle sie mit `initial_value`
         if not dh.exists(file_name):
             dh.save(file_name, initial_value)
 
         data = dh.load(file_name, initial_value, **load_args)
+        
+        # 🔧 Korrektur: Pfad wird nun mit `posixpath.join()` erstellt
+        user_data_path = posixpath.join(user_folder, file_name)
+
+        # Speichern im Session State
         st.session_state[session_state_key] = data
-        self.user_data_reg[session_state_key] = dh.join(user_data_folder, file_name)
+        self.user_data_reg[session_state_key] = user_data_path  
+        
         return data
 
     def append_record(self, file_name, record_dict):
+        """
+        Fügt eine neue Zeile zu einer bestehenden CSV-Datei im Benutzerverzeichnis hinzu.
+
+        Args:
+            file_name (str): Name der Datei
+            record_dict (dict): Die neue Zeile als Dictionary
+        """
         username = st.session_state.get('username', None)
         if not username:
-            raise ValueError("Kein Benutzer angemeldet!")
+            raise ValueError("❌ Kein Benutzer angemeldet!")
 
         user_data_folder = f'user_data_{username}'
         dh = self._get_data_handler(user_data_folder)
@@ -110,3 +140,4 @@ class DataManager:
             data = dh.load(file_name)
             data = pd.concat([data, pd.DataFrame([record_dict])], ignore_index=True)
             dh.save(file_name, data)
+
