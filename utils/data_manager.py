@@ -15,7 +15,7 @@ class DataManager:
         if 'data_manager' in st.session_state:
             return st.session_state.data_manager
         else:
-            instance = super(DataManager, cls)._new_(cls)
+            instance = super(DataManager, cls).__new__(cls)
             st.session_state.data_manager = instance
             return instance
     
