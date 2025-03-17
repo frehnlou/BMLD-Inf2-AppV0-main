@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
+from utils.data_manager import DataManager  # 📊 Data Manager für nutzerspezifische Daten
 
 # ====== Start Login Block ======
 login_manager = LoginManager()
@@ -11,15 +12,24 @@ def blutzucker_werte():
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("## 📋 Blutzucker-Werte")
 
-    if 'daten' in st.session_state and st.session_state['daten']:
+    # Nutzername aus Session holen
+    username = st.session_state.get("username", "Gast")
+
+    # Datenbank für den Nutzer laden
+    data_manager = DataManager()
+    user_data = data_manager.load_user_data(
+        session_state_key="user_data",
+        file_name="data.csv",
+        parse_dates=["datum_zeit"]
+    )
+
+    if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(st.session_state['daten'])
-        
+        st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+
         # Durchschnitt berechnen
-        durchschnitt = sum(d['blutzuckerwert'] for d in st.session_state['daten']) / len(st.session_state['daten'])
-        
-        # Durchschnittswert anzeigen
-        st.markdown(f"Durchschnittlicher Blutzuckerwert: {durchschnitt:.2f} mg/dL")
+        durchschnitt = user_data["blutzuckerwert"].mean()
+        st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
         st.warning("Noch keine Daten vorhanden.")
 
