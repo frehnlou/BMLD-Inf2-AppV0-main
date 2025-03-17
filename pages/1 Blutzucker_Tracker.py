@@ -32,7 +32,30 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
-# Tracker-Funktion
+# 📌 Nutzername holen
+username = st.session_state.get("username", "Gast")
+
+# 📌 Daten laden (damit alle Funktionen dieselben Daten nutzen)
+user_data = data_manager.load_user_data(
+    session_state_key="user_data",
+    file_name="data.csv",
+    initial_value=pd.DataFrame(columns=["username", "datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+    parse_dates=["datum_zeit"]
+)
+
+# 🔥 Startseite
+def startseite():
+    st.markdown("## 🏡 Willkommen auf der Startseite!")  # Überschrift
+    st.write("""
+    Diese App hilft Ihnen, Ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren.
+    
+    **Funktionen:**
+    - 🩸 **Blutzucker-Tracker**: Eingabe und Speicherung Ihrer Werte  
+    - 📋 **Blutzucker-Werte**: Übersicht über gespeicherte Daten  
+    - 📊 **Blutzucker-Grafik**: Grafische Darstellung der Werte  
+    """)
+
+# 🔥 Blutzucker-Tracker
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -40,15 +63,6 @@ def blutzucker_tracker():
         blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
         zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
         submit_button = st.form_submit_button(label='Eintrag hinzufügen')
-
-    user_data = data_manager.load_user_data(
-        session_state_key="user_data",
-        file_name="data.csv",
-        initial_value=pd.DataFrame(columns=["username", "datum_zeit", "blutzuckerwert", "zeitpunkt"]),
-        parse_dates=["datum_zeit"]
-    )
-
-    username = st.session_state.get("username", "Gast")
 
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
@@ -59,29 +73,46 @@ def blutzucker_tracker():
             "datum_zeit": datum_zeit
         }
         data_manager.append_record("data.csv", result)
-        st.success("Eintrag hinzugefügt!")
+        st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
+
+    # 📌 Daten filtern NUR für den aktuellen Benutzer
+    user_data_filtered = user_data[user_data["username"] == username]
+
+    if not user_data_filtered.empty:
+        st.markdown("### 🔢 Gespeicherte Blutzuckerwerte")
+        st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+
+        durchschnitt = user_data_filtered["blutzuckerwert"].mean()
+        st.markdown(f"📊 **Durchschnittlicher Wert:** `{durchschnitt:.2f} mg/dL`")
+    else:
+        st.warning("⚠️ Noch keine Daten vorhanden.")
+
+# 🔥 Blutzucker-Werte
+def blutzucker_werte():
+    st.markdown("## 📋 Blutzucker-Werte")
 
     user_data_filtered = user_data[user_data["username"] == username]
 
     if not user_data_filtered.empty:
         st.table(user_data_filtered[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
-        durchschnitt = user_data_filtered["blutzuckerwert"].mean()
-        st.write(f"Durchschnittlicher Wert: {durchschnitt:.2f} mg/dL")
     else:
-        st.warning("Keine Daten vorhanden.")
+        st.warning("⚠️ Noch keine Werte gespeichert.")
 
-# Platzhalter-Funktionen für andere Seiten
-def startseite():
-    st.markdown("## 🏠 Willkommen auf der Startseite!")
-
-def blutzucker_werte():
-    st.markdown("## 📋 Blutzucker-Werte")
-
+# 🔥 Blutzucker-Grafik
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
-# Seiten dynamisch verwalten (OHNE st.switch_page())
+    user_data_filtered = user_data[user_data["username"] == username]
+
+    if not user_data_filtered.empty:
+        st.markdown("### 📈 Verlauf der Blutzuckerwerte")
+        chart_data = user_data_filtered.set_index("datum_zeit")[["blutzuckerwert"]]
+        st.line_chart(chart_data)
+    else:
+        st.warning("⚠️ Noch keine Werte vorhanden.")
+
+# 🔄 Seitenwechsel OHNE `st.switch_page()`
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
@@ -93,3 +124,4 @@ elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
     blutzucker_grafik()
+
