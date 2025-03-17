@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
 
@@ -15,12 +16,17 @@ data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App"
 login_manager = LoginManager(data_manager)
 login_manager.login_register()  # Öffnet Login-/Registrierungsseite
 
-# Laden der Daten aus dem persistenten Speicher in den Session State
-data_manager.load_app_data(
+# ✅ Sicherstellen, dass `data.csv` existiert
+data_file = os.path.join(data_manager.fs_root_folder, "data.csv")
+if not os.path.exists(data_file):
+    pd.DataFrame(columns=["username", "datum_zeit", "blutzuckerwert", "zeitpunkt"]).to_csv(data_file, index=False)
+
+# 🔥 Nutzerbezogene Daten laden
+data_manager.load_user_data(
     session_state_key='data_df', 
     file_name='data.csv', 
     initial_value=pd.DataFrame(), 
-    parse_dates=['timestamp']
+    parse_dates=['datum_zeit']
 )
 
 # ====== End Init Block ======
@@ -34,7 +40,7 @@ Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzu
 """)
 
 # 👤 Zeigt den eingeloggten Benutzer an (Falls Session State korrekt gesetzt ist)
-if "username" in st.session_state:
+if "username" in st.session_state and st.session_state["username"]:
     st.info(f"👋 Eingeloggt als: **{st.session_state.username}**")
 else:
     st.warning("⚠️ Kein Benutzer eingeloggt!")
