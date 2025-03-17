@@ -53,7 +53,7 @@ class LoginManager:
 
     def _save_auth_credentials(self):
         """ Speichert die aktuellen Benutzeranmeldeinformationen in die Datei. """
-        dh = self.data_manager._get_data_handler()
+        dh = self.data_manager.__get_data__handler()
         dh.save(self.auth_credentials_file, self.auth_credentials)
 
     def login_register(self, login_title="Anmeldung", register_title="Neuen Benutzer registrieren"):
