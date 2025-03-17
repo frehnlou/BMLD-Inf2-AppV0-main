@@ -28,7 +28,7 @@ def blutzucker_werte():
     )
 
     if not user_data.empty:
-        st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
+        st.markdown("###  Gespeicherte Blutzuckerwerte")
 
         # 🔥 Sicherstellen, dass die Spalten existieren
         if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert", "zeitpunkt"]):
