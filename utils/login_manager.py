@@ -43,3 +43,38 @@ class LoginManager:
         """ Speichert die aktuellen Benutzeranmeldeinformationen in die Datei. """
         dh = self.data_manager._get_data_handler()  # 🔥 Fix: Richtige Methode aufrufen
         dh.save(self.auth_credentials_file, self.auth_credentials)
+
+    def login_register(self):
+        """
+        Zeigt die Login- und Registrierungsoberfläche an.
+        """
+        if "authentication_status" not in st.session_state:
+            st.session_state["authentication_status"] = None
+
+        if st.session_state["authentication_status"]:
+            st.sidebar.success(f"✅ Eingeloggt als {st.session_state.username}")
+            if st.sidebar.button("Logout"):
+                self.authenticator.logout()
+                st.session_state["authentication_status"] = None
+                st.experimental_rerun()
+        else:
+            with st.sidebar:
+                st.subheader("🔐 Anmeldung")
+                self.authenticator.login()
+                
+                if st.session_state["authentication_status"] is False:
+                    st.error("❌ Benutzername oder Passwort falsch!")
+                
+                if st.session_state["authentication_status"] is None:
+                    st.warning("⚠️ Bitte anmelden.")
+
+    def go_to_login(self, login_page_py_file):
+        """
+        Falls der Benutzer nicht eingeloggt ist, wird er zur Login-Seite weitergeleitet.
+        
+        Args:
+            login_page_py_file (str): Der Name der Python-Datei mit der Login-Seite.
+        """
+        if "authentication_status" not in st.session_state or not st.session_state["authentication_status"]:
+            st.warning("⚠️ Sie sind nicht eingeloggt! Weiterleitung zur Login-Seite...")
+            st.switch_page(login_page_py_file)  # Diese Funktion erfordert Streamlit Experimental Features
