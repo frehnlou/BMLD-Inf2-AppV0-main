@@ -12,14 +12,18 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 st.markdown("## 📊 Blutzucker-Grafik")
 
-# Nutzername aus Session holen
-username = st.session_state.get("username", "Gast")
+# Nutzername holen
+username = st.session_state.get("username")
+
+if not username:
+    st.error("⚠️ Kein Benutzer eingeloggt! Anmeldung erforderlich.")
+    st.stop()
 
 # Datenbank für den Nutzer laden
-data_manager = DataManager()
+data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
-    file_name="data.csv",
+    username=username,  # ✅ Benutzer bekommt eigene Datei
     parse_dates=["datum_zeit"]
 )
 
