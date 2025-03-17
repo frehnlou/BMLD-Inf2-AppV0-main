@@ -1,63 +1,130 @@
 import streamlit as st
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from utils.data_manager import DataManager
+from utils.login_manager import LoginManager
+import pandas as pd
 
-# ✅ `st.set_page_config` MUSS als erstes Streamlit-Kommando stehen!
+# ✅ MUSS erstes Streamlit-Kommando bleiben!
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
-import pandas as pd
-import os
-from utils.data_manager import DataManager
-from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
+# ====== Start Login Block ======
+login_manager = LoginManager()
+login_manager.go_to_login('Start.py') 
+# ====== End Login Block ======
 
-# ====== Start Init Block (Login & Datenmanagement) ======
+# Navigation über vier Spalten
+col1, col2, col3, col4 = st.columns(4)
 
-# Initialisierung des Data Managers
+with col1:
+    if st.button("🏠 Startseite"):
+        st.session_state.seite = "Startseite"
+
+with col2:
+    if st.button("🩸 Blutzucker-Tracker"):
+        st.session_state.seite = "Blutzucker-Tracker"
+
+with col3:
+    if st.button("📋 Blutzucker-Werte"):
+        st.session_state.seite = "Blutzucker-Werte"
+
+with col4:
+    if st.button("📊 Blutzucker-Grafik"):
+        st.session_state.seite = "Blutzucker-Grafik"
+
+# Nutzername holen
+username = st.session_state.get("username", "Gast")
+
+# DataManager initialisieren
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 
-# Initialisierung des Login Managers
-login_manager = LoginManager(data_manager)
-login_manager.login_register()  # Öffnet Login-/Registrierungsseite
+# Seiten-Funktionen definieren
+def startseite():
+    st.markdown("## 🏠 Willkommen auf der Startseite!")
+    st.write("""
+    Liebe Diabetikerinnen und Diabetiker!🩸
 
-# ✅ Sicherstellen, dass `data.csv` existiert
-data_file = "data.csv"
-if not os.path.exists(data_file):
-    pd.DataFrame(columns=["username", "datum_zeit", "blutzuckerwert", "zeitpunkt"]).to_csv(data_file, index=False)
+    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
 
-# 🔥 Nutzerbezogene Daten laden
-data_manager.load_user_data(
-    session_state_key='data_df', 
-    file_name='data.csv', 
-    initial_value=pd.DataFrame(), 
-    parse_dates=['datum_zeit']
-)
+    ✔ Kein lästiges Papier-Tagebuch mehr
 
-# ====== End Init Block ======
+    ✔ Verfolge deine Werte langfristig & erkenne Muster
 
-# Titel mit größerer Schrift
-st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
+    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
 
-# Beschreibung in normalem Text
-st.write("""
-Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren. So behalten Sie Ihre Werte stets im Blick und können langfristige Trends erkennen.
-""")
+    Einfach testen & deine Blutzuckerwerte im Blick behalten! 🏅
+    """)
 
-# 👤 Zeigt den eingeloggten Benutzer an (Falls Session State korrekt gesetzt ist)
-if "username" in st.session_state and st.session_state["username"]:
-    st.info(f"👋 Eingeloggt als: **{st.session_state.username}**")
-else:
-    st.warning("⚠️ Kein Benutzer eingeloggt!")
+def blutzucker_tracker():
+    st.markdown("## 🩸 Blutzucker-Tracker")
 
-# Zusätzliche Information in einer dezenten farbigen Box
-st.markdown("""
-<div style="border-left: 4px solid #4CAF50; background-color: #F0FFF0; padding: 10px; border-radius: 5px;">
-Nutzen Sie die App regelmäßig, um Ihre Blutzuckerwerte besser im Blick zu behalten und langfristige Muster zu erkennen.
-</div>
-""", unsafe_allow_html=True)
+    with st.form(key='blutzucker_form'):
+        blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
+        zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
+        submit_button = st.form_submit_button(label='Eintrag hinzufügen')
 
-# Autoren und E-Mails in einer klaren Struktur
-st.write("""
-### Autoren  
-Diese App wurde im Rahmen des Moduls *BMLD Informatik 2* an der ZHAW entwickelt von:
+    user_data = data_manager.load_user_data(
+        session_state_key="user_data",
+        file_name="data.csv",
+        initial_value=pd.DataFrame(columns=["username", "datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+        parse_dates=["datum_zeit"]
+    )
 
-- **Cristiana Bastos** ([pereicri@students.zhaw.ch](mailto:pereicri@students.zhaw.ch))  
-- **Lou-Salomé Frehner** ([frehnlou@students.zhaw.ch](mailto:frehnlou@students.zhaw.ch))
-""")
+    if submit_button:
+        datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M:%S")
+        result = {
+            "username": username,
+            "blutzuckerwert": blutzuckerwert,
+            "zeitpunkt": zeitpunkt,
+            "datum_zeit": datum_zeit
+        }
+        data_manager.append_record("data.csv", result)
+        st.success("Eintrag hinzugefügt!")
+        st.rerun()
+
+    if not user_data.empty:
+        st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+        durchschnitt = user_data["blutzuckerwert"].mean()
+        st.write(f"Durchschnittlicher Wert: {durchschnitt:.2f} mg/dL")
+    else:
+        st.warning("Keine Daten vorhanden.")
+
+def blutzucker_werte():
+    st.markdown("## 📋 Blutzucker-Werte")
+    user_data = data_manager.load_user_data(
+        session_state_key="user_data",
+        file_name="data.csv",
+        initial_value=pd.DataFrame(),
+        parse_dates=["datum_zeit"]
+    )
+    if not user_data.empty:
+        st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
+    else:
+        st.warning("Keine Daten vorhanden.")
+
+def blutzucker_grafik():
+    st.markdown("## 📊 Blutzucker-Grafik")
+    user_data = data_manager.load_user_data(
+        session_state_key="user_data",
+        file_name="data.csv",
+        parse_dates=["datum_zeit"]
+    )
+
+    if not user_data.empty:
+        chart_data = user_data[["datum_zeit", "blutzuckerwert"]].set_index("datum_zeit")
+        st.line_chart(blutzuckerwerte)
+    else:
+        st.warning("Keine Daten vorhanden.")
+
+# Seiten dynamisch verwalten
+if "seite" not in st.session_state:
+    st.session_state.seite = "Startseite"
+
+if st.session_state.seite == "Startseite":
+    startseite()
+elif st.session_state.seite == "Blutzucker-Tracker":
+    blutzucker_tracker()
+elif st.session_state.seite == "Blutzucker-Werte":
+    blutzucker_werte()
+elif st.session_state.seite == "Blutzucker-Grafik":
+    blutzucker_grafik()
