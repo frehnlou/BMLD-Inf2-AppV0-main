@@ -127,12 +127,30 @@ class LoginManager:
             Das Passwort muss 8-20 Zeichen lang sein und mindestens einen Großbuchstaben, 
             einen Kleinbuchstaben, eine Ziffer und ein Sonderzeichen aus @$!%*?& enthalten.
             """)
-            username = st.text_input("Benutzername", key="register_username")
+
+            # Registrierungsformular
+            first_name = st.text_input("Vorname", key="register_first_name")
+            last_name = st.text_input("Nachname", key="register_last_name")
             email = st.text_input("E-Mail", key="register_email")
+            username = st.text_input("Benutzername", key="register_username")
             password = st.text_input("Passwort", type="password", key="register_password")
+            repeat_password = st.text_input("Passwort wiederholen", type="password", key="register_repeat_password")
+            password_hint = st.text_input("Passworthinweis (optional)", key="register_password_hint")
+            captcha = st.text_input("Captcha: Bitte geben Sie '1234' ein", key="register_captcha")
+
             register_button = st.button("Registrieren", key="register_button")
 
             if register_button:
+                # Überprüfen, ob das Captcha korrekt ist
+                if captcha != "1234":
+                    st.error("Captcha ist falsch. Bitte versuchen Sie es erneut.")
+                    return
+
+                # Überprüfen, ob die Passwörter übereinstimmen
+                if password != repeat_password:
+                    st.error("Die Passwörter stimmen nicht überein.")
+                    return
+
                 # Überprüfen, ob der Benutzername bereits existiert
                 if username in self.auth_credentials["usernames"]:
                     st.error("Benutzername existiert bereits. Bitte wählen Sie einen anderen.")
@@ -140,8 +158,11 @@ class LoginManager:
 
                 # Benutzer hinzufügen
                 self.auth_credentials["usernames"][username] = {
+                    "first_name": first_name,
+                    "last_name": last_name,
                     "email": email,
-                    "password": password  # Optional: Passwort-Hashing hinzufügen
+                    "password": password,  # Optional: Passwort-Hashing hinzufügen
+                    "password_hint": password_hint
                 }
 
                 try:

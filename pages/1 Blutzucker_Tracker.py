@@ -4,7 +4,6 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
-import threading
 
 # Seitenkonfiguration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
@@ -23,26 +22,15 @@ if not username:
 
 # Benutzerspezifische Daten initialisieren
 if f"user_data_{username}" not in st.session_state:
-    # Lade die Daten des aktuellen Benutzers oder initialisiere sie, falls keine vorhanden sind
-    try:
-        st.session_state[f"user_data_{username}"] = data_manager.load_user_data(
-            session_state_key=f"user_data_{username}",
-            username=username,
-            initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
-            parse_dates=["datum_zeit"]
-        )
-    except Exception as e:
-        st.error(f"⚠️ Fehler beim Laden der Benutzerdaten: {e}")
-        st.stop()
+    st.session_state[f"user_data_{username}"] = data_manager.load_user_data(
+        session_state_key=f"user_data_{username}",
+        username=username,
+        initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+        parse_dates=["datum_zeit"]
+    )
 
 # Zugriff auf die Benutzerdaten
 user_data = st.session_state.get(f"user_data_{username}", pd.DataFrame())
-
-# ====== Automatisches Speichern ======
-def save_user_data_async(data_manager, session_state_key, username):
-    def save():
-        data_manager.save_user_data(session_state_key, username)
-    threading.Thread(target=save).start()
 
 # ====== Navigation ======
 col1, col2, col3, col4 = st.columns(4)
@@ -91,31 +79,22 @@ def blutzucker_tracker():
 
     if submit_button:
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")
-        new_entry = pd.DataFrame([{
+        new_entry = {
             "datum_zeit": datum_zeit,
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt
-        }])
+        }
 
-        # Aktualisiere die Daten im Session-State
-        if user_data.empty:
-            st.session_state[f"user_data_{username}"] = new_entry
-        else:
-            st.session_state[f"user_data_{username}"] = pd.concat(
-                [st.session_state[f"user_data_{username}"], new_entry],
-                ignore_index=True
-            )
+        # Temporäre Speicherung der neuen Daten
+        if "temp_data" not in st.session_state:
+            st.session_state["temp_data"] = []
 
-        # Speichere die Daten für den aktuellen Benutzer asynchron
-        save_user_data_async(data_manager, f"user_data_{username}", username)
+        st.session_state["temp_data"].append(new_entry)
         st.success("Eintrag erfolgreich hinzugefügt!")
 
-    # Zeige die gespeicherten Werte an
-    if user_data.empty:
-        st.warning("Noch keine Daten vorhanden.")
-    else:
-        st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data)
+    # Aktualisiere den DataFrame nur bei Bedarf
+    if "temp_data" in st.session_state:
+        st.session_state[f"user_data_{username}"] = pd.DataFrame(st.session_state["temp_data"])
 
 # ====== Blutzucker-Werte ======
 def blutzucker_werte():
