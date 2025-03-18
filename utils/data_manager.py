@@ -120,6 +120,6 @@ class DataManager:
             # Speichern mit Fehlerbehandlung
             try:
                 dh.save(file_name, df)
-                st.toast(f"✅ Daten für {username} erfolgreich gespeichert!", icon="💾")
+                st.toast(f"✅ Daten für {username} erfolgreich gespeichert!",)
             except Exception as e:
                 st.error(f"⚠️ Fehler beim Speichern der Daten: {e}")

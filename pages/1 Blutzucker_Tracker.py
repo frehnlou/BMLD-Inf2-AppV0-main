@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
+import threading
 
 # Seitenkonfiguration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
@@ -36,6 +37,12 @@ if f"user_data_{username}" not in st.session_state:
 
 # Zugriff auf die Benutzerdaten
 user_data = st.session_state.get(f"user_data_{username}", pd.DataFrame())
+
+# ====== Automatisches Speichern ======
+def save_user_data_async(data_manager, session_state_key, username):
+    def save():
+        data_manager.save_user_data(session_state_key, username)
+    threading.Thread(target=save).start()
 
 # ====== Navigation ======
 col1, col2, col3, col4 = st.columns(4)
@@ -99,15 +106,9 @@ def blutzucker_tracker():
                 ignore_index=True
             )
 
-        # Speichere die Daten für den aktuellen Benutzer
-        try:
-            data_manager.save_user_data(
-                session_state_key=f"user_data_{username}",
-                username=username
-            )
-            st.success("Eintrag erfolgreich hinzugefügt!")
-        except Exception as e:
-            st.error(f"Fehler beim Speichern der Daten: {e}")
+        # Speichere die Daten für den aktuellen Benutzer asynchron
+        save_user_data_async(data_manager, f"user_data_{username}", username)
+        st.success("Eintrag erfolgreich hinzugefügt!")
 
     # Zeige die gespeicherten Werte an
     if user_data.empty:
