@@ -20,29 +20,31 @@ if not username:
     st.error("⚠️ Kein Benutzer eingeloggt! Anmeldung erforderlich.")
     st.stop()
 
-# Datenbank für den Nutzer laden
+# 📌 Datenbank für den Nutzer laden
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
-    username=username,  # ✅ Benutzer bekommt eigene Datei
+    username=username,  # ✅ Jeder Benutzer hat seine eigene Datei!
     parse_dates=["datum_zeit"]
 )
 
 if user_data is not None and not user_data.empty:
     st.markdown("### 📈 Verlauf der Blutzuckerwerte")
 
-    # 🔥 Sicherstellen, dass `datum_zeit` und `blutzuckerwert` existieren
-    required_columns = {"datum_zeit", "blutzuckerwert"}
-    if required_columns.issubset(user_data.columns):
+    # 🔥 Sicherstellen, dass die Spalten existieren
+    if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert"]):
         try:
             # 🔥 Falls `datum_zeit` nicht als `Datetime` erkannt wird, umwandeln
             if not pd.api.types.is_datetime64_any_dtype(user_data["datum_zeit"]):
                 user_data["datum_zeit"] = pd.to_datetime(user_data["datum_zeit"], errors='coerce')
 
+            # 🔥 Sortieren, um die Grafik richtig darzustellen
+            user_data = user_data.sort_values("datum_zeit")
+
             # 🔥 Setze `datum_zeit` als Index für das Diagramm
             blutzuckerwerte = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
 
-            # Überprüfung: Mindestens zwei Datenpunkte nötig für eine Linie
+            # 🔍 Mindestens zwei Datenpunkte nötig, um eine Linie zu zeichnen
             if len(blutzuckerwerte) > 1:
                 st.line_chart(blutzuckerwerte)
             else:
@@ -52,4 +54,4 @@ if user_data is not None and not user_data.empty:
     else:
         st.warning("⚠️ Datenformat fehlerhaft oder Spalten fehlen!")
 else:
-    st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte geben Sie einen neuen Wert ein.")
+    st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte geben Sie einen neuen Wert ein.")  

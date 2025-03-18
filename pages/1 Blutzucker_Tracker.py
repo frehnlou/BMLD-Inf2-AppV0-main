@@ -84,6 +84,28 @@ if not user_data.empty:
 else:
     st.warning("⚠️ Noch keine Werte gespeichert. Bitte einen neuen Wert eingeben.")
 
+# 🔥 Blutzucker-Grafik
+def blutzucker_grafik():
+    st.markdown("## 📊 Blutzucker-Grafik")
+
+    if not user_data.empty:
+        st.markdown("###  Verlauf der Blutzuckerwerte")
+
+        # 🔥 Falls `datum_zeit` nicht als `Datetime` erkannt wird, umwandeln
+        if not pd.api.types.is_datetime64_any_dtype(user_data["datum_zeit"]):
+            user_data["datum_zeit"] = pd.to_datetime(user_data["datum_zeit"], errors='coerce')
+
+        # 🔥 Setze `datum_zeit` als Index für das Diagramm
+        chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
+
+        if len(chart_data) > 1:
+            st.line_chart(chart_data)
+        else:
+            st.warning("⚠️ Mindestens zwei Werte erforderlich, um eine Grafik darzustellen.")
+    else:
+        st.warning("⚠️ Noch keine Werte vorhanden. Bitte geben Sie einen neuen Wert ein.")
+
+
 # 🔄 Seitenwechsel
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
