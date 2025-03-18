@@ -5,7 +5,7 @@ import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# ✅ MUSS erstes Kommando bleiben!
+# ✅ Streamlit-Seitenkonfiguration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
@@ -19,7 +19,7 @@ if not username:
     st.error("⚠️ Kein Benutzer eingeloggt! Anmeldung erforderlich.")
     st.stop()
 
-# 📌 Benutzerspezifische Daten laden (stellen sicher, dass nach Logout die Daten noch da sind)
+# 📌 Benutzerspezifische Daten laden (nach Logout bleiben Daten erhalten)
 if "user_data" not in st.session_state:
     st.session_state.user_data = data_manager.load_user_data(
         session_state_key="user_data",
@@ -36,9 +36,9 @@ col1, col2, col3, col4 = st.columns(4)
 def save_and_switch_page(page):
     """ Speichert die Daten und wechselt zur anderen Seite """
     if "user_data" in st.session_state:
-        data_manager.save_user_data("user_data", username)  # 🔥 Speichert vor Seitenwechsel
+        data_manager.save_user_data("user_data", username)  
     st.session_state.seite = page
-    st.rerun()  # 🔄 Aktualisiert die Seite nach dem Speichern
+    st.experimental_rerun()  
 
 with col1:
     if st.button("🏠 Startseite"):
@@ -56,30 +56,28 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         save_and_switch_page("Blutzucker-Grafik")
 
-# 🔥 Startseite
+# 🔥 **Startseite**
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
-    Liebe Diabetikerinnen und Diabetiker!🩸
+    Liebe Diabetikerinnen und Diabetiker! 🩸
 
-    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
+    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten?  
+    Mit unserem **Blutzucker-Tracker** kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!  
 
-    - Was bringt dir die App?
-    - Schnelle Eingabe deines Blutzuckers (mg/dL)
-    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
-    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
-    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
+    **Was bringt dir die App?**  
+    - Schnelle Eingabe deines Blutzuckers (mg/dL)  
+    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)  
+    - Automatische Übersicht in einer Tabelle  
+    - Anschauliche Diagramme zur Analyse deiner Werte  
 
-    Warum diese App?
-             
-    ✔ Kein lästiges Papier-Tagebuch mehr
-             
-    ✔ Verfolge deine Werte langfristig & erkenne Muster
-             
-    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
+    **Warum diese App?**  
+    ✔ Kein lästiges Papier-Tagebuch mehr  
+    ✔ Verfolge deine Werte langfristig & erkenne Muster  
+    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes  
     """)
 
-# 🔥 Blutzucker-Tracker
+# 🔥 **Blutzucker-Tracker**
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -89,26 +87,33 @@ def blutzucker_tracker():
         submit_button = st.form_submit_button(label=' Eintrag hinzufügen')
 
     if submit_button:
+        # 🔥 **Neuen Eintrag mit aktuellem Zeitstempel erstellen**
         datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")
-        new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
+        new_entry = pd.DataFrame([{
+            "datum_zeit": datum_zeit,
+            "blutzuckerwert": blutzuckerwert,
+            "zeitpunkt": zeitpunkt
+        }])
+
         st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
 
-        # ✅ Speichert die Werte nur für den aktuellen Benutzer
+        # ✅ **Speichert die Werte in der Datenbank (WebDAV)**
         data_manager.save_user_data("user_data", username)
 
-        st.success("✅ Eintrag hinzugefügt!")
-        st.rerun()
+        st.success("✅ Blutzuckerwert gespeichert!")
+        st.experimental_rerun()
 
+    # 📋 **Gespeicherte Blutzuckerwerte anzeigen**
     if not user_data.empty:
         st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
         st.table(user_data)
 
         durchschnitt = user_data["blutzuckerwert"].mean()
-        st.markdown(f" **Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
+        st.markdown(f"** Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
-        st.warning("Noch keine Werte vorhanden.")
+        st.warning("⚠️ Noch keine Werte vorhanden. Bitte neuen Wert eingeben.")
 
-# 🔥 Blutzucker-Werte
+# 🔥 **Blutzucker-Werte**
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
@@ -118,7 +123,7 @@ def blutzucker_werte():
     else:
         st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte neuen Wert eingeben.")
 
-# 🔥 Blutzucker-Grafik
+# 🔥 **Blutzucker-Grafik**
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
@@ -133,7 +138,7 @@ def blutzucker_grafik():
     else:
         st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte neuen Wert eingeben.")
 
-# 🔄 Seitenwechsel
+# 🔄 **Seitenwechsel**
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
@@ -145,3 +150,4 @@ elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
     blutzucker_grafik()
+
