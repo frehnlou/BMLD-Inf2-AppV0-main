@@ -6,7 +6,7 @@ from utils.login_manager import LoginManager
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # Initialisiere DataManager
-data_manager = DataManager(fs_protocol='file', fs_root_folder="BMLD_cpblsf_App")
+data_manager = DataManager(fs_protocol='file', fs_root_folder="BMLD_CPBLSF_App")
 
 # Initialisiere LoginManager
 login_manager = LoginManager(data_manager)

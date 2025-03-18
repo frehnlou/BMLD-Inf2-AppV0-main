@@ -129,6 +129,7 @@ class LoginManager:
             """)
 
             # Registrierungsformular
+            st.markdown("### Benutzer registrieren")
             first_name = st.text_input("Vorname", key="register_first_name")
             last_name = st.text_input("Nachname", key="register_last_name")
             email = st.text_input("E-Mail", key="register_email")
