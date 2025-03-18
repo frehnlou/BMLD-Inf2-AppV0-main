@@ -120,9 +120,13 @@ def blutzucker_werte():
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        # Entferne die Spaltenüberschriften
-        table_data = user_data.reset_index(drop=True).to_numpy().tolist()
-        st.table(table_data)
+        # Benutzerdefinierte Spaltenüberschriften
+        renamed_data = user_data.rename(columns={
+            "blutzuckerwert": "1: Blutzuckerwerte",
+            "zeitpunkt": "2: Nüchtern"
+        })
+        # Zeige die Tabelle mit den neuen Spaltenüberschriften
+        st.table(renamed_data[["1: Blutzuckerwerte", "2: Nüchtern"]])
     else:
         st.warning("Noch keine Werte gespeichert.")
 
