@@ -50,7 +50,7 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
-# Blutzucker-Tracker
+# ====== Blutzucker-Tracker ======
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -83,7 +83,7 @@ def blutzucker_tracker():
     else:
         st.warning("Noch keine Daten vorhanden.")
 
-# Blutzucker-Werte
+# ====== Blutzucker-Werte ======
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
@@ -93,7 +93,7 @@ def blutzucker_werte():
     else:
         st.warning("Noch keine Werte gespeichert.")
 
-# Blutzucker-Grafik
+# ====== Blutzucker-Grafik ======
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
@@ -104,18 +104,31 @@ def blutzucker_grafik():
     else:
         st.warning("Noch keine Werte vorhanden.")
 
-# Seitenwechsel
-if "seite" not in st.session_state:
-    st.session_state.seite = "Startseite"
-
-# Seitenlogik
-if st.session_state.seite == "Blutzucker-Tracker":
-    blutzucker_tracker()
-elif st.session_state.seite == "Startseite":
+# ====== Startseite ======
+def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
-    Willkommen! Nutzen Sie die Navigation, um Ihre Blutzuckerwerte zu verwalten und zu analysieren.
+    Liebe Diabetikerinnen und Diabetiker 🩸,
+
+    Mit dieser App können Sie:
+    - Ihre Blutzuckerwerte einfach eingeben und speichern.
+    - Den Messzeitpunkt auswählen (z. B. Nüchtern oder nach dem Essen).
+    - Ihre Werte in einer übersichtlichen Tabelle anzeigen lassen.
+    - Den Durchschnitt Ihrer Blutzuckerwerte berechnen.
+    - Ihre Werte in einer anschaulichen Grafik analysieren.
+
+    Behalten Sie Ihre Gesundheit im Blick und erkennen Sie langfristige Muster!
     """)
+
+# ====== Seitenwechsel ======
+if "seite" not in st.session_state:
+    st.session_state.seite = "Startseite"  # Standardseite ist die Startseite
+
+# Seitenlogik
+if st.session_state.seite == "Startseite":
+    startseite()
+elif st.session_state.seite == "Blutzucker-Tracker":
+    blutzucker_tracker()
 elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
