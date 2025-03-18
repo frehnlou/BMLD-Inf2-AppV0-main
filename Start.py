@@ -12,7 +12,7 @@ from utils.login_manager import LoginManager
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # Initialisiere DataManager
-data_manager = DataManager(fs_protocol='local', fs_root_folder="shared_folder")
+data_manager = DataManager(fs_protocol='local', fs_root_folder="BMLD_CPBLSF_App")
 
 # Debugging: Überprüfen Sie die Anmeldedaten
 print("Anmeldedaten:", data_manager.get_credentials())
