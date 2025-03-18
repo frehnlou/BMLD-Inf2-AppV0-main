@@ -27,7 +27,6 @@ user_data = data_manager.load_user_data(
 
 if not user_data.empty:
     st.markdown("###  Verlauf der Blutzuckerwerte")
-
     if "datum_zeit" in user_data.columns and "blutzuckerwert" in user_data.columns:
         try:
             user_data["datum_zeit"] = pd.to_datetime(user_data["datum_zeit"], errors='coerce')
