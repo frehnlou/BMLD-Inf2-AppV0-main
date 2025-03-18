@@ -30,6 +30,10 @@ class LoginManager:
         self.auth_cookie_name = auth_cookie_name
         self.auth_cookie_key = secrets.token_urlsafe(32)
         self.auth_credentials = self._load_auth_credentials()
+        
+        # DEBUG: Ausgabe der geladenen Anmeldedaten
+        st.write("Geladene Auth-Credentials:", self.auth_credentials)
+        
         self.authenticator = stauth.Authenticate(
             self.auth_credentials,
             self.auth_cookie_name,
@@ -63,8 +67,14 @@ class LoginManager:
             self.authenticator.logout("Logout", "sidebar")
         else:
             try:
-                # Korrekte Übergabe des Parameters "location"
-                name, authentication_status, username = self.authenticator.login("Login", "sidebar")
+                # DEBUG: Überprüfung der location-Werte
+                location_value = "main"  # Teste auch "unrendered" oder "sidebar"
+                st.write("Login attempt with location:", location_value)
+                
+                name, authentication_status, username = self.authenticator.login("Login", location_value)
+                
+                st.write(f"Name: {name}, Authenticated: {authentication_status}, Username: {username}")
+                
                 if authentication_status:
                     st.success(f"Willkommen {name}!")
                 elif authentication_status is False:
