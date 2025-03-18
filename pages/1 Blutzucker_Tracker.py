@@ -9,7 +9,7 @@ from utils.login_manager import LoginManager
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
-data_manager = DataManager(fs_protocol='local', fs_root_folder="BMLD_cpblsf_App")
+data_manager = DataManager(fs_protocol='file', fs_root_folder="BMLD_CPBLSF_App")
 login_manager = LoginManager(data_manager)
 login_manager.go_to_login('Start.py')
 
@@ -17,7 +17,7 @@ login_manager.go_to_login('Start.py')
 username = st.session_state.get("username")
 
 if not username:
-    st.error("Kein Benutzer eingeloggt. Anmeldung erforderlich.")
+    st.error("⚠️ Kein Benutzer eingeloggt! Anmeldung erforderlich.")
     st.stop()
 
 # Benutzerspezifische Daten initialisieren
@@ -25,7 +25,7 @@ if f"user_data_{username}" not in st.session_state:
     # Lade die Daten des aktuellen Benutzers oder initialisiere sie, falls keine vorhanden sind
     st.session_state[f"user_data_{username}"] = data_manager.load_user_data(
         session_state_key=f"user_data_{username}",
-        username=username,
+        file_name="blutzuckerwerte.csv",
         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
         parse_dates=["datum_zeit"]
     )
@@ -96,7 +96,7 @@ def blutzucker_tracker():
         try:
             data_manager.save_user_data(
                 session_state_key=f"user_data_{username}",
-                username=username
+                file_name="blutzuckerwerte.csv"
             )
             st.success("Eintrag erfolgreich hinzugefügt!")
         except Exception as e:
@@ -120,21 +120,15 @@ def blutzucker_tracker():
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
-    # Zugriff auf die Benutzerdaten
-    user_data = st.session_state[f"user_data_{username}"]
-
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        # Benutzerdefinierte Spaltenüberschriften
         renamed_data = user_data.rename(columns={
             "datum_zeit": "Datum & Uhrzeit",
             "blutzuckerwert": "Blutzuckerwert (mg/dL)",
             "zeitpunkt": "Zeitpunkt"
         })
-        # Zeige die Tabelle mit den neuen Spaltenüberschriften
         st.table(renamed_data[["Datum & Uhrzeit", "Blutzuckerwert (mg/dL)", "Zeitpunkt"]])
 
-        # Durchschnitt berechnen und anzeigen
         durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
@@ -143,9 +137,6 @@ def blutzucker_werte():
 # ====== Blutzucker-Grafik ======
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
-
-    # Zugriff auf die Benutzerdaten
-    user_data = st.session_state[f"user_data_{username}"]
 
     if not user_data.empty:
         st.markdown("### Verlauf der Blutzuckerwerte")

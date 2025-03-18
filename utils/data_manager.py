@@ -8,8 +8,8 @@ from utils.data_handler import DataHandler
 
 class DataManager:
     """
-    Eine Singleton-Klasse zur Verwaltung von Anwendungsdaten und benutzerspezifischer Speicherung.
-    Unterstützt lokale und WebDAV-Dateisysteme und integriert sich in den Streamlit-Session-State.
+    Eine Singleton-Klasse zur Verwaltung von Anwendungs- und Benutzerdaten mit persistenter Speicherung.
+    Unterstützt Multi-User-Umgebungen und speichert Daten für jeden Benutzer separat.
     """
 
     def __new__(cls, *args, **kwargs):
@@ -34,6 +34,10 @@ class DataManager:
         self.fs = self._init_filesystem(fs_protocol)
         self.app_data_reg = {}
         self.user_data_reg = {}
+
+        # Erstelle den Root-Ordner, falls er nicht existiert
+        if not os.path.exists(self.fs_root_folder):
+            os.makedirs(self.fs_root_folder)
 
     @staticmethod
     def _init_filesystem(protocol: str):
@@ -61,81 +65,77 @@ class DataManager:
         else:
             return DataHandler(self.fs, posixpath.join(self.fs_root_folder, subfolder))
 
-    def load_app_data(self, session_state_key, file_name, initial_value=None, **load_args):
-        """
-        Lädt Anwendungsdaten aus einer Datei und speichert sie im Streamlit-Session-State.
-        """
-        if session_state_key in st.session_state:
-            return
-
-        dh = self._get_data_handler()
-        data = dh.load(file_name, initial_value, **load_args)
-        st.session_state[session_state_key] = data
-        self.app_data_reg[session_state_key] = file_name
-
     def load_user_data(self, session_state_key, file_name, initial_value=None, **load_args):
         """
         Lädt benutzerspezifische Daten aus einer Datei im Benutzerordner.
+
+        Args:
+            session_state_key (str): Schlüssel im Session-State, unter dem die Daten gespeichert werden.
+            file_name (str): Name der Datei, aus der die Daten geladen werden.
+            initial_value: Standardwert, falls die Datei nicht existiert.
+            **load_args: Zusätzliche Argumente für die Ladefunktion.
+
+        Returns:
+            pd.DataFrame: Die geladenen oder initialisierten Benutzerdaten.
         """
         username = st.session_state.get('username', None)
         if username is None:
-            for key in self.user_data_reg:  # Lösche alle Benutzerdaten
-                st.session_state.pop(key)
-            self.user_data_reg = {}
-            st.error(f"DataManager: Kein Benutzer eingeloggt, Datei `{file_name}` kann nicht geladen werden.")
+            st.error("DataManager: Kein Benutzer eingeloggt. Daten können nicht geladen werden.")
+            return initial_value
+
+        user_folder = os.path.join(self.fs_root_folder, f"user_data_{username}")
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
+
+        file_path = os.path.join(user_folder, file_name)
+
+        try:
+            return pd.read_csv(file_path, **load_args)
+        except FileNotFoundError:
+            return initial_value
+
+    def save_user_data(self, session_state_key, file_name):
+        """
+        Speichert benutzerspezifische Daten in einer Datei im Benutzerordner.
+
+        Args:
+            session_state_key (str): Schlüssel im Session-State, unter dem die Daten gespeichert sind.
+            file_name (str): Name der Datei, in der die Daten gespeichert werden.
+        """
+        username = st.session_state.get('username', None)
+        if username is None:
+            st.error("DataManager: Kein Benutzer eingeloggt. Daten können nicht gespeichert werden.")
             return
-        elif session_state_key in st.session_state:
-            return
 
-        user_data_folder = 'user_data_' + username
-        dh = self._get_data_handler(user_data_folder)
-        data = dh.load(file_name, initial_value, **load_args)
-        st.session_state[session_state_key] = data
-        self.user_data_reg[session_state_key] = dh.join(user_data_folder, file_name)
+        user_folder = os.path.join(self.fs_root_folder, f"user_data_{username}")
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
 
-    @property
-    def data_reg(self):
-        """
-        Gibt eine kombinierte Registrierung von Anwendungs- und Benutzerdaten zurück.
-        """
-        return {**self.app_data_reg, **self.user_data_reg}
+        file_path = os.path.join(user_folder, file_name)
 
-    def save_data(self, session_state_key):
-        """
-        Speichert Daten aus dem Session-State in den persistenten Speicher.
-        """
-        if session_state_key not in self.data_reg:
-            raise ValueError(f"DataManager: Kein Eintrag für Schlüssel {session_state_key} registriert.")
-
-        if session_state_key not in st.session_state:
-            raise ValueError(f"DataManager: Schlüssel {session_state_key} nicht im Session-State gefunden.")
-
-        dh = self._get_data_handler()
-        dh.save(self.data_reg[session_state_key], st.session_state[session_state_key])
-
-    def save_all_data(self):
-        """
-        Speichert alle registrierten Daten aus dem Session-State in den persistenten Speicher.
-        """
-        for key in self.data_reg.keys():
-            if key in st.session_state:
-                self.save_data(key)
+        data = st.session_state.get(session_state_key, None)
+        if data is not None:
+            data.to_csv(file_path, index=False)
 
     def append_record(self, session_state_key, record_dict):
         """
         Fügt einen neuen Datensatz zu einer im Session-State gespeicherten Liste oder DataFrame hinzu.
+
+        Args:
+            session_state_key (str): Schlüssel im Session-State, unter dem die Daten gespeichert sind.
+            record_dict (dict): Neuer Datensatz, der hinzugefügt werden soll.
         """
-        data_value = st.session_state.get(session_state_key)
+        data = st.session_state.get(session_state_key, None)
 
-        if not isinstance(record_dict, dict):
-            raise ValueError("DataManager: Der Datensatz muss ein Dictionary sein.")
+        if data is None:
+            st.error(f"DataManager: Keine Daten für Schlüssel {session_state_key} gefunden.")
+            return
 
-        if isinstance(data_value, pd.DataFrame):
-            data_value = pd.concat([data_value, pd.DataFrame([record_dict])], ignore_index=True)
-        elif isinstance(data_value, list):
-            data_value.append(record_dict)
+        if isinstance(data, pd.DataFrame):
+            new_data = pd.DataFrame([record_dict])
+            st.session_state[session_state_key] = pd.concat([data, new_data], ignore_index=True)
+        elif isinstance(data, list):
+            data.append(record_dict)
+            st.session_state[session_state_key] = data
         else:
-            raise ValueError(f"DataManager: Der Wert für Schlüssel {session_state_key} muss ein DataFrame oder eine Liste sein.")
-
-        st.session_state[session_state_key] = data_value
-        self.save_data(session_state_key)
+            st.error(f"DataManager: Daten für Schlüssel {session_state_key} müssen ein DataFrame oder eine Liste sein.")

@@ -2,12 +2,12 @@ import streamlit as st
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# ✅ Direkt zur Login-Seite
+# Seitenkonfiguration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login Block ======
 # Initialisiere DataManager
-data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_CPBLSF_App")
+data_manager = DataManager(fs_protocol='file', fs_root_folder="BMLD_CPBLSF_App")
 
 # Initialisiere LoginManager und zeige Login/Register direkt
 login_manager = LoginManager(data_manager)
