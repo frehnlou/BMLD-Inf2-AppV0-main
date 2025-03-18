@@ -1,93 +1,115 @@
-import os
-import pandas as pd
+import fsspec
+import posixpath
 import streamlit as st
+import pandas as pd
 from utils.data_handler import DataHandler
 
 class DataManager:
-    def __init__(self, fs_protocol='file', fs_root_folder='app_data'):
-        """
-        Initialisiert den DataManager.
+    """
+    Singleton-Klasse für das Management von Anwendungsdaten und Benutzerspeicherung.
+    Diese Klasse verwendet das Streamlit Session-State für Konsistenz zwischen Reruns.
+    """
 
-        Args:
-            fs_protocol (str): Das Protokoll für das Dateisystem (z. B. 'file').
-            fs_root_folder (str): Der Root-Ordner für alle Dateioperationen.
-        """
-        self.fs_protocol = fs_protocol
-        self.fs_root_folder = fs_root_folder
-
-        # Erstelle den Root-Ordner, falls er nicht existiert
-        if not os.path.exists(self.fs_root_folder):
-            os.makedirs(self.fs_root_folder)
-
-    def _get_data_handler(self, subfolder=None):
-        """
-        Erstellt eine DataHandler-Instanz für Dateioperationen.
-
-        Args:
-            subfolder (str): Optionaler Unterordner relativ zum Root-Ordner.
-
-        Returns:
-            DataHandler: Eine Instanz des DataHandlers.
-        """
-        if subfolder is None:
-            return DataHandler(self.fs_protocol, self.fs_root_folder)
+    def __new__(cls, *args, **kwargs):
+        """ Singleton-Pattern: Gibt die bestehende Instanz zurück, falls vorhanden. """
+        if 'data_manager' in st.session_state:
+            return st.session_state.data_manager
         else:
-            return DataHandler(self.fs_protocol, os.path.join(self.fs_root_folder, subfolder))
+            instance = super(DataManager, cls).__new__(cls)
+            st.session_state.data_manager = instance
+            return instance
+    
+    def __init__(self, fs_protocol='file', fs_root_folder='app_data'):
+        """ Initialisiert das Dateisystem für Speicherung. """
+        if hasattr(self, '_initialized') and self._initialized:
+            return  # Verhindert erneutes Initialisieren
 
-    def load_user_data(self, session_state_key, file_name, initial_value=None, **load_args):
+        self.fs_root_folder = fs_root_folder
+        self.fs_protocol = fs_protocol
+        self.fs = self._init_filesystem(fs_protocol)
+        self.app_data_reg = {}
+        self.user_data_reg = {}
+
+        self._initialized = True  # Markiere als initialisiert
+
+    def _init_filesystem(self, protocol: str):
+        """ Erstellt ein Dateisystem (lokal oder WebDAV). """
+        if protocol == 'webdav':
+            secrets = st.secrets['webdav']
+            return fsspec.filesystem('webdav', 
+                                     base_url=secrets['base_url'], 
+                                     auth=(secrets['username'], secrets['password']))
+        elif protocol == 'file':
+            return fsspec.filesystem('file')
+        else:
+            raise ValueError(f"Unsupported protocol: {protocol}")
+    
+    def _get_data_handler(self):
+        """ Erstellt und gibt einen Daten-Handler zurück. """
+        return DataHandler(self.fs, self.fs_root_folder)
+
+    def load_user_data(self, session_state_key, username, initial_value=None, parse_dates=None):
         """
-        Lädt benutzerspezifische Daten aus einer Datei im Benutzerordner.
-
+        Lädt die Benutzerdaten aus einer benutzerspezifischen Datei oder erstellt eine neue Datei.
+        
         Args:
-            session_state_key (str): Der Schlüssel im Session-State, unter dem die Daten gespeichert werden.
-            file_name (str): Der Name der Datei, aus der die Daten geladen werden.
-            initial_value: Der Standardwert, falls die Datei nicht existiert.
-            **load_args: Zusätzliche Argumente für die Ladefunktion.
+            session_state_key (str): Der Key im Streamlit Session-State für die Daten.
+            username (str): Der Benutzername für die individuelle Datei.
+            initial_value (pd.DataFrame, optional): Der Standardwert, falls die Datei nicht existiert.
+            parse_dates (list, optional): Spaltennamen, die als Datetime geparst werden sollen.
 
         Returns:
-            pd.DataFrame: Die geladenen Daten oder der Standardwert.
+            pd.DataFrame: Die geladenen Benutzerdaten.
         """
-        username = st.session_state.get('username', None)
-        if username is None:
-            st.error("⚠️ Kein Benutzer eingeloggt. Daten können nicht geladen werden.")
-            return initial_value if initial_value is not None else pd.DataFrame()
+        if not username:
+            st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
+            return pd.DataFrame()
 
-        # Benutzerordner erstellen, falls er nicht existiert
-        user_folder = os.path.join(self.fs_root_folder, f"user_data_{username}")
-        data_handler = self._get_data_handler(user_folder)
-
+        file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")  # 🔥 Speichert in WebDAV
+        dh = self._get_data_handler()
+        
+        # Prüfe, ob die Datei existiert (Fehlerbehandlung für WebDAV)
         try:
-            return data_handler.load(file_name, initial_value=initial_value, **load_args)
-        except FileNotFoundError:
-            st.warning(f"⚠️ Datei {file_name} nicht gefunden. Rückgabe des Standardwerts.")
-            return initial_value if initial_value is not None else pd.DataFrame()
+            if not self.fs.exists(file_name):
+                df = initial_value if initial_value is not None else pd.DataFrame()
+                dh.save(file_name, df)
+                return df
         except Exception as e:
-            st.error(f"❌ Fehler beim Laden der Datei {file_name}: {e}")
-            return initial_value if initial_value is not None else pd.DataFrame()
+            st.error(f"⚠️ Fehler beim Zugriff auf WebDAV: {e}")
+            return pd.DataFrame()
 
-    def save_user_data(self, session_state_key, file_name):
+        # Lade die Datei
+        df = dh.load(file_name, initial_value=initial_value)
+        
+        # Falls parse_dates definiert ist, konvertiere Spalten zu Datetime
+        if parse_dates:
+            for col in parse_dates:
+                if col in df.columns:
+                    df[col] = pd.to_datetime(df[col])
+        
+        return df
+
+    def save_user_data(self, session_state_key, username):
         """
-        Speichert benutzerspezifische Daten in einer Datei im Benutzerordner.
-
+        Speichert die Benutzerdaten in eine benutzerspezifische Datei.
+        
         Args:
-            session_state_key (str): Der Schlüssel im Session-State, unter dem die Daten gespeichert sind.
-            file_name (str): Der Name der Datei, in der die Daten gespeichert werden sollen.
+            session_state_key (str): Der Key im Streamlit Session-State für die Daten.
+            username (str): Der Benutzername für die individuelle Datei.
         """
-        username = st.session_state.get('username', None)
-        if username is None:
-            st.error("⚠️ Kein Benutzer eingeloggt. Daten können nicht gespeichert werden.")
+        if not username:
+            st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
             return
 
-        # Benutzerordner erstellen, falls er nicht existiert
-        user_folder = os.path.join(self.fs_root_folder, f"user_data_{username}")
-        data_handler = self._get_data_handler(user_folder)
+        file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")  # 🔥 Speichert in WebDAV
 
-        data = st.session_state.get(session_state_key, None)
-        if data is not None:
+        if session_state_key in st.session_state:
+            df = st.session_state[session_state_key]
+            dh = self._get_data_handler()
+
+            # Speichern mit Fehlerbehandlung für WebDAV
             try:
-                data_handler.save(file_name, data)
-                st.success(f"✅ Daten erfolgreich in {file_name} gespeichert.")
+                dh.save(file_name, df)
+                st.toast(f"✅ Daten für {username} erfolgreich gespeichert!", icon="💾")  # 🔥 Diskretere Meldung
             except Exception as e:
-                st.error(f"❌ Fehler beim Speichern der Datei {file_name}: {e}")
-        else:
-            st.warning(f"⚠️ Keine Daten im Session-State unter {session_state_key} gefunden.")
+                st.error(f"⚠️ Fehler beim Speichern in WebDAV: {e}")
