@@ -21,12 +21,15 @@ if not username:
     st.stop()
 
 # Benutzerspezifische Daten laden
-user_data = data_manager.load_user_data(
-    session_state_key=f"user_data_{username}",
-    username=username,
-    initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
-    parse_dates=["datum_zeit"]
-)
+if "user_data" not in st.session_state:
+    st.session_state.user_data = data_manager.load_user_data(
+        session_state_key="user_data",
+        username=username,
+        initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+        parse_dates=["datum_zeit"]
+    )
+
+user_data = st.session_state.user_data
 
 # ====== Navigation ======
 col1, col2, col3, col4 = st.columns(4)
@@ -48,45 +51,54 @@ with col4:
         st.session_state.seite = "Blutzucker-Grafik"
 
 # ====== Blutzucker-Tracker ======
-st.markdown("## 🩸 Blutzucker-Tracker")
+def blutzucker_tracker():
+    st.markdown("## 🩸 Blutzucker-Tracker")
 
-st.write("""
-Liebe Diabetikerinnen und Diabetiker,
+    st.write("""
+    Liebe Diabetikerinnen und Diabetiker,
 
-Mit unserem Blutzucker-Tracker können Sie Ihre Blutzuckerwerte einfach eingeben und speichern. 
-Verfolgen Sie Ihre Werte langfristig und behalten Sie die Kontrolle über Ihre Gesundheit.
-""")
+    Mit unserem Blutzucker-Tracker können Sie:
+    - Ihre Blutzuckerwerte einfach eingeben und speichern.
+    - Den Messzeitpunkt auswählen (z. B. Nüchtern oder nach dem Essen).
+    - Ihre Werte in einer übersichtlichen Tabelle anzeigen lassen.
+    - Den Durchschnitt Ihrer Blutzuckerwerte berechnen.
+    - Ihre Werte in einer anschaulichen Grafik analysieren.
 
-with st.form(key='blutzucker_form'):
-    blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
-    zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
-    submit_button = st.form_submit_button(label='Eintrag hinzufügen')
+    Behalten Sie Ihre Gesundheit im Blick und erkennen Sie langfristige Muster!
+    """)
 
-if submit_button:
-    datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")
-    new_entry = pd.DataFrame([{
-        "datum_zeit": datum_zeit,
-        "blutzuckerwert": blutzuckerwert,
-        "zeitpunkt": zeitpunkt
-    }])
-    st.session_state[f"user_data_{username}"] = pd.concat([user_data, new_entry], ignore_index=True)
+    with st.form(key='blutzucker_form'):
+        blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
+        zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
+        submit_button = st.form_submit_button(label='Eintrag hinzufügen')
 
-    # Speichert die Werte nur für den aktuellen Benutzer
-    data_manager.save_user_data(
-        session_state_key=f"user_data_{username}",
-        username=username
-    )
+    if submit_button:
+        datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")
+        new_entry = pd.DataFrame([{
+            "datum_zeit": datum_zeit,
+            "blutzuckerwert": blutzuckerwert,
+            "zeitpunkt": zeitpunkt
+        }])
+        st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
 
-    st.success("Eintrag hinzugefügt!")
-    st.rerun()
+        # Speichert die Werte nur für den aktuellen Benutzer
+        data_manager.save_user_data("user_data", username)
 
-# ====== Gespeicherte Werte anzeigen ======
-if not user_data.empty:
-    st.markdown("### Gespeicherte Blutzuckerwerte")
-    st.table(user_data.reset_index(drop=True))
+        st.success("Eintrag hinzugefügt!")
+        st.rerun()
 
-    # Durchschnitt berechnen und anzeigen
-    durchschnitt = user_data["blutzuckerwert"].mean()
-    st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
-else:
-    st.warning("Noch keine Daten vorhanden.")
+    if not user_data.empty:
+        st.markdown("### Gespeicherte Blutzuckerwerte")
+        st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
+
+        durchschnitt = user_data["blutzuckerwert"].mean()
+        st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
+    else:
+        st.warning("Noch keine Daten vorhanden.")
+
+# ====== Seitenwechsel ======
+if "seite" not in st.session_state:
+    st.session_state.seite = "Startseite"
+
+if st.session_state.seite == "Blutzucker-Tracker":
+    blutzucker_tracker()
