@@ -5,20 +5,28 @@ from utils.login_manager import LoginManager
 # ✅ Direkt zur Login-Seite
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
-# ====== Login Block ======
-# Initialisiere DataManager
+# ✅ Initialisiere DataManager
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 
-# Initialisiere LoginManager und zeige Login/Register direkt
+# ✅ Initialisiere LoginManager
 login_manager = LoginManager(data_manager)
-login_manager.login_register()  # Login-/Registrierungsseite anzeigen
+login_manager.login_register()
 
 # Falls der Benutzer nicht eingeloggt ist, stoppe den weiteren Code
 if "authentication_status" not in st.session_state or not st.session_state["authentication_status"]:
     st.stop()
 
-# ✅ Benutzername holen (Multi-User!)
-username = st.session_state.get("username", "Unbekannter Benutzer")
+# 📌 Nutzername holen
+username = st.session_state.get("username")
+
+# ✅ Daten des Nutzers laden
+if "user_data" not in st.session_state:
+    st.session_state.user_data = data_manager.load_user_data(
+        session_state_key="user_data",
+        username=username,
+        initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+        parse_dates=["datum_zeit"]
+    )
 
 # ====== Startseite nach erfolgreicher Anmeldung ======
 st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
@@ -28,7 +36,7 @@ Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzu
 """)
 
 # 👤 Benutzerinfo
-st.info(f"👋 Eingeloggt als: {username}")
+st.info(f"👋 Eingeloggt als: {st.session_state.username}")
 
 # Infobox
 st.markdown("""
