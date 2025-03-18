@@ -72,14 +72,19 @@ class LoginManager:
         Zeigt das Login-Formular an und verarbeitet die Anmeldung.
         """
         try:
-            name, authentication_status, username = self.authenticator.login("Login", "sidebar")
+            # Debugging-Ausgabe
+            st.write("Debug: Login wird aufgerufen mit location='sidebar'")
+            
+            # Stelle sicher, dass der Parameter "location" korrekt ist
+            name, authentication_status, username = self.authenticator.login("Login", location="sidebar")
+            
             if authentication_status:
                 st.success(f"Willkommen {name}!")
             elif authentication_status is False:
                 st.error("Benutzername oder Passwort ist falsch.")
             elif authentication_status is None:
                 st.warning("Bitte geben Sie Ihre Anmeldedaten ein.")
-        except Exception as e:
+        except ValueError as e:
             st.error(f"Fehler bei der Anmeldung: {e}")
 
     def register(self):
