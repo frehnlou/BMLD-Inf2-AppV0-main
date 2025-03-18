@@ -11,32 +11,29 @@ class DataManager:
         if not os.path.exists(self.fs_root_folder):
             os.makedirs(self.fs_root_folder)
 
-    def save_user_data(self, session_state_key, username):
+    def _get_data_handler(self):
         """
-        Speichert die nutzerspezifischen Daten in einer Datei.
+        Gibt einen Daten-Handler zurück, der für das Laden und Speichern von Daten verwendet wird.
         """
-        # Verwende einen konsistenten Dateinamen
-        user_file = os.path.join(self.fs_root_folder, f"{username}_data.csv")
-        data = st.session_state.get(session_state_key)
-        if data is not None and not data.empty:
-            try:
-                data.to_csv(user_file, index=False)
-                st.write(f"Daten erfolgreich gespeichert: {user_file}")  # Debugging-Ausgabe
-            except Exception as e:
-                st.error(f"Fehler beim Speichern der Daten: {e}")
-        else:
-            st.warning(f"Keine Daten zum Speichern für Benutzer: {username}")
+        return self  # Der DataManager selbst fungiert als Handler
 
-    def load_user_data(self, session_state_key, username, initial_value=None, parse_dates=None):
+    def load(self, file_name, initial_value=None):
         """
-        Lädt die nutzerspezifischen Daten aus einer Datei.
+        Lädt Daten aus einer Datei.
         """
-        # Verwende denselben konsistenten Dateinamen
-        user_file = os.path.join(self.fs_root_folder, f"{username}_data.csv")
+        file_path = os.path.join(self.fs_root_folder, file_name)
         try:
-            # Versuche, die Datei zu laden
-            data = pd.read_csv(user_file, parse_dates=parse_dates)
+            with open(file_path, 'r') as file:
+                return pd.read_csv(file)  # Beispiel: CSV-Datei laden
         except FileNotFoundError:
-            # Initialisiere mit Standardwerten, falls die Datei nicht existiert
-            data = initial_value if initial_value is not None else pd.DataFrame()
-        return data
+            return initial_value
+
+    def save(self, file_name, data):
+        """
+        Speichert Daten in einer Datei.
+        """
+        file_path = os.path.join(self.fs_root_folder, file_name)
+        try:
+            data.to_csv(file_path, index=False)
+        except Exception as e:
+            st.error(f"Fehler beim Speichern der Datei {file_name}: {e}")
