@@ -67,7 +67,9 @@ def startseite():
     Warum diese App?
              
     ✔ Kein lästiges Papier-Tagebuch mehr
+             
     ✔ Verfolge deine Werte langfristig & erkenne Muster
+             
     ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
     """)
 
