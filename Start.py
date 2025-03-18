@@ -14,6 +14,9 @@ st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 # Initialisiere DataManager
 data_manager = DataManager(fs_protocol='local', fs_root_folder="shared_folder")
 
+# Debugging: Überprüfen Sie die Anmeldedaten
+print("Anmeldedaten:", data_manager.get_credentials())
+
 # Initialisiere LoginManager
 try:
     login_manager = LoginManager(data_manager)
@@ -27,7 +30,6 @@ try:
     login_manager.login_register()
 except Exception as e:
     st.error("Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.")
-    # Fehlerdetails für Debugging ausgeben
     print(f"Fehler in login_register: {e}")
 
 # Benutzerinfo

@@ -29,7 +29,6 @@ class DataManager:
         """
         Gibt die Anmeldedaten zurück, die von streamlit_authenticator benötigt werden.
         """
-        # Beispiel: Anmeldedaten können hier statisch definiert oder aus einer Datei geladen werden
         credentials = {
             "usernames": {
                 "admin": {

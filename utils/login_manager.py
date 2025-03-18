@@ -54,5 +54,4 @@ class LoginManager:
                 st.error("Registrierung fehlgeschlagen. CAPTCHA wurde falsch eingegeben.")
             else:
                 st.error("Ein Fehler ist während der Registrierung aufgetreten.")
-            # Fehlerdetails für Debugging ausgeben
             print(f"Registrierungsfehler: {e}")
