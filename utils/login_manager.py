@@ -71,14 +71,19 @@ class LoginManager:
         """
         Zeigt das Login-Formular an und verarbeitet die Anmeldung.
         """
-        # Ändere den Wert "main" zu "sidebar" oder "main"
-        name, authentication_status, username = self.authenticator.login("Login", "sidebar")
-        if authentication_status:
-            st.success(f"Willkommen {name}!")
-        elif authentication_status is False:
-            st.error("Benutzername oder Passwort ist falsch.")
-        elif authentication_status is None:
-            st.warning("Bitte geben Sie Ihre Anmeldedaten ein.")
+        # Debugging-Ausgabe
+        st.write("Debug: Login wird aufgerufen mit location='sidebar'")
+        try:
+            # Stelle sicher, dass der Parameter "location" korrekt ist
+            name, authentication_status, username = self.authenticator.login("Login", location="sidebar")
+            if authentication_status:
+                st.success(f"Willkommen {name}!")
+            elif authentication_status is False:
+                st.error("Benutzername oder Passwort ist falsch.")
+            elif authentication_status is None:
+                st.warning("Bitte geben Sie Ihre Anmeldedaten ein.")
+        except ValueError as e:
+            st.error(f"Fehler: {e}")
 
     def register(self):
         """
@@ -87,7 +92,7 @@ class LoginManager:
         st.markdown("""
         **Passwortanforderungen:**
         - Mindestens 8 Zeichen
-        - Mindestens ein Grossbuchstabe
+        - Mindestens ein Großbuchstabe
         - Mindestens ein Kleinbuchstabe
         - Mindestens eine Zahl
         - Mindestens ein Sonderzeichen (@$!%*?&)
