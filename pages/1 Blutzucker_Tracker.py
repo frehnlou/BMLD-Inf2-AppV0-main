@@ -54,19 +54,6 @@ with col4:
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
-    st.write("""
-    Liebe Diabetikerinnen und Diabetiker,
-
-    Mit unserem Blutzucker-Tracker können Sie:
-    - Ihre Blutzuckerwerte einfach eingeben und speichern.
-    - Den Messzeitpunkt auswählen (z. B. Nüchtern oder nach dem Essen).
-    - Ihre Werte in einer übersichtlichen Tabelle anzeigen lassen.
-    - Den Durchschnitt Ihrer Blutzuckerwerte berechnen.
-    - Ihre Werte in einer anschaulichen Grafik analysieren.
-
-    Behalten Sie Ihre Gesundheit im Blick und erkennen Sie langfristige Muster!
-    """)
-
     with st.form(key='blutzucker_form'):
         blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
         zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
@@ -100,10 +87,6 @@ def blutzucker_tracker():
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
-    st.write("""
-    Hier sehen Sie alle gespeicherten Blutzuckerwerte in einer übersichtlichen Tabelle.
-    """)
-
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
         st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
@@ -113,10 +96,6 @@ def blutzucker_werte():
 # Blutzucker-Grafik
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
-
-    st.write("""
-    Analysieren Sie Ihre Blutzuckerwerte in einer anschaulichen Grafik.
-    """)
 
     if not user_data.empty:
         st.markdown("### Verlauf der Blutzuckerwerte")
@@ -135,9 +114,7 @@ if st.session_state.seite == "Blutzucker-Tracker":
 elif st.session_state.seite == "Startseite":
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
-    Liebe Diabetikerinnen und Diabetiker,
-
-    Mit unserem Blutzucker-Tracker können Sie Ihre Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
+    Willkommen! Nutzen Sie die Navigation, um Ihre Blutzuckerwerte zu verwalten und zu analysieren.
     """)
 elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
