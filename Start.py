@@ -7,9 +7,6 @@ st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # Initialisiere DataManager
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
-if not data_manager:
-    st.error("❌ Fehler: DataManager konnte nicht geladen werden!")
-    st.stop()
 
 # Initialisiere LoginManager
 login_manager = LoginManager(data_manager)
