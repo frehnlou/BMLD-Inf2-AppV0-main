@@ -15,7 +15,7 @@ if not username:
     st.stop()
 
 # Datenbank für den Nutzer laden
-data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
+data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cpblsf_App")
 if f"user_data_{username}" not in st.session_state:
     st.session_state[f"user_data_{username}"] = data_manager.load_user_data(
         session_state_key=f"user_data_{username}",
