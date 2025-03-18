@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 from utils.data_handler import DataHandler
 
+
 class DataManager:
     """
     Singleton-Klasse für das Management von Anwendungsdaten und Benutzerspeicherung.
@@ -18,7 +19,7 @@ class DataManager:
             instance = super(DataManager, cls).__new__(cls)
             st.session_state.data_manager = instance
             return instance
-    
+
     def __init__(self, fs_protocol='file', fs_root_folder='app_data'):
         """ Initialisiert das Dateisystem für Speicherung. """
         if hasattr(self, '_initialized') and self._initialized:
@@ -36,14 +37,14 @@ class DataManager:
         """ Erstellt ein Dateisystem (lokal oder WebDAV). """
         if protocol == 'webdav':
             secrets = st.secrets['webdav']
-            return fsspec.filesystem('webdav', 
-                                     base_url=secrets['base_url'], 
+            return fsspec.filesystem('webdav',
+                                     base_url=secrets['base_url'],
                                      auth=(secrets['username'], secrets['password']))
         elif protocol == 'file':
             return fsspec.filesystem('file')
         else:
             raise ValueError(f"Unsupported protocol: {protocol}")
-    
+
     def _get_data_handler(self):
         """ Erstellt und gibt einen Daten-Handler zurück. """
         return DataHandler(self.fs, self.fs_root_folder)
@@ -120,6 +121,6 @@ class DataManager:
             # Speichern mit Fehlerbehandlung
             try:
                 dh.save(file_name, df)
-                st.toast(f"✅ Daten für {username} erfolgreich gespeichert!",)
+                st.toast(f"✅ Daten für {username} erfolgreich gespeichert!")
             except Exception as e:
                 st.error(f"⚠️ Fehler beim Speichern der Daten: {e}")
