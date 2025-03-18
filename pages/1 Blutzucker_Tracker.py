@@ -22,6 +22,7 @@ if not username:
 
 # Benutzerspezifische Daten initialisieren
 if f"user_data_{username}" not in st.session_state:
+    # Lade die Daten des aktuellen Benutzers oder initialisiere sie, falls keine vorhanden sind
     st.session_state[f"user_data_{username}"] = data_manager.load_user_data(
         session_state_key=f"user_data_{username}",
         username=username,
@@ -29,6 +30,7 @@ if f"user_data_{username}" not in st.session_state:
         parse_dates=["datum_zeit"]
     )
 
+# Zugriff auf die Benutzerdaten
 user_data = st.session_state[f"user_data_{username}"]
 
 # ====== Navigation ======
@@ -94,7 +96,7 @@ def blutzucker_tracker():
         )
 
         # Zeige eine Erfolgsmeldung an
-        st.success("Eintrag hinzugefügt!")
+        st.success("Eintrag erfolgreich hinzugefügt!")
 
     # Zeige die gespeicherten Werte an
     if not user_data.empty:
