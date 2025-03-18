@@ -39,6 +39,6 @@ st.write("""
 ### Autoren  
 Diese App wurde im Rahmen des Moduls BMLD Informatik 2 an der ZHAW entwickelt von:
 
-- Cristiana Bastos (pereicri@students.zhaw.ch)  
+- Cristiana Pereira Bastos (pereicri@students.zhaw.ch)  
 - Lou-Salomé Frehner (frehnlou@students.zhaw.ch)
 """)
