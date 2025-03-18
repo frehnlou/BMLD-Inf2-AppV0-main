@@ -71,7 +71,8 @@ class LoginManager:
         """
         Zeigt das Login-Formular an und verarbeitet die Anmeldung.
         """
-        name, authentication_status, username = self.authenticator.login("Login", "main")
+        # Ändere den Wert "main" zu "sidebar" oder "main"
+        name, authentication_status, username = self.authenticator.login("Login", "sidebar")
         if authentication_status:
             st.success(f"Willkommen {name}!")
         elif authentication_status is False:
@@ -85,8 +86,8 @@ class LoginManager:
         """
         st.markdown("""
         **Passwortanforderungen:**
-        - Mindestens 8 - 15 Zeichen
-        - Mindestens ein Großbuchstabe
+        - Mindestens 8 Zeichen
+        - Mindestens ein Grossbuchstabe
         - Mindestens ein Kleinbuchstabe
         - Mindestens eine Zahl
         - Mindestens ein Sonderzeichen (@$!%*?&)
