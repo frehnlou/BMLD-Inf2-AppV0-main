@@ -1,9 +1,7 @@
 import streamlit as st
-from datetime import datetime
-from zoneinfo import ZoneInfo
+import posixpath
 import pandas as pd
-from utils.data_manager import DataManager
-from utils.login_manager import LoginManager
+from utils.data_handler import DataHandler
 
 def save_user_data(self, session_state_key, username):
     """
@@ -14,18 +12,22 @@ def save_user_data(self, session_state_key, username):
         username (str): Der Benutzername für die individuelle Datei.
     """
     if not username:
-        st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
+        st.warning("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
         return
 
     file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")
 
-    if session_state_key in st.session_state:
-        df = st.session_state[session_state_key]
-        dh = self._get_data_handler()
+    if session_state_key not in st.session_state:
+        st.warning("⚠️ Keine Daten zum Speichern gefunden.")
+        return
 
-        # ✅ Fehlerbehandlung hinzufügen
-        try:
-            dh.save(file_name, df)
-            st.success(f"✅ Daten für {username} erfolgreich gespeichert!")
-        except Exception as e:
-            st.error(f"⚠️ Fehler beim Speichern der Datei: {e}")
+    df = st.session_state[session_state_key]
+
+    # ✅ Datenhandler erstellen und Datei speichern
+    dh = DataHandler(self.fs, self.fs_root_folder)
+
+    try:
+        dh.save(file_name, df)
+        st.success(f"✅ Daten für {username} erfolgreich gespeichert!")
+    except Exception as e:
+        st.error(f"⚠️ Fehler beim Speichern der Datei: {e}")
