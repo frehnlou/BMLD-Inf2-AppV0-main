@@ -1,4 +1,10 @@
 import streamlit as st
+import sys
+import os
+
+# Sicherstellen, dass das Verzeichnis "utils" im Python-Pfad enthalten ist
+sys.path.append(os.path.abspath("utils"))
+
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
