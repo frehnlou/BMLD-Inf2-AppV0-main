@@ -7,8 +7,6 @@ login_manager = LoginManager()
 login_manager.go_to_login('Start.py')
 # ====== End Login Block ======
 
-# ====== Funktionen ======
-
 def blutzucker_werte():
     # Überschrift
     st.markdown("## 📋 Blutzucker-Werte")
@@ -23,10 +21,12 @@ def blutzucker_werte():
     # Datenbank für den Nutzer laden
     data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
     user_data = data_manager.load_user_data(
-        session_state_key="user_data",
+        session_state_key=f"user_data_{username}",  # Benutzerspezifischer Schlüssel
         username=username,
         parse_dates=["datum_zeit"]
     )
+
+    st.write("Geladene Daten:", user_data)  # Debugging
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
@@ -43,27 +43,5 @@ def blutzucker_werte():
     else:
         st.warning("Noch keine Daten vorhanden.")
 
-# ====== Navigation ======
-def navigation_buttons():
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        if st.button("🏠 Startseite"):
-            st.session_state.seite = "Startseite"
-
-    with col2:
-        if st.button("🩸 Blutzucker-Tracker"):
-            st.session_state.seite = "Blutzucker-Tracker"
-
-    with col3:
-        if st.button("📋 Blutzucker-Werte"):
-            st.session_state.seite = "Blutzucker-Werte"
-
-    with col4:
-        if st.button("📊 Blutzucker-Grafik"):
-            st.session_state.seite = "Blutzucker-Grafik"
-
-# ====== Hauptprogramm ======
 if __name__ == "__main__":
-    navigation_buttons()
     blutzucker_werte()
