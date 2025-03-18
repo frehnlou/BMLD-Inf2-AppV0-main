@@ -6,120 +6,141 @@ from utils.data_manager import DataManager
 
 class LoginManager:
     """
-    Verwaltet die Benutzer-Authentifizierung und den Zugriff auf Anmeldedaten.
+    Singleton-Klasse, die den Anwendungszustand, die Speicherung und die Benutzer-Authentifizierung verwaltet.
+    
+    Verwaltet den Zugriff auf das Dateisystem, Benutzeranmeldedaten und den Authentifizierungsstatus
+    mithilfe des Streamlit-Session-States für Konsistenz zwischen Reruns.
     """
-
-    def __init__(self, data_manager, auth_credentials_file='credentials.yaml', auth_cookie_name='auth_cookie'):
+    def __new__(cls, *args, **kwargs):
         """
-        Initialisiert den LoginManager.
+        Implementiert das Singleton-Pattern, indem die bestehende Instanz aus dem Session-State zurückgegeben wird, falls verfügbar.
+
+        Returns:
+            LoginManager: Die Singleton-Instanz, entweder bestehend oder neu erstellt.
+        """
+        if 'login_manager' in st.session_state:
+            return st.session_state.login_manager
+        else:
+            instance = super(LoginManager, cls).__new__(cls)
+            st.session_state.login_manager = instance
+            return instance
+    
+    def __init__(self, data_manager: DataManager = None,
+                 auth_credentials_file: str = 'credentials.yaml',
+                 auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
+        """
+        Initialisiert die Komponenten für das Dateisystem und die Authentifizierung, falls noch nicht initialisiert.
 
         Args:
-            data_manager (DataManager): Instanz des DataManager zum Laden/Speichern von Daten.
-            auth_credentials_file (str): Pfad zur Datei mit den Anmeldedaten.
-            auth_cookie_name (str): Name des Cookies für die Sitzungsverwaltung.
+            data_manager: Die DataManager-Instanz für die Datenspeicherung.
+            auth_credentials_file (str): Der Dateiname für die Speicherung der Benutzeranmeldedaten.
+            auth_cookie_name (str): Der Name des Cookies für die Sitzungsverwaltung.
         """
+        if hasattr(self, 'authenticator'):  # Überprüfen, ob die Instanz bereits initialisiert ist
+            return
+        
+        if data_manager is None:
+            return
+
+        # Initialisiere die Authentifizierungskomponenten
         self.data_manager = data_manager
         self.auth_credentials_file = auth_credentials_file
         self.auth_cookie_name = auth_cookie_name
-        self.auth_cookie_key = secrets.token_urlsafe(32)  # Generiere einen zufälligen Schlüssel
+        self.auth_cookie_key = secrets.token_urlsafe(32)
         self.auth_credentials = self._load_auth_credentials()
-
-        # Initialisiere den Authenticator
         self.authenticator = stauth.Authenticate(
             self.auth_credentials,
             self.auth_cookie_name,
-            self.auth_cookie_key,
-            cookie_expiry_days=30
+            self.auth_cookie_key
         )
 
     def _load_auth_credentials(self):
         """
-        Lädt die Benutzeranmeldedaten aus der Datei.
+        Lädt die Benutzeranmeldedaten aus der konfigurierten Anmeldedatei.
 
         Returns:
-            dict: Benutzeranmeldedaten.
+            dict: Benutzeranmeldedaten, standardmäßig ein leeres `usernames`-Dictionary, falls die Datei nicht gefunden wird.
         """
-        try:
-            return self.data_manager.load(self.auth_credentials_file, initial_value={"usernames": {}})
-        except Exception as e:
-            st.error(f"Fehler beim Laden der Anmeldedaten: {e}")
-            return {"usernames": {}}
+        dh = self.data_manager._get_data_handler()
+        return dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
 
     def _save_auth_credentials(self):
         """
-        Speichert die Benutzeranmeldedaten in der Datei.
+        Speichert die aktuellen Benutzeranmeldedaten in der Anmeldedatei.
         """
-        try:
-            self.data_manager.save(self.auth_credentials_file, self.auth_credentials)
-        except Exception as e:
-            st.error(f"Fehler beim Speichern der Anmeldedaten: {e}")
+        dh = self.data_manager._get_data_handler()
+        dh.save(self.auth_credentials_file, self.auth_credentials)
 
-    def login_register(self):
+    def login_register(self, login_title='Login', register_title='Register new user'):
         """
-        Zeigt die Login- und Registrierungsoberfläche an.
+        Rendert die Authentifizierungsoberfläche.
+        
+        Zeigt das Login-Formular und optional das Registrierungsformular an. Verarbeitet die Benutzeranmeldung
+        und den Registrierungsablauf. Stoppt die weitere Ausführung nach dem Rendern.
         """
         if st.session_state.get("authentication_status") is True:
             self.authenticator.logout("Logout", "sidebar")
         else:
-            login_tab, register_tab = st.tabs(["Login", "Registrieren"])
+            login_tab, register_tab = st.tabs((login_title, register_title))
             with login_tab:
-                self.login()
+                self.login(stop=False)
             with register_tab:
                 self.register()
 
-    def login(self):
+    def login(self, stop=True):
         """
-        Zeigt das Login-Formular an und verarbeitet die Anmeldung.
-        """
-        try:
-            # Debugging-Ausgabe
-            st.write("Debug: Login wird aufgerufen mit location='sidebar'")
-            
-            # Stelle sicher, dass der Parameter "location" korrekt ist
-            result = self.authenticator.login("Login", location="sidebar")
-            st.write("Debug: Login-Ergebnis:", result)  # Debugging-Ausgabe
+        Rendert das Login-Formular und verarbeitet Authentifizierungsstatusmeldungen.
 
-            # Entpacke das Ergebnis, falls es ein Tuple ist
-            if isinstance(result, tuple) and len(result) == 3:
-                name, authentication_status, username = result
-                if authentication_status:
-                    st.success(f"Willkommen {name}!")
-                elif authentication_status is False:
-                    st.error("Benutzername oder Passwort ist falsch.")
-                elif authentication_status is None:
-                    st.warning("Bitte geben Sie Ihre Anmeldedaten ein.")
+        Args:
+            stop (bool): Stoppt die Ausführung nach dem Rendern.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout("Logout", "sidebar")
+        else:
+            self.authenticator.login("Login", "sidebar")
+            if st.session_state["authentication_status"] is False:
+                st.error("Benutzername/Passwort ist falsch.")
             else:
-                st.error("Unerwartetes Ergebnis von self.authenticator.login()")
-        except Exception as e:
-            st.error(f"Fehler bei der Anmeldung: {e}")
+                st.warning("Bitte geben Sie Ihren Benutzernamen und Ihr Passwort ein.")
+            if stop:
+                st.stop()
 
-    def register(self):
+    def register(self, stop=True):
         """
-        Zeigt das Registrierungsformular an und verarbeitet die Registrierung.
-        """
-        st.markdown("""
-        **Passwortanforderungen:**
-        - Mindestens 8 Zeichen
-        - Mindestens ein Großbuchstabe
-        - Mindestens ein Kleinbuchstabe
-        - Mindestens eine Zahl
-        - Mindestens ein Sonderzeichen (@$!%*?&)
-        """)
+        Rendert das Registrierungsformular und verarbeitet den Benutzerregistrierungsablauf.
+        Zeigt Passwortanforderungen an, verarbeitet Registrierungsversuche und speichert Anmeldedaten
+        bei erfolgreicher Registrierung.
 
-        try:
-            if self.authenticator.register_user("Registrieren", preauthorization=False):
-                st.success("Benutzer erfolgreich registriert!")
-                self._save_auth_credentials()
-        except Exception as e:
-            st.error(f"Fehler bei der Registrierung: {e}")
+        Args:
+            stop (bool): Stoppt die Ausführung nach dem Rendern.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout("Logout", "sidebar")
+        else:
+            st.info("""
+            Das Passwort muss 8-20 Zeichen lang sein und mindestens einen Großbuchstaben, 
+            einen Kleinbuchstaben, eine Ziffer und ein Sonderzeichen aus @$!%*?& enthalten.
+            """)
+            res = self.authenticator.register_user("Registrieren", preauthorization=False)
+            if res[1] is not None:
+                st.success(f"Benutzer {res[1]} erfolgreich registriert.")
+                try:
+                    self._save_auth_credentials()
+                    st.success("Anmeldedaten erfolgreich gespeichert.")
+                except Exception as e:
+                    st.error(f"Fehler beim Speichern der Anmeldedaten: {e}")
+            if stop:
+                st.stop()
 
     def go_to_login(self, login_page_py_file):
         """
-        Leitet den Benutzer zur Login-Seite weiter, falls nicht eingeloggt.
+        Erstellt eine Logout-Schaltfläche, die den Benutzer abmeldet und zur Login-Seite weiterleitet.
+        Wenn der Benutzer nicht eingeloggt ist, wird die Login-Seite angezeigt.
 
         Args:
-            login_page_py_file (str): Name der Login-Seite.
+            login_page_py_file (str): Der Pfad zur Python-Datei, die die Login-Seite enthält.
         """
         if st.session_state.get("authentication_status") is not True:
-            st.warning("Bitte melden Sie sich an.")
-            st.stop()
+            st.switch_page(login_page_py_file)
+        else:
+            self.authenticator.logout("Logout", "sidebar")
