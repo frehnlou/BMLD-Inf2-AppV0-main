@@ -1,17 +1,17 @@
 import streamlit as st
-from utils.data_manager import DataManager  # ✅ Import korrigiert
-from utils.login_manager import LoginManager  # ✅ Import korrigiert
-import pandas as pd
+from utils.data_manager import DataManager
+from utils.login_manager import LoginManager
 
 # ✅ Direkt zur Login-Seite
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
-# ✅ Initialisiere DataManager
+# ====== Login Block ======
+# Initialisiere DataManager
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 
-# ✅ Initialisiere LoginManager
+# Initialisiere LoginManager und zeige Login/Register direkt
 login_manager = LoginManager(data_manager)
-login_manager.login_register()
+login_manager.login_register()  # Login-/Registrierungsseite anzeigen
 
 # Falls der Benutzer nicht eingeloggt ist, stoppe den weiteren Code
 if "authentication_status" not in st.session_state or not st.session_state["authentication_status"]:
@@ -19,10 +19,13 @@ if "authentication_status" not in st.session_state or not st.session_state["auth
 
 # 📌 Nutzername holen
 username = st.session_state.get("username")
+if not username:
+    st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
+    st.stop()
 
-# ✅ Daten des Nutzers laden
+# 📌 Benutzerbezogene Daten laden
 if "user_data" not in st.session_state:
-    st.session_state.user_data = data_manager.load_user_data(
+    st.session_state["user_data"] = data_manager.load_user_data(
         username=username,
         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
         parse_dates=["datum_zeit"]
@@ -36,7 +39,7 @@ Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzu
 """)
 
 # 👤 Benutzerinfo
-st.info(f"👋 Eingeloggt als: {username}")
+st.info(f"👋 Eingeloggt als: *{username}*")
 
 # Infobox
 st.markdown("""
@@ -50,6 +53,6 @@ st.write("""
 ### Autoren  
 Diese App wurde im Rahmen des Moduls BMLD Informatik 2 an der ZHAW entwickelt von:
 
-- Cristiana Bastos (pereicri@students.zhaw.ch)  
-- Lou-Salomé Frehner (frehnlou@students.zhaw.ch)
+- *Cristiana Bastos* (pereicri@students.zhaw.ch)  
+- *Lou-Salomé Frehner* (frehnlou@students.zhaw.ch)
 """)

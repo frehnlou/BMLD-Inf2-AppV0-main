@@ -30,15 +30,25 @@ if "user_data" not in st.session_state:
 
 user_data = st.session_state.user_data
 
-# ====== Navigation ======
-col1, col2, col3, col4 = st.columns(4)
-
 def save_and_switch_page(page):
     """ Speichert die Daten und wechselt zur anderen Seite """
-    if "user_data" in st.session_state:
-        data_manager.save_user_data("user_data", username)  
+    
+    # Prüfen, ob die Variablen existieren
+    if "user_data" in st.session_state and "username" in st.session_state:
+        username = st.session_state["username"]
+        
+        if username:
+            data_manager.save_user_data(username)  # 🔥 Richtiges Speichern
+            
+    # Stelle sicher, dass "seite" in session_state existiert
+    if "seite" not in st.session_state:
+        st.session_state.seite = "Startseite"
+    
     st.session_state.seite = page
-    st.experimental_rerun()  
+    st.rerun()  # 🔄 Aktualisiert die Seite nach dem Speichern
+
+# ====== Navigation ======
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     if st.button("🏠 Startseite"):
