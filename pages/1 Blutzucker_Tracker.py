@@ -23,12 +23,16 @@ if not username:
 # Benutzerspezifische Daten initialisieren
 if f"user_data_{username}" not in st.session_state:
     # Lade die Daten des aktuellen Benutzers oder initialisiere sie, falls keine vorhanden sind
-    st.session_state[f"user_data_{username}"] = data_manager.load_user_data(
-        session_state_key=f"user_data_{username}",
-        file_name="blutzuckerwerte.csv",
-        initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
-        parse_dates=["datum_zeit"]
-    )
+    try:
+        st.session_state[f"user_data_{username}"] = data_manager.load_user_data(
+            session_state_key=f"user_data_{username}",
+            username=username,
+            initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+            parse_dates=["datum_zeit"]
+        )
+    except Exception as e:
+        st.error(f"⚠️ Fehler beim Laden der Benutzerdaten: {e}")
+        st.stop()
 
 # Zugriff auf die Benutzerdaten
 user_data = st.session_state.get(f"user_data_{username}", pd.DataFrame())
@@ -99,7 +103,7 @@ def blutzucker_tracker():
         try:
             data_manager.save_user_data(
                 session_state_key=f"user_data_{username}",
-                file_name="blutzuckerwerte.csv"
+                username=username
             )
             st.success("Eintrag erfolgreich hinzugefügt!")
         except Exception as e:
