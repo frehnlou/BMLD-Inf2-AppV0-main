@@ -1,115 +1,129 @@
-import fsspec
-import posixpath
+import secrets
 import streamlit as st
-import pandas as pd
-from utils.data_handler import DataHandler
+import streamlit_authenticator as stauth
+from utils.data_manager import DataManager
 
-class DataManager:
+class LoginManager:
     """
-    Singleton-Klasse für das Management von Anwendungsdaten und Benutzerspeicherung.
-    Diese Klasse verwendet den Streamlit Session-State für Konsistenz zwischen Reruns.
+    Singleton-Klasse, die das Anwendungs-Login verwaltet.
+    
+    - Unterstützt Benutzerregistrierung, Anmeldung und Sitzungsverwaltung.
+    - Speichert Benutzerdaten in einer YAML-Datei für Authentifizierung.
     """
 
     def __new__(cls, *args, **kwargs):
         """ Singleton-Pattern: Gibt die bestehende Instanz zurück, falls vorhanden. """
-        if 'data_manager' in st.session_state:
-            return st.session_state.data_manager
+        if 'login_manager' in st.session_state:
+            return st.session_state.login_manager
         else:
-            instance = super(DataManager, cls).__new__(cls)
-            st.session_state.data_manager = instance
+            instance = super(LoginManager, cls).__new__(cls)
+            st.session_state.login_manager = instance
             return instance
     
-    def __init__(self, fs_protocol='file', fs_root_folder='app_data'):
-        """ Initialisiert das Dateisystem für Speicherung. """
-        if hasattr(self, '_initialized') and self._initialized:
-            return  # Verhindert erneutes Initialisieren
-
-        self.fs_root_folder = fs_root_folder
-        self.fs_protocol = fs_protocol
-        self.fs = self._init_filesystem(fs_protocol)
-        self.app_data_reg = {}
-        self.user_data_reg = {}
-
-        self._initialized = True  # Markiere als initialisiert
-
-    def _init_filesystem(self, protocol: str):
-        """ Erstellt ein Dateisystem (lokal oder WebDAV). """
-        if protocol == 'webdav':
-            secrets = st.secrets['webdav']
-            return fsspec.filesystem('webdav', 
-                                     base_url=secrets['base_url'], 
-                                     auth=(secrets['username'], secrets['password']))
-        elif protocol == 'file':
-            return fsspec.filesystem('file')
-        else:
-            raise ValueError(f"❌ Fehler: Protokoll {protocol} wird nicht unterstützt!")
-
-    def _get_data_handler(self):
-        """ Erstellt und gibt einen Daten-Handler zurück. """
-        return DataHandler(self.fs, self.fs_root_folder)
-
-    def load_user_data(self, session_state_key, username, initial_value=None, parse_dates=None):
+    def __init__(self, data_manager: DataManager = None,
+                 auth_credentials_file: str = 'credentials.yaml',
+                 auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
         """
-        Lädt die Benutzerdaten aus einer benutzerspezifischen Datei oder erstellt eine neue Datei.
-        
+        Initialisiert den Login-Manager.
+
         Args:
-            session_state_key (str): Der Key im Streamlit Session-State für die Daten.
-            username (str): Der Benutzername für die individuelle Datei.
-            initial_value (pd.DataFrame, optional): Der Standardwert, falls die Datei nicht existiert.
-            parse_dates (list, optional): Spaltennamen, die als Datetime geparst werden sollen.
-
-        Returns:
-            pd.DataFrame: Die geladenen Benutzerdaten.
+            data_manager: Das DataManager-Objekt zur Speicherung von Benutzeranmeldungen.
+            auth_credentials_file (str): YAML-Datei zur Speicherung von Benutzerdaten.
+            auth_cookie_name (str): Name des Authentifizierungs-Cookies.
         """
-        if not username:
-            st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
-            return pd.DataFrame()
-
-        file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")  # 🔥 Speichert in WebDAV
-        dh = self._get_data_handler()
-
-        # Prüfe, ob die Datei existiert (Fehlerbehandlung für WebDAV)
-        try:
-            if not self.fs.exists(file_name):
-                df = initial_value if initial_value is not None else pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"])
-                dh.save(file_name, df)
-                return df
-        except Exception as e:
-            st.error(f"⚠️ Fehler beim Zugriff auf WebDAV: {e}")
-            return pd.DataFrame()
-
-        # Lade die Datei
-        df = dh.load(file_name, initial_value=initial_value)
-
-        # Falls parse_dates definiert ist, konvertiere Spalten zu Datetime
-        if parse_dates:
-            for col in parse_dates:
-                if col in df.columns:
-                    df[col] = pd.to_datetime(df[col], errors='coerce')
-
-        return df
-
-    def save_user_data(self, session_state_key, username):
-        """
-        Speichert die Benutzerdaten in eine benutzerspezifische Datei.
+        if hasattr(self, 'authenticator'):  # Falls bereits initialisiert, nichts tun
+            return
         
-        Args:
-            session_state_key (str): Der Key im Streamlit Session-State für die Daten.
-            username (str): Der Benutzername für die individuelle Datei.
-        """
-        if not username:
-            st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
+        if data_manager is None:
             return
 
-        file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")  # 🔥 Speichert in WebDAV
+        # Initialisiere Authentifizierungsvariablen
+        self.data_manager = data_manager
+        self.auth_credentials_file = auth_credentials_file
+        self.auth_cookie_name = auth_cookie_name
+        self.auth_cookie_key = secrets.token_urlsafe(32)
+        self.auth_credentials = self._load_auth_credentials()
+        self.authenticator = stauth.Authenticate(self.auth_credentials, self.auth_cookie_name, self.auth_cookie_key)
 
-        if session_state_key in st.session_state:
-            df = st.session_state[session_state_key]
-            dh = self._get_data_handler()
 
-            # Speichern mit Fehlerbehandlung für WebDAV
-            try:
-                dh.save(file_name, df)
-                st.success(f"✅ Daten für {username} erfolgreich gespeichert!")  # 🔥 Normale Speichermeldung
-            except Exception as e:
-                st.error(f"⚠️ Fehler beim Speichern in WebDAV: {e}")
+    def _load_auth_credentials(self):
+        """
+        Lädt die Benutzerdaten aus der YAML-Datei.
+
+        Returns:
+            dict: Benutzerinformationen, falls vorhanden.
+        """
+        dh = self.data_manager._get_data_handler()
+        return dh.load(self.auth_credentials_file, initial_value= {"usernames": {}})
+
+    def _save_auth_credentials(self):
+        """
+        Speichert aktuelle Benutzeranmeldungen in die YAML-Datei.
+        """
+        dh = self.data_manager._get_data_handler()
+        dh.save(self.auth_credentials_file, self.auth_credentials)
+
+    def login_register(self, login_title='Login', register_title='Neuen Benutzer registrieren'):
+        """
+        Zeigt das Login- und Registrierungsformular an.
+        
+        Falls der Benutzer nicht eingeloggt ist, wird entweder das Login- oder Registrierungsformular angezeigt.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
+        else:
+            login_tab, register_tab = st.tabs((login_title, register_title))
+            with login_tab:
+                self.login(stop=False)
+            with register_tab:
+                self.register()
+
+    def login(self, stop=True):
+        """
+        Zeigt das Login-Formular an und verarbeitet den Anmeldevorgang.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
+        else:
+            self.authenticator.login()
+            if st.session_state["authentication_status"] is False:
+                st.error("⚠️ Benutzername oder Passwort ist falsch!")
+            else:
+                st.warning("Bitte Benutzername und Passwort eingeben.")
+            if stop:
+                st.stop()
+
+    def register(self, stop=True):
+        """
+        Zeigt das Registrierungsformular an und speichert neue Benutzer.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
+        else:
+            st.info("""
+            🔑 Das Passwort muss zwischen 8-20 Zeichen lang sein und mindestens enthalten:
+            - Einen Großbuchstaben
+            - Einen Kleinbuchstaben
+            - Eine Zahl
+            - Ein Sonderzeichen (@$!%*?&)
+            """)
+
+            res = self.authenticator.register_user()
+            if res[1] is not None:
+                st.success(f"✅ Benutzer *{res[1]}* wurde erfolgreich registriert!")
+                try:
+                    self._save_auth_credentials()
+                    st.success("🔒 Anmeldedaten wurden gespeichert!")
+                except Exception as e:
+                    st.error(f"⚠️ Fehler beim Speichern der Anmeldedaten: {e}")
+            if stop:
+                st.stop()
+
+    def go_to_login(self, login_page_py_file):
+        """
+        Erstellt eine Logout-Schaltfläche und leitet nicht angemeldete Benutzer zur Login-Seite um.
+        """
+        if st.session_state.get("authentication_status") is not True:
+            st.switch_page(login_page_py_file)
+        else:
+            self.authenticator.logout()  # 🔑 Zeigt Logout-Button an

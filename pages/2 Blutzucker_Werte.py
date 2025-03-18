@@ -19,11 +19,11 @@ def blutzucker_werte():
         st.error("⚠️ Kein Benutzer eingeloggt! Anmeldung erforderlich.")
         st.stop()
 
-    # 📌 Datenbank für den Nutzer laden
+    # 📌 Datenbank für den aktuellen Benutzer laden
     data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
     user_data = data_manager.load_user_data(
         session_state_key="user_data",
-        username=username,  # ✅ Jeder Benutzer hat seine eigene Datei!
+        username=username,  # ✅ Jeder Benutzer bekommt seine eigene Datei
         parse_dates=["datum_zeit"]
     )
 
@@ -32,22 +32,15 @@ def blutzucker_werte():
 
         # 🔥 Sicherstellen, dass die Spalten existieren
         if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert", "zeitpunkt"]):
-            # 🔥 Falls `datum_zeit` nicht als `Datetime` erkannt wird, umwandeln
-            if not pd.api.types.is_datetime64_any_dtype(user_data["datum_zeit"]):
-                user_data["datum_zeit"] = pd.to_datetime(user_data["datum_zeit"], errors='coerce')
-
-            # 🔥 Sortieren nach Datum für bessere Übersicht
-            user_data = user_data.sort_values("datum_zeit", ascending=False)
-
             st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
-
+            
             # ✅ Durchschnitt berechnen
             durchschnitt = user_data["blutzuckerwert"].mean()
             st.markdown(f"**📊 Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
         else:
             st.warning("⚠️ Datenformat fehlerhaft oder Spalten fehlen!")
     else:
-        st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte geben Sie einen neuen Wert ein.")
+        st.warning("⚠️ Noch keine Daten vorhanden. Bitte neuen Wert eingeben.")
 
 if __name__ == "__main__":
     blutzucker_werte()

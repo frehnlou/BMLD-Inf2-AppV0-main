@@ -81,7 +81,7 @@ class DataManager:
         # Lade die Datei
         df = dh.load(file_name, initial_value=initial_value)
         
-        # Falls `parse_dates` definiert ist, konvertiere Spalten zu Datetime
+        # Falls parse_dates definiert ist, konvertiere Spalten zu Datetime
         if parse_dates:
             for col in parse_dates:
                 if col in df.columns:
@@ -110,6 +110,6 @@ class DataManager:
             # Speichern mit Fehlerbehandlung für WebDAV
             try:
                 dh.save(file_name, df)
-                st.toast(f"✅ Daten für {username} erfolgreich gespeichert!", icon="💾")  # 🔥 Diskretere Meldung
+                st.success(f"✅ Daten für {username} erfolgreich gespeichert!")  
             except Exception as e:
                 st.error(f"⚠️ Fehler beim Speichern in WebDAV: {e}")
