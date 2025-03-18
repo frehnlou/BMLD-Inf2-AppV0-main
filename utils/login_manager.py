@@ -76,15 +76,21 @@ class LoginManager:
             st.write("Debug: Login wird aufgerufen mit location='sidebar'")
             
             # Stelle sicher, dass der Parameter "location" korrekt ist
-            name, authentication_status, username = self.authenticator.login("Login", location="sidebar")
-            
-            if authentication_status:
-                st.success(f"Willkommen {name}!")
-            elif authentication_status is False:
-                st.error("Benutzername oder Passwort ist falsch.")
-            elif authentication_status is None:
-                st.warning("Bitte geben Sie Ihre Anmeldedaten ein.")
-        except ValueError as e:
+            result = self.authenticator.login("Login", location="sidebar")
+            st.write("Debug: Login-Ergebnis:", result)  # Debugging-Ausgabe
+
+            # Entpacke das Ergebnis, falls es ein Tuple ist
+            if isinstance(result, tuple) and len(result) == 3:
+                name, authentication_status, username = result
+                if authentication_status:
+                    st.success(f"Willkommen {name}!")
+                elif authentication_status is False:
+                    st.error("Benutzername oder Passwort ist falsch.")
+                elif authentication_status is None:
+                    st.warning("Bitte geben Sie Ihre Anmeldedaten ein.")
+            else:
+                st.error("Unerwartetes Ergebnis von self.authenticator.login()")
+        except Exception as e:
             st.error(f"Fehler bei der Anmeldung: {e}")
 
     def register(self):
