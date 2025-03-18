@@ -110,6 +110,5 @@ class DataManager:
 
             try:
                 dh.save(file_name, df)
-                # Toast-Meldung entfernt
             except Exception as e:
                 st.error(f"Fehler beim Speichern in WebDAV: {e}")
