@@ -89,7 +89,7 @@ class DataManager:
 
         return df
 
-    def save_user_data(self, session_state_key, username, show_toast=True):
+    def save_user_data(self, session_state_key, username, show_toast=False):
         """
         Speichert die Benutzerdaten in eine benutzerspezifische Datei.
 
@@ -110,7 +110,6 @@ class DataManager:
 
             try:
                 dh.save(file_name, df)
-                if show_toast:
-                    st.toast(f"Daten für {username} erfolgreich gespeichert.", icon="💾")
+                # Toast-Meldung entfernt
             except Exception as e:
                 st.error(f"Fehler beim Speichern in WebDAV: {e}")

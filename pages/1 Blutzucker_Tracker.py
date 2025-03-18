@@ -95,8 +95,8 @@ def blutzucker_tracker():
             username=username
         )
 
-        # Zeige eine Erfolgsmeldung an
-        st.success("Eintrag erfolgreich hinzugefügt!")
+        # Automatische Aktualisierung der Seite
+        st.experimental_rerun()
 
     # Zeige die gespeicherten Werte an
     if not user_data.empty:
