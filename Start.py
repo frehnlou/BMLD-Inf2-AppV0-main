@@ -1,6 +1,7 @@
 import streamlit as st
-from utils.data_manager import DataManager
-from utils.login_manager import LoginManager
+from utils.data_manager import DataManager  # ✅ Import korrigiert
+from utils.login_manager import LoginManager  # ✅ Import korrigiert
+import pandas as pd
 
 # ✅ Direkt zur Login-Seite
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
@@ -22,7 +23,6 @@ username = st.session_state.get("username")
 # ✅ Daten des Nutzers laden
 if "user_data" not in st.session_state:
     st.session_state.user_data = data_manager.load_user_data(
-        session_state_key="user_data",
         username=username,
         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
         parse_dates=["datum_zeit"]
@@ -36,7 +36,7 @@ Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzu
 """)
 
 # 👤 Benutzerinfo
-st.info(f"👋 Eingeloggt als: {st.session_state.username}")
+st.info(f"👋 Eingeloggt als: {username}")
 
 # Infobox
 st.markdown("""
