@@ -27,16 +27,11 @@ user_data = data_manager.load_user_data(
 
 if not user_data.empty:
     st.markdown("### Verlauf der Blutzuckerwerte")
+    blutzuckerwerte = user_data[["datum_zeit", "blutzuckerwert"]].set_index("datum_zeit")
 
-    # Sicherstellen, dass die benötigten Spalten existieren
-    if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert"]):
-        blutzuckerwerte = user_data[["datum_zeit", "blutzuckerwert"]].set_index("datum_zeit")
-
-        if len(blutzuckerwerte) > 1:
-            st.line_chart(blutzuckerwerte)
-        else:
-            st.warning("Mindestens zwei Werte erforderlich, um eine Grafik darzustellen.")
+    if len(blutzuckerwerte) > 1:
+        st.line_chart(blutzuckerwerte)
     else:
-        st.warning("Datenformat fehlerhaft oder Spalten fehlen.")
+        st.warning("Mindestens zwei Werte erforderlich, um eine Grafik darzustellen.")
 else:
     st.warning("Noch keine Daten vorhanden. Bitte fügen Sie Blutzuckerwerte hinzu.")

@@ -51,7 +51,9 @@ with col4:
 st.markdown("## 🩸 Blutzucker-Tracker")
 
 st.write("""
-Mit dem Blutzucker-Tracker können Sie Ihre Blutzuckerwerte einfach eingeben und speichern. 
+Liebe Diabetikerinnen und Diabetiker,
+
+Mit unserem Blutzucker-Tracker können Sie Ihre Blutzuckerwerte einfach eingeben und speichern. 
 Verfolgen Sie Ihre Werte langfristig und behalten Sie die Kontrolle über Ihre Gesundheit.
 """)
 
@@ -82,5 +84,9 @@ if submit_button:
 if not user_data.empty:
     st.markdown("### Gespeicherte Blutzuckerwerte")
     st.table(user_data.reset_index(drop=True))
+
+    # Durchschnitt berechnen und anzeigen
+    durchschnitt = user_data["blutzuckerwert"].mean()
+    st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
 else:
     st.warning("Noch keine Daten vorhanden.")
