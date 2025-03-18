@@ -15,7 +15,12 @@ st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 data_manager = DataManager(fs_protocol='local', fs_root_folder="shared_folder")
 
 # Initialisiere LoginManager
-login_manager = LoginManager(data_manager)
+try:
+    login_manager = LoginManager(data_manager)
+except Exception as e:
+    st.error("Ein Fehler ist bei der Initialisierung des LoginManagers aufgetreten.")
+    print(f"Fehler bei LoginManager-Initialisierung: {e}")
+    st.stop()
 
 # Fehlerbehandlung für Login/Register
 try:
