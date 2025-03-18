@@ -17,8 +17,23 @@ login_manager.login_register()  # Login-/Registrierungsseite anzeigen
 if "authentication_status" not in st.session_state or not st.session_state["authentication_status"]:
     st.stop()
 
-# ====== Startseite nach erfolgreicher Anmeldung ======
+# 📌 Nutzername holen
+username = st.session_state.get("username", "Gast")
 
+# 📌 Benutzerspezifische Daten laden
+if "user_data" not in st.session_state:
+    st.session_state.user_data = data_manager.load_user_data(
+        session_state_key="user_data",
+        username=username,
+        initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
+        parse_dates=["datum_zeit"]
+    )
+
+# 🔥 Sicherstellen, dass die Daten gespeichert werden
+if "user_data" in st.session_state:
+    data_manager.save_user_data("user_data", username)
+
+# ====== Startseite nach erfolgreicher Anmeldung ======
 st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
 
 st.write("""
@@ -26,7 +41,7 @@ Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzu
 """)
 
 # 👤 Benutzerinfo
-st.info(f"👋 Eingeloggt als: {st.session_state.username}")
+st.info(f"👋 Eingeloggt als: {username}")
 
 # Infobox
 st.markdown("""
