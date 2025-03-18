@@ -24,7 +24,7 @@ if not username:
 if "user_data" not in st.session_state:
     st.session_state.user_data = data_manager.load_user_data(
         session_state_key="user_data",
-        username=username,  # 🔥 Jeder Benutzer bekommt seine eigene Datei
+        username=username,  
         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
         parse_dates=["datum_zeit"]
     )
@@ -50,6 +50,27 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
+# 🔥 Startseite
+def startseite():
+    st.markdown("## 🏠 Willkommen auf der Startseite!")
+    st.write("""
+    Liebe Diabetikerinnen und Diabetiker!🩸
+
+    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
+
+    - Was bringt dir die App?
+    - Schnelle Eingabe deines Blutzuckers (mg/dL)
+    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
+    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
+    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
+
+    Warum diese App?
+             
+    ✔ Kein lästiges Papier-Tagebuch mehr
+    ✔ Verfolge deine Werte langfristig & erkenne Muster
+    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
+    """)
+
 # 🔥 Blutzucker-Tracker
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
@@ -57,29 +78,37 @@ def blutzucker_tracker():
     with st.form(key='blutzucker_form'):
         blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
         zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
-        submit_button = st.form_submit_button(label='✅ Eintrag hinzufügen')
+        submit_button = st.form_submit_button(label=' Eintrag hinzufügen')
 
     if submit_button:
-        datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")  # 🔥 Einheitliches Datum-Format
+        datum_zeit = datetime.now(ZoneInfo("Europe/Zurich")).strftime("%Y-%m-%d %H:%M:%S")
         new_entry = pd.DataFrame([{ "datum_zeit": datum_zeit, "blutzuckerwert": blutzuckerwert, "zeitpunkt": zeitpunkt }])
-        
-        # ✅ Speichert Werte **nur für diesen Benutzer**
         st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
+
+        # ✅ Speichert die Werte nur für den aktuellen Benutzer
         data_manager.save_user_data("user_data", username)
 
-        st.success("✅ Eintrag gespeichert!")
+        st.success("✅ Eintrag hinzugefügt!")
         st.rerun()
 
     if not user_data.empty:
         st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
-        
-        # ✅ Entferne 'username' aus der Tabelle (falls vorhanden)
         st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
 
         durchschnitt = user_data["blutzuckerwert"].mean()
-        st.markdown(f"** Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
+        st.markdown(f"📊 **Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
-        st.warning("⚠️ Noch keine Daten vorhanden. Bitte neuen Wert eingeben.")
+        st.warning("Noch keine Werte vorhanden.")
+
+# 🔥 Blutzucker-Werte
+def blutzucker_werte():
+    st.markdown("## 📋 Blutzucker-Werte")
+
+    if not user_data.empty:
+        st.markdown("###  Gespeicherte Blutzuckerwerte")
+        st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
+    else:
+        st.warning("Noch keine Werte gespeichert.")
 
 # 🔥 Blutzucker-Grafik
 def blutzucker_grafik():
@@ -90,17 +119,17 @@ def blutzucker_grafik():
         chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
         st.line_chart(chart_data)
     else:
-        st.warning("⚠️ Noch keine Werte vorhanden.")
+        st.warning("Noch keine Werte vorhanden.")
 
-# 🔄 Seitenwechsel steuern
+# 🔄 Seitenwechsel
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
 if st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
 elif st.session_state.seite == "Startseite":
-    startseite()  
+    startseite()
 elif st.session_state.seite == "Blutzucker-Werte":
-    blutzucker_werte()  
+    blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
-    blutzucker_grafik()  
+    blutzucker_grafik()

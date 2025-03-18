@@ -29,7 +29,7 @@ user_data = data_manager.load_user_data(
 )
 
 if not user_data.empty:
-    st.markdown("### 📈 Verlauf der Blutzuckerwerte")
+    st.markdown("###  Verlauf der Blutzuckerwerte")
 
     # 🔥 Sicherstellen, dass die benötigten Spalten existieren
     if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert"]):

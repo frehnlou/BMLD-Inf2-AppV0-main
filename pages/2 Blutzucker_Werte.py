@@ -10,7 +10,7 @@ login_manager.go_to_login('Start.py')
 def blutzucker_werte():
     # Abstand nach oben für bessere Platzierung
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("## 📋 Blutzucker-Werte")
+    st.markdown("##  Blutzucker-Werte")
 
     # 📌 Nutzername holen
     username = st.session_state.get("username")
@@ -36,7 +36,7 @@ def blutzucker_werte():
             
             # ✅ Durchschnitt berechnen
             durchschnitt = user_data["blutzuckerwert"].mean()
-            st.markdown(f"**📊 Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
+            st.markdown(f"** Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
         else:
             st.warning("⚠️ Datenformat fehlerhaft oder Spalten fehlen!")
     else:
