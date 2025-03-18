@@ -56,6 +56,29 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         save_and_switch_page("Blutzucker-Grafik")
 
+# 🔥 Startseite
+def startseite():
+    st.markdown("## 🏠 Willkommen auf der Startseite!")
+    st.write("""
+    Liebe Diabetikerinnen und Diabetiker!🩸
+
+    Kennst du das Problem, den Überblick über deine Blutzuckerwerte zu behalten? Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
+
+    - Was bringt dir die App?
+    - Schnelle Eingabe deines Blutzuckers (mg/dL)
+    - Messzeitpunkt wählen (Nüchtern, Nach dem Essen)
+    - Automatische Übersicht in einer Tabelle, damit du deine Werte immer im Blick hast
+    - Anschauliche Diagramme, die deine Blutzuckerwerte visuell auswerten
+
+    Warum diese App?
+             
+    ✔ Kein lästiges Papier-Tagebuch mehr
+             
+    ✔ Verfolge deine Werte langfristig & erkenne Muster
+             
+    ✔ Bessere Kontrolle für ein gesünderes Leben mit Diabetes
+    """)
+
 # 🔥 Blutzucker-Tracker
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
@@ -77,7 +100,7 @@ def blutzucker_tracker():
         st.rerun()
 
     if not user_data.empty:
-        st.markdown("###  Gespeicherte Blutzuckerwerte")
+        st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
         st.table(user_data)
 
         durchschnitt = user_data["blutzuckerwert"].mean()
@@ -93,7 +116,7 @@ def blutzucker_werte():
         st.markdown("###  Gespeicherte Blutzuckerwerte")
         st.table(user_data)
     else:
-        st.warning("Noch keine Werte gespeichert.")
+        st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte neuen Wert eingeben.")
 
 # 🔥 Blutzucker-Grafik
 def blutzucker_grafik():
@@ -108,7 +131,7 @@ def blutzucker_grafik():
         else:
             st.warning("⚠️ Mindestens zwei Werte erforderlich, um eine Grafik darzustellen.")
     else:
-        st.warning("Noch keine Werte vorhanden.")
+        st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte neuen Wert eingeben.")
 
 # 🔄 Seitenwechsel
 if "seite" not in st.session_state:
@@ -117,7 +140,7 @@ if "seite" not in st.session_state:
 if st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
 elif st.session_state.seite == "Startseite":
-    st.markdown("## 🏠 Willkommen auf der Startseite!")
+    startseite()
 elif st.session_state.seite == "Blutzucker-Werte":
     blutzucker_werte()
 elif st.session_state.seite == "Blutzucker-Grafik":
