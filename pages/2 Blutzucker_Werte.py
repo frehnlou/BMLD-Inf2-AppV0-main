@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
 from utils.data_manager import DataManager  # 📊 Data Manager für nutzerspezifische Daten
 
@@ -28,12 +27,11 @@ def blutzucker_werte():
         parse_dates=["datum_zeit"]
     )
 
-    if user_data is not None and not user_data.empty:
+    if not user_data.empty:
         st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
 
         # 🔥 Sicherstellen, dass die Spalten existieren
-        required_columns = {"datum_zeit", "blutzuckerwert", "zeitpunkt"}
-        if required_columns.issubset(user_data.columns):
+        if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert", "zeitpunkt"]):
             # 🔥 Falls `datum_zeit` nicht als `Datetime` erkannt wird, umwandeln
             if not pd.api.types.is_datetime64_any_dtype(user_data["datum_zeit"]):
                 user_data["datum_zeit"] = pd.to_datetime(user_data["datum_zeit"], errors='coerce')
