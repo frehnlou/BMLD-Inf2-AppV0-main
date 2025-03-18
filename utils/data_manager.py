@@ -24,3 +24,19 @@ class DataManager:
     def save(self, file_name, data):
         file_path = os.path.join(self.fs_root_folder, file_name)
         data.to_csv(file_path, index=False)
+
+    def get_credentials(self):
+        """
+        Gibt die Anmeldedaten zurück, die von streamlit_authenticator benötigt werden.
+        """
+        # Beispiel: Anmeldedaten können hier statisch definiert oder aus einer Datei geladen werden
+        credentials = {
+            "usernames": {
+                "admin": {
+                    "email": "admin@example.com",
+                    "name": "Admin",
+                    "password": "$2b$12$KIXQ1vZ8QJH6FJ9Q9Q9Q9u9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9Q9"  # Beispiel für ein gehashtes Passwort
+                }
+            }
+        }
+        return credentials
