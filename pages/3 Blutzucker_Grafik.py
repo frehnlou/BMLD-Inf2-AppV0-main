@@ -19,12 +19,11 @@ if not username:
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
-    username=username,  
+    username=username,
     parse_dates=["datum_zeit"]
 )
-
 if user_data is not None and not user_data.empty:
-    st.markdown("### Verlauf der Blutzuckerwerte")
+    st.markdown("### 📊 Verlauf der Blutzuckerwerte")
     if "datum_zeit" in user_data.columns and "blutzuckerwert" in user_data.columns:
         try:
             user_data["datum_zeit"] = pd.to_datetime(user_data["datum_zeit"], errors='coerce')

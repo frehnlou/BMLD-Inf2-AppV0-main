@@ -19,18 +19,13 @@ if not username:
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 user_data = data_manager.load_user_data(
     session_state_key="user_data",
-    username=username,  
+    username=username,
     parse_dates=["datum_zeit"]
 )
 
+
 if user_data is not None and not user_data.empty:
-    st.markdown("### Gespeicherte Blutzuckerwerte")
-    if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert", "zeitpunkt"]):
-        st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
-        durchschnitt = user_data["blutzuckerwert"].mean()
-        st.markdown(f"📊 **Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
-    else:
-        st.warning("⚠️ Datenformat fehlerhaft oder Spalten fehlen!")
+    st.markdown("### 📋 Gespeicherte Blutzuckerwerte")
+    st.table(user_data)
 else:
     st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte neuen Wert eingeben.")
-
