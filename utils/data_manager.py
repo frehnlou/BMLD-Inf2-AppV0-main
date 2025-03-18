@@ -47,9 +47,6 @@ class DataManager:
 
     def _get_data_handler(self):
         """ Erstellt und gibt einen Daten-Handler zurück. """
-        # Debugging-Ausgaben hinzufügen
-        st.write(f"Dateisystem: {self.fs}")
-        st.write(f"Root-Pfad: {self.fs_root_folder}")
         return DataHandler(self.fs, self.fs_root_folder)
 
     def load_user_data(self, session_state_key, username, initial_value=None, parse_dates=None):
