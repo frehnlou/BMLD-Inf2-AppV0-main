@@ -50,7 +50,7 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
-# ====== Blutzucker-Tracker ======
+# Blutzucker-Tracker
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
@@ -85,7 +85,7 @@ def blutzucker_tracker():
         data_manager.save_user_data("user_data", username)
 
         st.success("Eintrag hinzugefügt!")
-        st.rerun()
+        st.experimental_rerun()
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
@@ -96,9 +96,50 @@ def blutzucker_tracker():
     else:
         st.warning("Noch keine Daten vorhanden.")
 
-# ====== Seitenwechsel ======
+# Blutzucker-Werte
+def blutzucker_werte():
+    st.markdown("## 📋 Blutzucker-Werte")
+
+    st.write("""
+    Hier sehen Sie alle gespeicherten Blutzuckerwerte in einer übersichtlichen Tabelle.
+    """)
+
+    if not user_data.empty:
+        st.markdown("### Gespeicherte Blutzuckerwerte")
+        st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
+    else:
+        st.warning("Noch keine Werte gespeichert.")
+
+# Blutzucker-Grafik
+def blutzucker_grafik():
+    st.markdown("## 📊 Blutzucker-Grafik")
+
+    st.write("""
+    Analysieren Sie Ihre Blutzuckerwerte in einer anschaulichen Grafik.
+    """)
+
+    if not user_data.empty:
+        st.markdown("### Verlauf der Blutzuckerwerte")
+        chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
+        st.line_chart(chart_data)
+    else:
+        st.warning("Noch keine Werte vorhanden.")
+
+# Seitenwechsel
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
+# Seitenlogik
 if st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
+elif st.session_state.seite == "Startseite":
+    st.markdown("## 🏠 Willkommen auf der Startseite!")
+    st.write("""
+    Liebe Diabetikerinnen und Diabetiker,
+
+    Mit unserem Blutzucker-Tracker können Sie Ihre Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
+    """)
+elif st.session_state.seite == "Blutzucker-Werte":
+    blutzucker_werte()
+elif st.session_state.seite == "Blutzucker-Grafik":
+    blutzucker_grafik()
