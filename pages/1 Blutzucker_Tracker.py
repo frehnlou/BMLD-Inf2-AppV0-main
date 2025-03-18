@@ -87,7 +87,10 @@ def blutzucker_tracker():
         }])
 
         # Aktualisiere die Daten im Session-State
-        st.session_state[f"user_data_{username}"] = pd.concat([st.session_state[f"user_data_{username}"], new_entry], ignore_index=True)
+        st.session_state[f"user_data_{username}"] = pd.concat(
+            [st.session_state[f"user_data_{username}"], new_entry],
+            ignore_index=True
+        )
 
         # Speichere die Daten für den aktuellen Benutzer
         try:
