@@ -41,18 +41,13 @@ class DataHandler:
             relative_path: Der relative Pfad.
             content: Der zu speichernde Inhalt.
         """
-        logger.info(f"Speichere Datei: {relative_path}")
         full_path = self._resolve_path(relative_path)
         parent_dir = posixpath.dirname(full_path)
-
-        # 🔍 Speicherort überprüfen
-        logger.info(f"📂 Datei sollte gespeichert werden unter: {full_path}")
 
         # Falls Ordner nicht existiert, erstelle ihn
         if not self.filesystem.exists(parent_dir):
             try:
                 self.filesystem.mkdirs(parent_dir, exist_ok=True)
-                logger.info(f"📂 Ordner erstellt: {parent_dir}")
             except Exception as e:
                 logger.error(f"❌ Fehler beim Erstellen des Ordners {parent_dir}: {e}")
 
@@ -77,7 +72,43 @@ class DataHandler:
             else:
                 raise ValueError(f"Nicht unterstützter Inhaltstyp für Dateiendung {ext}")
 
-            logger.info(f"✅ Datei erfolgreich gespeichert: {full_path}")
-
+            # Erfolgsmeldung entfernt
         except Exception as e:
             logger.error(f"❌ Fehler beim Speichern von {relative_path}: {e}")
+
+    def load(self, relative_path, initial_value=None):
+        """
+        Lädt den Inhalt einer Datei basierend auf der Dateiendung.
+
+        Args:
+            relative_path: Der relative Pfad.
+            initial_value: Der Standardwert, falls die Datei nicht existiert.
+
+        Returns:
+            Der geladene Inhalt oder der Standardwert.
+        """
+        full_path = self._resolve_path(relative_path)
+
+        if not self.filesystem.exists(full_path):
+            return initial_value
+
+        ext = posixpath.splitext(relative_path)[-1].lower()
+
+        try:
+            if ext == ".csv":
+                with self.filesystem.open(full_path, "r") as f:
+                    return pd.read_csv(f)
+            elif ext == ".json":
+                with self.filesystem.open(full_path, "r") as f:
+                    return json.load(f)
+            elif ext in [".yaml", ".yml"]:
+                with self.filesystem.open(full_path, "r") as f:
+                    return yaml.safe_load(f)
+            elif ext == ".txt":
+                with self.filesystem.open(full_path, "r") as f:
+                    return f.read()
+            else:
+                raise ValueError(f"Nicht unterstützter Inhaltstyp für Dateiendung {ext}")
+        except Exception as e:
+            logger.error(f"❌ Fehler beim Laden von {relative_path}: {e}")
+            return initial_value
