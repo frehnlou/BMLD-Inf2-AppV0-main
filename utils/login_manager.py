@@ -30,10 +30,6 @@ class LoginManager:
         self.auth_cookie_name = auth_cookie_name
         self.auth_cookie_key = secrets.token_urlsafe(32)
         self.auth_credentials = self._load_auth_credentials()
-        
-        # DEBUG: Ausgabe der geladenen Anmeldedaten
-        st.write("Geladene Auth-Credentials:", self.auth_credentials)
-        
         self.authenticator = stauth.Authenticate(
             self.auth_credentials,
             self.auth_cookie_name,
@@ -42,29 +38,36 @@ class LoginManager:
         )
 
     def _load_auth_credentials(self):
+        """
+        Lädt die Benutzeranmeldedaten aus der Datei `credentials.yaml`.
+        Erstellt eine neue Datei mit Standardwerten, falls sie nicht existiert.
+
+        Returns:
+            dict: Benutzeranmeldedaten.
+        """
         dh = self.data_manager._get_data_handler()
-        creds = dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
-        
-        # Falls die Datei leer ist oder nicht existiert, erstelle eine neue
-        if not creds.get("usernames"):
-            st.warning("credentials.yaml wurde nicht gefunden oder ist leer. Eine neue Datei wird erstellt...")
-            creds = {
-                "usernames": {
-                    "admin": {
-                        "email": "admin@example.com",
-                        "hashed_password": "$2b$12$..."  # Ersetze mit generiertem Hash
-                    }
-                }
-            }
+        try:
+            # Versuche, die Datei zu laden
+            creds = dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
+            if not creds or "usernames" not in creds:
+                raise ValueError("credentials.yaml wurde nicht gefunden oder ist leer. Eine neue Datei wird erstellt...")
+            return creds
+        except Exception as e:
+            # Erstelle eine neue Datei mit Standardwerten
+            st.warning(f"{e}")
+            creds = {"usernames": {}}
             dh.save(self.auth_credentials_file, creds)
-            st.success("Neue credentials.yaml wurde erstellt. Bitte ersetze das Passwort mit einem sicheren Hash.")
-        
-        st.write("Geladene Benutzer-Credentials:", creds)
-        return creds
+            return creds
 
     def _save_auth_credentials(self):
+        """
+        Speichert die Benutzeranmeldedaten in der Datei `credentials.yaml`.
+        """
         dh = self.data_manager._get_data_handler()
-        dh.save(self.auth_credentials_file, self.auth_credentials)
+        try:
+            dh.save(self.auth_credentials_file, self.auth_credentials)
+        except Exception as e:
+            st.error(f"Fehler beim Speichern der Anmeldedaten: {e}")
 
     def login_register(self, login_title='Login', register_title='Register new user'):
         if st.session_state.get("authentication_status") is True:
@@ -84,13 +87,7 @@ class LoginManager:
             self.authenticator.logout("Logout", "sidebar")
         else:
             try:
-                location_value = "main"
-                st.write(f"Teste Login-Formular mit location='{location_value}'")
-                
-                name, authentication_status, username = self.authenticator.login("Login", location_value)
-                
-                st.write(f"Login Ergebnis: Name={name}, Status={authentication_status}, Benutzername={username}")
-                
+                name, authentication_status, username = self.authenticator.login("Login", "sidebar")
                 if authentication_status:
                     st.success(f"Willkommen {name}!")
                 elif authentication_status is False:
