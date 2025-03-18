@@ -72,7 +72,6 @@ class DataManager:
             if not self.fs.exists(file_name):
                 df = initial_value if initial_value is not None else pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"])
                 dh.save(file_name, df)
-                st.info(f"📁 Neue Datei für {username} wurde erstellt.")
                 return df
         except Exception as e:
             st.error(f"⚠️ Fehler beim Zugriff auf WebDAV: {e}")
