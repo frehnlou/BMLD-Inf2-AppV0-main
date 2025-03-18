@@ -63,7 +63,7 @@ class LoginManager:
             self.authenticator.logout("Logout", "sidebar")
         else:
             try:
-                # Korrekte Übergabe der Argumente
+                # Korrekte Übergabe des Parameters "location"
                 name, authentication_status, username = self.authenticator.login("Login", "sidebar")
                 if authentication_status:
                     st.success(f"Willkommen {name}!")
