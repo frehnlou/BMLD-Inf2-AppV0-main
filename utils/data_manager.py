@@ -68,25 +68,29 @@ class DataManager:
         file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")  # 🔥 Speichert in WebDAV
         dh = self._get_data_handler()
         
-        # Prüfe, ob die Datei existiert (Fehlerbehandlung für WebDAV)
         try:
             if not self.fs.exists(file_name):
-                df = initial_value if initial_value is not None else pd.DataFrame()
+                df = initial_value if initial_value is not None else pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"])
                 dh.save(file_name, df)
+                st.info(f"📁 Neue Datei für {username} wurde erstellt.")
                 return df
         except Exception as e:
             st.error(f"⚠️ Fehler beim Zugriff auf WebDAV: {e}")
             return pd.DataFrame()
 
-        # Lade die Datei
-        df = dh.load(file_name, initial_value=initial_value)
-        
+        # Lade die Datei für den aktuellen Benutzer
+        try:
+            df = dh.load(file_name, initial_value=initial_value)
+        except Exception as e:
+            st.error(f"⚠️ Fehler beim Laden der Daten für {username}: {e}")
+            return pd.DataFrame()
+
         # Falls parse_dates definiert ist, konvertiere Spalten zu Datetime
         if parse_dates:
             for col in parse_dates:
                 if col in df.columns:
                     df[col] = pd.to_datetime(df[col])
-        
+
         return df
 
     def save_user_data(self, session_state_key, username):
@@ -107,9 +111,8 @@ class DataManager:
             df = st.session_state[session_state_key]
             dh = self._get_data_handler()
 
-            # Speichern mit Fehlerbehandlung für WebDAV
             try:
                 dh.save(file_name, df)
-                st.success(f"✅ Daten für {username} erfolgreich gespeichert!")  
+                st.toast(f"💾 Daten für {username} gespeichert!")  # 🔥 Diskrete Benachrichtigung
             except Exception as e:
-                st.error(f"⚠️ Fehler beim Speichern in WebDAV: {e}")
+                st.error(f"⚠️ Fehler beim Speichern für {username}: {e}")
