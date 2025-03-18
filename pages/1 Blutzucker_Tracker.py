@@ -104,11 +104,12 @@ def blutzucker_tracker():
         st.markdown("### Gespeicherte Blutzuckerwerte")
         # Benutzerdefinierte Spaltenüberschriften
         renamed_data = user_data.rename(columns={
-            "blutzuckerwert": "1: Blutzuckerwerte",
-            "zeitpunkt": "2: Nüchtern"
+            "datum_zeit": "Datum & Uhrzeit",
+            "blutzuckerwert": "Blutzuckerwert (mg/dL)",
+            "zeitpunkt": "Zeitpunkt"
         })
         # Zeige die Tabelle mit den neuen Spaltenüberschriften
-        st.table(renamed_data[["1: Blutzuckerwerte", "2: Nüchtern"]])
+        st.table(renamed_data[["Datum & Uhrzeit", "Blutzuckerwert (mg/dL)", "Zeitpunkt"]])
     else:
         st.warning("Noch keine Daten vorhanden.")
 
@@ -123,11 +124,16 @@ def blutzucker_werte():
         st.markdown("### Gespeicherte Blutzuckerwerte")
         # Benutzerdefinierte Spaltenüberschriften
         renamed_data = user_data.rename(columns={
-            "blutzuckerwert": "1: Blutzuckerwerte",
-            "zeitpunkt": "2: Nüchtern"
+            "datum_zeit": "Datum & Uhrzeit",
+            "blutzuckerwert": "Blutzuckerwert (mg/dL)",
+            "zeitpunkt": "Zeitpunkt"
         })
         # Zeige die Tabelle mit den neuen Spaltenüberschriften
-        st.table(renamed_data[["1: Blutzuckerwerte", "2: Nüchtern"]])
+        st.table(renamed_data[["Datum & Uhrzeit", "Blutzuckerwert (mg/dL)", "Zeitpunkt"]])
+
+        # Durchschnitt berechnen und anzeigen
+        durchschnitt = user_data["blutzuckerwert"].mean()
+        st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
     else:
         st.warning("Noch keine Werte gespeichert.")
 
