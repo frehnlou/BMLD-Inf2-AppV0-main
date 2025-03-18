@@ -20,12 +20,10 @@ if not username:
 # Datenbank für den Nutzer laden
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 user_data = data_manager.load_user_data(
-    session_state_key=f"user_data_{username}",  # Benutzerspezifischer Schlüssel
+    session_state_key=f"user_data_{username}",
     username=username,
     parse_dates=["datum_zeit"]
 )
-
-st.write("Geladene Daten:", user_data)  # Debugging
 
 if not user_data.empty:
     st.markdown("### Verlauf der Blutzuckerwerte")
