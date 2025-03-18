@@ -23,7 +23,7 @@ if not username:
 # Benutzerspezifische Daten laden
 if "user_data" not in st.session_state:
     st.session_state.user_data = data_manager.load_user_data(
-        session_state_key="user_data",
+        session_state_key=f"user_data_{username}",  # Benutzerspezifischer Schlüssel
         username=username,
         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
         parse_dates=["datum_zeit"]
@@ -50,6 +50,22 @@ with col4:
     if st.button("📊 Blutzucker-Grafik"):
         st.session_state.seite = "Blutzucker-Grafik"
 
+# ====== Startseite ======
+def startseite():
+    st.markdown("## 🏠 Willkommen auf der Startseite!")
+    st.write("""
+    Liebe Diabetikerinnen und Diabetiker 🩸,
+
+    Mit dieser App können Sie:
+    - Ihre Blutzuckerwerte einfach eingeben und speichern.
+    - Den Messzeitpunkt auswählen (z. B. Nüchtern oder nach dem Essen).
+    - Ihre Werte in einer übersichtlichen Tabelle anzeigen lassen.
+    - Den Durchschnitt Ihrer Blutzuckerwerte berechnen.
+    - Ihre Werte in einer anschaulichen Grafik analysieren.
+
+    Behalten Sie Ihre Gesundheit im Blick und erkennen Sie langfristige Muster!
+    """)
+
 # ====== Blutzucker-Tracker ======
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
@@ -69,12 +85,15 @@ def blutzucker_tracker():
         }])
 
         # Aktualisiere die Daten im Session-State
-        st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
+        st.session_state[f"user_data_{username}"] = pd.concat([st.session_state[f"user_data_{username}"], new_entry], ignore_index=True)
 
         # Speichere die Daten für den aktuellen Benutzer
-        data_manager.save_user_data("user_data", username)
+        data_manager.save_user_data(
+            session_state_key=f"user_data_{username}",  # Benutzerspezifischer Schlüssel
+            username=username
+        )
 
-        # Zeige eine Erfolgsmeldung an
+        # Zeige eine Erfolgsmeldung an (ohne Benutzernamen)
         st.success("Eintrag hinzugefügt!")
 
     # Zeige die gespeicherten Werte an
@@ -107,22 +126,6 @@ def blutzucker_grafik():
         st.line_chart(chart_data)
     else:
         st.warning("Noch keine Werte vorhanden.")
-
-# ====== Startseite ======
-def startseite():
-    st.markdown("## 🏠 Willkommen auf der Startseite!")
-    st.write("""
-    Liebe Diabetikerinnen und Diabetiker 🩸,
-
-    Mit dieser App können Sie:
-    - Ihre Blutzuckerwerte einfach eingeben und speichern.
-    - Den Messzeitpunkt auswählen (z. B. Nüchtern oder nach dem Essen).
-    - Ihre Werte in einer übersichtlichen Tabelle anzeigen lassen.
-    - Den Durchschnitt Ihrer Blutzuckerwerte berechnen.
-    - Ihre Werte in einer anschaulichen Grafik analysieren.
-
-    Behalten Sie Ihre Gesundheit im Blick und erkennen Sie langfristige Muster!
-    """)
 
 # ====== Seitenwechsel ======
 if "seite" not in st.session_state:
