@@ -17,21 +17,8 @@ login_manager.login_register()  # Login-/Registrierungsseite anzeigen
 if "authentication_status" not in st.session_state or not st.session_state["authentication_status"]:
     st.stop()
 
-# 📌 Nutzername holen
-username = st.session_state.get("username")
-if not username:
-    st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
-    st.stop()
-
-# 📌 Benutzerbezogene Daten laden
-if "user_data" not in st.session_state:
-    st.session_state["user_data"] = data_manager.load_user_data(
-        username=username,
-        initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
-        parse_dates=["datum_zeit"]
-    )
-
 # ====== Startseite nach erfolgreicher Anmeldung ======
+
 st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
 
 st.write("""
@@ -39,7 +26,7 @@ Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzu
 """)
 
 # 👤 Benutzerinfo
-st.info(f"👋 Eingeloggt als: *{username}*")
+st.info(f"👋 Eingeloggt als: {st.session_state.username}")
 
 # Infobox
 st.markdown("""
@@ -53,6 +40,6 @@ st.write("""
 ### Autoren  
 Diese App wurde im Rahmen des Moduls BMLD Informatik 2 an der ZHAW entwickelt von:
 
-- *Cristiana Bastos* (pereicri@students.zhaw.ch)  
-- *Lou-Salomé Frehner* (frehnlou@students.zhaw.ch)
+- Cristiana Bastos (pereicri@students.zhaw.ch)  
+- Lou-Salomé Frehner (frehnlou@students.zhaw.ch)
 """)
