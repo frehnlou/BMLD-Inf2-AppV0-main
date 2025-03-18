@@ -116,10 +116,14 @@ class LoginManager:
         if st.session_state.get("authentication_status") is True:
             self.authenticator.logout()
         else:
-            st.info("""
-            Das Passwort muss 8-20 Zeichen lang sein und mindestens einen Großbuchstaben, 
-            einen Kleinbuchstaben, eine Ziffer und ein Sonderzeichen aus @$!%*?& enthalten.
-            """)
+            st.markdown("""
+**Das Passwort muss:**
+- 8-20 Zeichen lang sein
+- Mindestens einen **Grossbuchstaben**
+- Mindestens einen **Kleinbuchstaben**
+- Mindestens eine **Ziffer**
+- Mindestens ein **Sonderzeichen** aus `@$!%*?&` enthalten
+""")
             res = self.authenticator.register_user()
             if res[1] is not None:
                 st.success(f"Benutzer {res[1]} erfolgreich registriert.")
