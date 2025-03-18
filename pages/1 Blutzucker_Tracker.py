@@ -92,15 +92,15 @@ def blutzucker_grafik():
     else:
         st.warning("⚠️ Noch keine Werte vorhanden.")
 
-# 🔄 Seitenwechsel
+# 🔄 Seitenwechsel steuern
 if "seite" not in st.session_state:
     st.session_state.seite = "Startseite"
 
 if st.session_state.seite == "Blutzucker-Tracker":
     blutzucker_tracker()
 elif st.session_state.seite == "Startseite":
-    startseite()
+    startseite()  
 elif st.session_state.seite == "Blutzucker-Werte":
-    blutzucker_werte()
+    blutzucker_werte()  
 elif st.session_state.seite == "Blutzucker-Grafik":
-    blutzucker_grafik()
+    blutzucker_grafik()  

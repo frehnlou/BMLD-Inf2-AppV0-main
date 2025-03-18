@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from utils.login_manager import LoginManager  # 🔐 Login-Manager hinzufügen
 from utils.data_manager import DataManager  # 📊 Data Manager für nutzerspezifische Daten
 
