@@ -1,86 +1,145 @@
-import json, yaml, posixpath
-import pandas as pd
-from io import StringIO
-import logging
+import secrets
+import streamlit as st
+import streamlit_authenticator as stauth
+from utils.data_manager import DataManager
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-class DataHandler:
-    def __init__(self, filesystem, root_path):
-        self.filesystem = filesystem
-        self.root_path = root_path
+class LoginManager:
+    """
+    Singleton-Klasse, die den Anwendungszustand, die Speicherung und die Benutzer-Authentifizierung verwaltet.
+    
+    Verwaltet den Zugriff auf das Dateisystem, Benutzeranmeldedaten und den Authentifizierungsstatus
+    mithilfe des Streamlit-Session-States für Konsistenz zwischen Reruns.
+    """
 
-    def join(self, *args):
-        return posixpath.join(*args)
+    def __new__(cls, *args, **kwargs):
+        """
+        Implementiert das Singleton-Pattern, indem die bestehende Instanz aus dem Session-State zurückgegeben wird, falls verfügbar.
 
-    def _resolve_path(self, relative_path):
-        return self.join(self.root_path, relative_path)
-
-    def exists(self, relative_path):
-        full_path = self._resolve_path(relative_path)
-        return self.filesystem.exists(full_path)
-
-    def read_text(self, relative_path):
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "r") as f:
-            return f.read()
-
-    def read_binary(self, relative_path):
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "rb") as f:
-            return f.read()
-
-    def write_text(self, relative_path, content):
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "w") as f:
-            f.write(content)
-
-    def write_binary(self, relative_path, content):
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "wb") as f:
-            f.write(content)
-
-    def load(self, relative_path, initial_value=None, **load_args):
-        logger.info(f"Loading file: {relative_path}")
-        if not self.exists(relative_path):
-            if initial_value is not None:
-                logger.warning(f"File not found: {relative_path}. Returning initial value.")
-                return initial_value
-            raise FileNotFoundError(f"File does not exist: {relative_path}")
-
-        ext = posixpath.splitext(relative_path)[-1].lower()
-        if ext == ".json":
-            return json.loads(self.read_text(relative_path))
-        elif ext in [".yaml", ".yml"]:
-            return yaml.safe_load(self.read_text(relative_path))
-        elif ext == ".csv":
-            with self.filesystem.open(self._resolve_path(relative_path), "r") as f:
-                return pd.read_csv(f, **load_args)
-        elif ext == ".txt":
-            return self.read_text(relative_path)
+        Returns:
+            LoginManager: Die Singleton-Instanz, entweder bestehend oder neu erstellt.
+        """
+        if 'login_manager' in st.session_state:
+            return st.session_state.login_manager
         else:
-            raise ValueError(f"Unsupported file extension: {ext}")
+            instance = super(LoginManager, cls).__new__(cls)
+            st.session_state.login_manager = instance
+            return instance
 
-    def save(self, relative_path, content):
-        logger.info(f"Saving file: {relative_path}")
-        full_path = self._resolve_path(relative_path)
-        parent_dir = posixpath.dirname(full_path)
+    def __init__(self, data_manager: DataManager = None,
+                 auth_credentials_file: str = 'credentials.yaml',
+                 auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
+        """
+        Initialisiert die Komponenten für das Dateisystem und die Authentifizierung, falls noch nicht initialisiert.
 
-        if not self.filesystem.exists(parent_dir):
-            self.filesystem.mkdirs(parent_dir, exist_ok=True)
+        Args:
+            data_manager: Die DataManager-Instanz für die Datenspeicherung.
+            auth_credentials_file (str): Der Dateiname für die Speicherung der Benutzeranmeldedaten.
+            auth_cookie_name (str): Der Name des Cookies für die Sitzungsverwaltung.
+        """
+        if hasattr(self, 'authenticator'):  # Überprüfen, ob die Instanz bereits initialisiert ist
+            return
 
-        ext = posixpath.splitext(relative_path)[-1].lower()
+        if data_manager is None:
+            return
 
-        if isinstance(content, pd.DataFrame) and ext == ".csv":
-            self.write_text(relative_path, content.to_csv(index=False))
-        elif isinstance(content, (dict, list)) and ext == ".json":
-            self.write_text(relative_path, json.dumps(content, indent=4))
-        elif isinstance(content, (dict, list)) and ext in [".yaml", ".yml"]:
-            self.write_text(relative_path, yaml.dump(content, default_flow_style=False))
-        elif isinstance(content, str) and ext == ".txt":
-            self.write_text(relative_path, content)
-        elif isinstance(content, bytes):
-            self.write_binary(relative_path, content)
+        # Initialisiere die Authentifizierungskomponenten
+        self.data_manager = data_manager
+        self.auth_credentials_file = auth_credentials_file
+        self.auth_cookie_name = auth_cookie_name
+        self.auth_cookie_key = secrets.token_urlsafe(32)
+        self.auth_credentials = self._load_auth_credentials()
+        self.authenticator = stauth.Authenticate(self.auth_credentials, self.auth_cookie_name, self.auth_cookie_key)
+
+    def _load_auth_credentials(self):
+        """
+        Lädt die Benutzeranmeldedaten aus der konfigurierten Anmeldedatei.
+
+        Returns:
+            dict: Benutzeranmeldedaten, standardmäßig ein leeres `usernames`-Dictionary, falls die Datei nicht gefunden wird.
+        """
+        dh = self.data_manager._get_data_handler()
+        return dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
+
+    def _save_auth_credentials(self):
+        """
+        Speichert die aktuellen Benutzeranmeldedaten in der Anmeldedatei.
+        """
+        dh = self.data_manager._get_data_handler()
+        dh.save(self.auth_credentials_file, self.auth_credentials)
+
+    def login_register(self, login_title='Login', register_title='Register new user'):
+        """
+        Rendert die Authentifizierungsoberfläche.
+        
+        Zeigt das Login-Formular und optional das Registrierungsformular an. Verarbeitet die Benutzeranmeldung
+        und den Registrierungsablauf. Stoppt die weitere Ausführung nach dem Rendern.
+
+        Args:
+            login_title (str): Titel für den Login-Tab.
+            register_title (str): Titel für den Registrierungs-Tab.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
         else:
-            raise ValueError(f"Unsupported content type for extension {ext}")
+            login_tab, register_tab = st.tabs((login_title, register_title))
+            with login_tab:
+                self.login(stop=False)
+            with register_tab:
+                self.register()
+
+    def login(self, stop=True):
+        """
+        Rendert das Login-Formular und verarbeitet Authentifizierungsstatusmeldungen.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
+        else:
+            self.authenticator.login()
+            if st.session_state["authentication_status"] is False:
+                st.error("Benutzername/Passwort ist falsch.")
+            else:
+                st.warning("Bitte geben Sie Ihren Benutzernamen und Ihr Passwort ein.")
+            if stop:
+                st.stop()
+
+    def register(self, stop=True):
+        """
+        Rendert das Registrierungsformular und verarbeitet den Benutzerregistrierungsablauf.
+        
+        Zeigt Passwortanforderungen an, verarbeitet Registrierungsversuche und speichert Anmeldedaten
+        bei erfolgreicher Registrierung.
+
+        Args:
+            stop (bool): Stoppt die Ausführung nach dem Rendern.
+        """
+        if st.session_state.get("authentication_status") is True:
+            self.authenticator.logout()
+        else:
+            st.info("""
+            Das Passwort muss 8-20 Zeichen lang sein und mindestens einen Großbuchstaben, 
+            einen Kleinbuchstaben, eine Ziffer und ein Sonderzeichen aus @$!%*?& enthalten.
+            """)
+            res = self.authenticator.register_user()
+            if res[1] is not None:
+                st.success(f"Benutzer {res[1]} erfolgreich registriert.")
+                try:
+                    self._save_auth_credentials()
+                    st.success("Anmeldedaten erfolgreich gespeichert.")
+                except Exception as e:
+                    st.error(f"Fehler beim Speichern der Anmeldedaten: {e}")
+            if stop:
+                st.stop()
+
+    def go_to_login(self, login_page_py_file):
+        """
+        Erstellt eine Logout-Schaltfläche, die den Benutzer abmeldet und zur Login-Seite weiterleitet.
+        Wenn der Benutzer nicht eingeloggt ist, wird die Login-Seite angezeigt.
+
+        Args:
+            login_page_py_file (str): Der Pfad zur Python-Datei, die die Login-Seite enthält.
+        """
+        if st.session_state.get("authentication_status") is not True:
+            st.switch_page(login_page_py_file)
+        else:
+            self.authenticator.logout()  # Erstellt die Logout-Schaltfläche
