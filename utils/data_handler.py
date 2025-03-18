@@ -2,7 +2,7 @@ import json
 import yaml
 import posixpath
 import pandas as pd
-from io import StringIO
+import os
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -21,121 +21,17 @@ class DataHandler:
         self.root_path = root_path
 
     def join(self, *args):
-        """
-        Verbindet Pfade mit posixpath.
-
-        Returns:
-            str: Der verbundene Pfad.
-        """
+        """ Verbindet Pfade mit posixpath. """
         return posixpath.join(*args)
 
     def _resolve_path(self, relative_path):
-        """
-        Löst den relativen Pfad in einen absoluten Pfad auf.
-
-        Args:
-            relative_path: Der relative Pfad.
-
-        Returns:
-            str: Der absolute Pfad.
-        """
+        """ Löst den relativen Pfad in einen absoluten Pfad auf. """
         return self.join(self.root_path, relative_path)
 
     def exists(self, relative_path):
-        """
-        Überprüft, ob eine Datei oder ein Verzeichnis existiert.
-
-        Args:
-            relative_path: Der relative Pfad.
-
-        Returns:
-            bool: True, wenn die Datei existiert, sonst False.
-        """
+        """ Überprüft, ob eine Datei oder ein Verzeichnis existiert. """
         full_path = self._resolve_path(relative_path)
         return self.filesystem.exists(full_path)
-
-    def read_text(self, relative_path):
-        """
-        Liest den Inhalt einer Textdatei.
-
-        Args:
-            relative_path: Der relative Pfad.
-
-        Returns:
-            str: Der Inhalt der Datei.
-        """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "r") as f:
-            return f.read()
-
-    def read_binary(self, relative_path):
-        """
-        Liest den Inhalt einer Binärdatei.
-
-        Args:
-            relative_path: Der relative Pfad.
-
-        Returns:
-            bytes: Der Inhalt der Datei.
-        """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "rb") as f:
-            return f.read()
-
-    def write_text(self, relative_path, content):
-        """
-        Schreibt Textinhalt in eine Datei.
-
-        Args:
-            relative_path: Der relative Pfad.
-            content: Der zu schreibende Textinhalt.
-        """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "w") as f:
-            f.write(content)
-
-    def write_binary(self, relative_path, content):
-        """
-        Schreibt Binärinhalt in eine Datei.
-
-        Args:
-            relative_path: Der relative Pfad.
-            content: Der zu schreibende Binärinhalt.
-        """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "wb") as f:
-            f.write(content)
-
-    def load(self, relative_path, initial_value=None, **load_args):
-        """
-        Lädt den Inhalt einer Datei basierend auf der Dateiendung.
-
-        Args:
-            relative_path: Der relative Pfad.
-            initial_value: Der Standardwert, falls die Datei nicht existiert.
-
-        Returns:
-            Der geladene Inhalt der Datei.
-        """
-        logger.info(f"Lade Datei: {relative_path}")
-        if not self.exists(relative_path):
-            if initial_value is not None:
-                logger.warning(f"Datei nicht gefunden: {relative_path}. Rückgabe des Standardwerts.")
-                return initial_value
-            raise FileNotFoundError(f"Datei existiert nicht: {relative_path}")
-
-        ext = posixpath.splitext(relative_path)[-1].lower()
-        if ext == ".json":
-            return json.loads(self.read_text(relative_path))
-        elif ext in [".yaml", ".yml"]:
-            return yaml.safe_load(self.read_text(relative_path))
-        elif ext == ".csv":
-            with self.filesystem.open(self._resolve_path(relative_path), "r") as f:
-                return pd.read_csv(f, **load_args)
-        elif ext == ".txt":
-            return self.read_text(relative_path)
-        else:
-            raise ValueError(f"Nicht unterstützte Dateiendung: {ext}")
 
     def save(self, relative_path, content):
         """
@@ -149,20 +45,39 @@ class DataHandler:
         full_path = self._resolve_path(relative_path)
         parent_dir = posixpath.dirname(full_path)
 
+        # 🔍 Speicherort überprüfen
+        logger.info(f"📂 Datei sollte gespeichert werden unter: {full_path}")
+
+        # Falls Ordner nicht existiert, erstelle ihn
         if not self.filesystem.exists(parent_dir):
-            self.filesystem.mkdirs(parent_dir, exist_ok=True)
+            try:
+                self.filesystem.mkdirs(parent_dir, exist_ok=True)
+                logger.info(f"📂 Ordner erstellt: {parent_dir}")
+            except Exception as e:
+                logger.error(f"❌ Fehler beim Erstellen des Ordners {parent_dir}: {e}")
 
         ext = posixpath.splitext(relative_path)[-1].lower()
 
-        if isinstance(content, pd.DataFrame) and ext == ".csv":
-            self.write_text(relative_path, content.to_csv(index=False))
-        elif isinstance(content, (dict, list)) and ext == ".json":
-            self.write_text(relative_path, json.dumps(content, indent=4))
-        elif isinstance(content, (dict, list)) and ext in [".yaml", ".yml"]:
-            self.write_text(relative_path, yaml.dump(content, default_flow_style=False))
-        elif isinstance(content, str) and ext == ".txt":
-            self.write_text(relative_path, content)
-        elif isinstance(content, bytes):
-            self.write_binary(relative_path, content)
-        else:
-            raise ValueError(f"Nicht unterstützter Inhaltstyp für Dateiendung {ext}")
+        try:
+            if isinstance(content, pd.DataFrame) and ext == ".csv":
+                with self.filesystem.open(full_path, "w") as f:
+                    content.to_csv(f, index=False)
+            elif isinstance(content, (dict, list)) and ext == ".json":
+                with self.filesystem.open(full_path, "w") as f:
+                    json.dump(content, f, indent=4)
+            elif isinstance(content, (dict, list)) and ext in [".yaml", ".yml"]:
+                with self.filesystem.open(full_path, "w") as f:
+                    yaml.dump(content, f, default_flow_style=False)
+            elif isinstance(content, str) and ext == ".txt":
+                with self.filesystem.open(full_path, "w") as f:
+                    f.write(content)
+            elif isinstance(content, bytes):
+                with self.filesystem.open(full_path, "wb") as f:
+                    f.write(content)
+            else:
+                raise ValueError(f"Nicht unterstützter Inhaltstyp für Dateiendung {ext}")
+
+            logger.info(f"✅ Datei erfolgreich gespeichert: {full_path}")
+
+        except Exception as e:
+            logger.error(f"❌ Fehler beim Speichern von {relative_path}: {e}")
