@@ -27,7 +27,7 @@ class DataManager:
 
         self.fs_root_folder = fs_root_folder
         self.fs_protocol = fs_protocol
-        self.fs = self._init_filesystem(fs_protocol)
+        self.fs = self._init_filesystem(fs_protocol)  # Initialisiere das Dateisystem
         self.app_data_reg = {}
         self.user_data_reg = {}
 
@@ -41,12 +41,15 @@ class DataManager:
                                      base_url=secrets['base_url'],
                                      auth=(secrets['username'], secrets['password']))
         elif protocol == 'file':
-            return fsspec.filesystem('file')
+            return fsspec.filesystem('file')  # Lokales Dateisystem
         else:
             raise ValueError(f"Unsupported protocol: {protocol}")
 
     def _get_data_handler(self):
         """ Erstellt und gibt einen Daten-Handler zurück. """
+        # Debugging-Ausgaben hinzufügen
+        st.write(f"Dateisystem: {self.fs}")
+        st.write(f"Root-Pfad: {self.fs_root_folder}")
         return DataHandler(self.fs, self.fs_root_folder)
 
     def load_user_data(self, session_state_key, username, initial_value=None, parse_dates=None):
@@ -62,16 +65,13 @@ class DataManager:
         Returns:
             pd.DataFrame: Die geladenen Benutzerdaten.
         """
-        # Überprüfen, ob ein Benutzername vorhanden ist
         if not username:
             st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
             return pd.DataFrame()
 
-        # Dateiname für die Benutzerdaten
         file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")
         dh = self._get_data_handler()
 
-        # Prüfen, ob die Datei existiert
         try:
             if not self.fs.exists(file_name):
                 df = initial_value if initial_value is not None else pd.DataFrame()
@@ -81,14 +81,12 @@ class DataManager:
             st.error(f"⚠️ Fehler beim Zugriff auf das Dateisystem: {e}")
             return pd.DataFrame()
 
-        # Datei laden
         try:
             df = dh.load(file_name, initial_value=initial_value)
         except Exception as e:
             st.error(f"⚠️ Fehler beim Laden der Datei: {e}")
             return pd.DataFrame()
 
-        # Falls parse_dates definiert ist, konvertiere Spalten zu Datetime
         if parse_dates:
             for col in parse_dates:
                 if col in df.columns:
@@ -114,9 +112,7 @@ class DataManager:
             df = st.session_state[session_state_key]
             dh = self._get_data_handler()
 
-            # Speichern mit Fehlerbehandlung
             try:
                 dh.save(file_name, df)
-                st.toast(f"✅ Daten für {username} erfolgreich gespeichert!")
             except Exception as e:
                 st.error(f"⚠️ Fehler beim Speichern der Daten: {e}")
