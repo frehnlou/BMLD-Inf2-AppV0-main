@@ -19,17 +19,19 @@ class LoginManager:
     def __init__(self, data_manager: DataManager = None,
                  auth_credentials_file: str = 'credentials.yaml',
                  auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
-        if hasattr(self, 'authenticator'):
-            return
-
+        """
+        Initialisiert die LoginManager-Klasse.
+        """
         if data_manager is None:
-            return
+            raise ValueError("Ein gültiger DataManager muss übergeben werden.")
 
         self.data_manager = data_manager
         self.auth_credentials_file = auth_credentials_file
         self.auth_cookie_name = auth_cookie_name
         self.auth_cookie_key = secrets.token_urlsafe(32)
         self.auth_credentials = self._load_auth_credentials()
+
+        # Initialisiere den Authenticator
         self.authenticator = stauth.Authenticate(
             self.auth_credentials,
             self.auth_cookie_name,
@@ -47,13 +49,11 @@ class LoginManager:
         """
         dh = self.data_manager._get_data_handler()
         try:
-            # Versuche, die Datei zu laden
             creds = dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
             if not creds or "usernames" not in creds:
                 raise ValueError("credentials.yaml wurde nicht gefunden oder ist leer. Eine neue Datei wird erstellt...")
             return creds
         except Exception as e:
-            # Erstelle eine neue Datei mit Standardwerten
             st.warning(f"{e}")
             creds = {"usernames": {}}
             dh.save(self.auth_credentials_file, creds)
