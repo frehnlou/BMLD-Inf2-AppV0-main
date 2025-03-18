@@ -133,14 +133,23 @@ class LoginManager:
             register_button = st.button("Registrieren", key="register_button")
 
             if register_button:
-                res = self.authenticator.register_user()
-                if res[1] is not None:
-                    st.success(f"Benutzer {res[1]} erfolgreich registriert.")
-                    try:
-                        self._save_auth_credentials()
-                        st.success("Anmeldedaten erfolgreich gespeichert.")
-                    except Exception as e:
-                        st.error(f"Fehler beim Speichern der Anmeldedaten: {e}")
+                # Überprüfen, ob der Benutzername bereits existiert
+                if username in self.auth_credentials["usernames"]:
+                    st.error("Benutzername existiert bereits. Bitte wählen Sie einen anderen.")
+                    return
+
+                # Benutzer hinzufügen
+                self.auth_credentials["usernames"][username] = {
+                    "email": email,
+                    "password": password  # Optional: Passwort-Hashing hinzufügen
+                }
+
+                try:
+                    self._save_auth_credentials()
+                    st.success(f"Benutzer {username} erfolgreich registriert.")
+                except Exception as e:
+                    st.error(f"Fehler beim Speichern der Anmeldedaten: {e}")
+
                 if stop:
                     st.stop()
 
