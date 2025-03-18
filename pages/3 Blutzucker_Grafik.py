@@ -51,5 +51,3 @@ if not user_data.empty:
 else:
     st.warning("Noch keine Daten vorhanden. Bitte fügen Sie Blutzuckerwerte hinzu.")
 
-# Hinweis für Benutzer
-st.info("Sie können Blutzuckerwerte im 'Blutzucker-Tracker' hinzufügen.")

@@ -55,7 +55,7 @@ with col4:
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
-    Liebe Diabetikerinnen und Diabetiker,
+    Liebe Diabetikerinnen und Diabetiker 🩸,
 
     Mit unserem Blutzucker-Tracker kannst du deine Werte einfach eingeben, speichern und analysieren – alles an einem Ort!
 
