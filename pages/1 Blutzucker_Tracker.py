@@ -20,16 +20,16 @@ if not username:
     st.error("Kein Benutzer eingeloggt. Anmeldung erforderlich.")
     st.stop()
 
-# Benutzerspezifische Daten laden
-if "user_data" not in st.session_state:
-    st.session_state.user_data = data_manager.load_user_data(
-        session_state_key=f"user_data_{username}",  # Benutzerspezifischer Schlüssel
+# Benutzerspezifische Daten initialisieren
+if f"user_data_{username}" not in st.session_state:
+    st.session_state[f"user_data_{username}"] = data_manager.load_user_data(
+        session_state_key=f"user_data_{username}",
         username=username,
         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
         parse_dates=["datum_zeit"]
     )
 
-user_data = st.session_state.user_data
+user_data = st.session_state[f"user_data_{username}"]
 
 # ====== Navigation ======
 col1, col2, col3, col4 = st.columns(4)
@@ -89,11 +89,11 @@ def blutzucker_tracker():
 
         # Speichere die Daten für den aktuellen Benutzer
         data_manager.save_user_data(
-            session_state_key=f"user_data_{username}",  # Benutzerspezifischer Schlüssel
+            session_state_key=f"user_data_{username}",
             username=username
         )
 
-        # Zeige eine Erfolgsmeldung an (ohne Benutzernamen)
+        # Zeige eine Erfolgsmeldung an
         st.success("Eintrag hinzugefügt!")
 
     # Zeige die gespeicherten Werte an
