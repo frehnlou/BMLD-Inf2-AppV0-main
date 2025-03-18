@@ -1,15 +1,23 @@
 import yaml
+import os
 import streamlit as st
 from utils.data_manager import DataManager
 
 class LoginManager:
     def __init__(self, data_manager, auth_credentials_file='credentials.yaml'):
         """
-        Initialisiert den LoginManager mit dem DataManager und der Datei für Anmeldedaten.
+        Initialisiert den LoginManager mit dem DataManager und stellt sicher, dass credentials.yaml existiert.
         """
         self.data_manager = data_manager
         self.auth_credentials_file = auth_credentials_file
-        self.auth_credentials = self._load_auth_credentials()
+
+        # Falls die Datei nicht existiert, wird sie automatisch erstellt
+        if not os.path.exists(self.auth_credentials_file):
+            st.warning("⚠️ `credentials.yaml` nicht gefunden. Neue Datei wird erstellt.")
+            self.auth_credentials = {"usernames": {}}  # Leere Struktur
+            self._save_auth_credentials()  # Datei speichern
+        else:
+            self.auth_credentials = self._load_auth_credentials()
 
     def _load_auth_credentials(self):
         """
@@ -17,34 +25,44 @@ class LoginManager:
         """
         try:
             with open(self.auth_credentials_file, 'r') as file:
-                return yaml.safe_load(file)
+                data = yaml.safe_load(file) or {"usernames": {}}
+                st.write(f"📂 Geladene Anmeldedaten: {data}")  # Debugging
+                return data
         except FileNotFoundError:
+            st.warning("⚠️ Datei nicht gefunden. Erstelle neue Datei.")
+            return {"usernames": {}}
+        except Exception as e:
+            st.error(f"❌ Fehler beim Laden von `credentials.yaml`: {e}")
             return {"usernames": {}}
 
     def _save_auth_credentials(self):
         """
         Speichert die Anmeldedaten in der Datei.
         """
-        with open(self.auth_credentials_file, 'w') as file:
-            yaml.safe_dump(self.auth_credentials, file)
+        try:
+            with open(self.auth_credentials_file, 'w') as file:
+                yaml.safe_dump(self.auth_credentials, file)
+            st.write("✅ Anmeldedaten erfolgreich gespeichert.")  # Debugging
+        except Exception as e:
+            st.error(f"❌ Fehler beim Speichern von `credentials.yaml`: {e}")
 
     def register_user(self, username, password, email):
         """
         Registriert einen neuen Benutzer und speichert die Anmeldedaten.
         """
         if username in self.auth_credentials["usernames"]:
-            st.error("Benutzername existiert bereits.")
+            st.error("❌ Benutzername existiert bereits.")
             return False
 
-        # Beispiel: Passwort-Hashing hinzufügen (optional)
-        hashed_password = password  # Hier könntest du bcrypt oder eine andere Hashing-Methode verwenden
+        # Passwort-Hashing kann hier hinzugefügt werden
+        hashed_password = password  
 
         self.auth_credentials["usernames"][username] = {
             "email": email,
             "password": hashed_password
         }
         self._save_auth_credentials()
-        st.success(f"Benutzer {username} erfolgreich registriert.")
+        st.success(f"✅ Benutzer {username} erfolgreich registriert.")
         return True
 
     def login(self):
@@ -57,12 +75,12 @@ class LoginManager:
 
         if login_button:
             user_data = self.auth_credentials["usernames"].get(username)
-            if user_data and user_data["password"] == password:  # Hier könntest du Passwort-Hashing verwenden
+            if user_data and user_data["password"] == password:  
                 st.session_state["username"] = username
                 st.session_state["authentication_status"] = True
-                st.success(f"Willkommen, {username}!")
+                st.success(f"🎉 Willkommen, {username}!")
             else:
-                st.error("Benutzername oder Passwort ist falsch.")
+                st.error("❌ Benutzername oder Passwort ist falsch.")
 
     def login_register(self):
         """
@@ -85,4 +103,4 @@ class LoginManager:
 
         if register_button:
             if self.register_user(username, password, email):
-                st.success("Registrierung erfolgreich. Bitte melden Sie sich an.")
+                st.success("✅ Registrierung erfolgreich. Bitte melden Sie sich an.")
