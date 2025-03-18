@@ -20,6 +20,9 @@ if not username:
     st.error("Kein Benutzer eingeloggt. Anmeldung erforderlich.")
     st.stop()
 
+# Debugging: Zeige den aktuellen Benutzernamen
+st.write(f"Debugging: Eingeloggter Benutzer: {username}")
+
 # Benutzerspezifische Daten initialisieren
 if f"user_data_{username}" not in st.session_state:
     # Lade die Daten des aktuellen Benutzers oder initialisiere sie, falls keine vorhanden sind
@@ -32,6 +35,9 @@ if f"user_data_{username}" not in st.session_state:
 
 # Zugriff auf die Benutzerdaten
 user_data = st.session_state[f"user_data_{username}"]
+
+# Debugging: Zeige die aktuellen Daten im Session-State
+st.write("Debugging: Aktuelle Benutzerdaten", user_data)
 
 # ====== Navigation ======
 col1, col2, col3, col4 = st.columns(4)
@@ -56,7 +62,7 @@ with col4:
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
-    Liebe Diabetikerinnen und Diabetiker 🩸,
+    Liebe Diabetikerinnen und Diabetiker 🩸
 
     Mit dieser App können Sie:
     - Ihre Blutzuckerwerte einfach eingeben und speichern.
@@ -90,13 +96,14 @@ def blutzucker_tracker():
         st.session_state[f"user_data_{username}"] = pd.concat([st.session_state[f"user_data_{username}"], new_entry], ignore_index=True)
 
         # Speichere die Daten für den aktuellen Benutzer
-        data_manager.save_user_data(
-            session_state_key=f"user_data_{username}",
-            username=username
-        )
-
-        # Zeige eine Erfolgsmeldung an
-        st.success("Eintrag erfolgreich hinzugefügt!")
+        try:
+            data_manager.save_user_data(
+                session_state_key=f"user_data_{username}",
+                username=username
+            )
+            st.success("Eintrag erfolgreich hinzugefügt!")
+        except Exception as e:
+            st.error(f"Fehler beim Speichern der Daten: {e}")
 
     # Zeige die gespeicherten Werte an
     if not user_data.empty:
@@ -112,6 +119,9 @@ def blutzucker_tracker():
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
+    # Zugriff auf die Benutzerdaten
+    user_data = st.session_state[f"user_data_{username}"]
+
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
         st.table(user_data.reset_index(drop=True))
@@ -121,6 +131,9 @@ def blutzucker_werte():
 # ====== Blutzucker-Grafik ======
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
+
+    # Zugriff auf die Benutzerdaten
+    user_data = st.session_state[f"user_data_{username}"]
 
     if not user_data.empty:
         st.markdown("### Verlauf der Blutzuckerwerte")
