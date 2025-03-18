@@ -54,19 +54,7 @@ with col4:
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
-    st.write("""
-    Liebe Diabetikerinnen und Diabetiker 🩸,
-
-    Mit dieser App können Sie:
-    - Ihre Blutzuckerwerte einfach eingeben und speichern.
-    - Den Messzeitpunkt auswählen (z. B. Nüchtern oder nach dem Essen).
-    - Ihre Werte in einer übersichtlichen Tabelle anzeigen lassen.
-    - Den Durchschnitt Ihrer Blutzuckerwerte berechnen.
-    - Ihre Werte in einer anschaulichen Grafik analysieren.
-
-    Behalten Sie Ihre Gesundheit im Blick und erkennen Sie langfristige Muster!
-    """)
-
+    # Eingabemaske für Blutzuckerwerte
     with st.form(key='blutzucker_form'):
         blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
         zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
@@ -81,10 +69,7 @@ def blutzucker_tracker():
         }])
 
         # Aktualisiere die Daten im Session-State
-        if "user_data" in st.session_state:
-            st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
-        else:
-            st.session_state.user_data = new_entry
+        st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
 
         # Speichere die Daten für den aktuellen Benutzer
         data_manager.save_user_data("user_data", username)
@@ -92,13 +77,10 @@ def blutzucker_tracker():
         # Zeige eine Erfolgsmeldung an
         st.success("Eintrag hinzugefügt!")
 
-        # Aktualisiere die Tabelle direkt
-        user_data = st.session_state.user_data
-
     # Zeige die gespeicherten Werte an
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
+        st.table(user_data.reset_index(drop=True))
 
         durchschnitt = user_data["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
@@ -111,7 +93,7 @@ def blutzucker_werte():
 
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
+        st.table(user_data.reset_index(drop=True))
     else:
         st.warning("Noch keine Werte gespeichert.")
 
