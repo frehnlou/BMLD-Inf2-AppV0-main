@@ -56,11 +56,15 @@ class LoginManager:
                 self.register()
 
     def login(self, stop=True):
+        """
+        Rendert das Login-Formular und verarbeitet Authentifizierungsstatusmeldungen.
+        """
         if st.session_state.get("authentication_status") is True:
             self.authenticator.logout("Logout", "sidebar")
         else:
             try:
-                name, authentication_status, username = self.authenticator.login("Login", location="sidebar")
+                # Korrekte Übergabe der Argumente
+                name, authentication_status, username = self.authenticator.login("Login", "sidebar")
                 if authentication_status:
                     st.success(f"Willkommen {name}!")
                 elif authentication_status is False:
@@ -85,12 +89,10 @@ class LoginManager:
             einen Kleinbuchstaben, eine Ziffer und ein Sonderzeichen aus @$!%*?& enthalten.
             """)
             try:
-                # Verwende die Methode register_user(), um die Datei automatisch zu erstellen
                 res = self.authenticator.register_user("Registrieren", preauthorization=False)
                 if res[1] is not None:
                     st.success(f"Benutzer {res[1]} erfolgreich registriert.")
                     try:
-                        # Speichere die Anmeldedaten in der Datei `credentials.yaml`
                         self._save_auth_credentials()
                         st.success("Anmeldedaten erfolgreich gespeichert.")
                     except Exception as e:
