@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
+import os
 
 # Seitenkonfiguration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
@@ -92,9 +93,14 @@ def blutzucker_tracker():
         st.session_state["temp_data"].append(new_entry)
         st.success("Eintrag erfolgreich hinzugefügt!")
 
-    # Aktualisiere den DataFrame nur bei Bedarf
-    if "temp_data" in st.session_state:
+        # Aktualisiere den DataFrame und speichere die Daten
         st.session_state[f"user_data_{username}"] = pd.DataFrame(st.session_state["temp_data"])
+        data_manager.save_user_data(f"user_data_{username}", username)
+
+    # Zeige die gespeicherten Werte in einer Tabelle an
+    if not user_data.empty:
+        st.markdown("### Gespeicherte Blutzuckerwerte")
+        st.table(user_data)
 
 # ====== Blutzucker-Werte ======
 def blutzucker_werte():
