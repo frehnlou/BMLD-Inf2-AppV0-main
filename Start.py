@@ -10,7 +10,7 @@ if utils_path not in sys.path:
 from data_manager import DataManager  # Import aus utils
 from login_manager import LoginManager  # Import aus utils
 
-# ✅ Direkt zur Login-Seite
+# Seitenkonfiguration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # Initialisiere DataManager
@@ -25,13 +25,14 @@ if "authentication_status" not in st.session_state or not st.session_state["auth
     st.stop()
 
 # Startseite
-st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
+st.markdown("## Blutzucker-Tracker für Diabetiker")
 
 st.write("""
 Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren. So behalten Sie Ihre Werte stets im Blick und können langfristige Trends erkennen.
 """)
 
-st.info(f"👋 Eingeloggt als: {st.session_state.username}")
+# Benutzerinfo
+st.info(f" 👋 Eingeloggt als: {st.session_state.username}")
 
 # Autoreninfo
 st.write("""

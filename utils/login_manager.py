@@ -7,7 +7,6 @@ from utils.data_manager import DataManager
 class LoginManager:
     """
     Singleton-Klasse, die den Anwendungszustand, die Speicherung und die Benutzer-Authentifizierung verwaltet.
-    
     Verwaltet den Zugriff auf das Dateisystem, Benutzeranmeldedaten und den Authentifizierungsstatus
     mithilfe des Streamlit-Session-States für Konsistenz zwischen Reruns.
     """
@@ -49,7 +48,11 @@ class LoginManager:
         self.auth_cookie_name = auth_cookie_name
         self.auth_cookie_key = secrets.token_urlsafe(32)
         self.auth_credentials = self._load_auth_credentials()
-        self.authenticator = stauth.Authenticate(self.auth_credentials, self.auth_cookie_name, self.auth_cookie_key)
+        self.authenticator = stauth.Authenticate(
+            self.auth_credentials,
+            self.auth_cookie_name,
+            self.auth_cookie_key
+        )
 
     def _load_auth_credentials(self):
         """
@@ -71,7 +74,6 @@ class LoginManager:
     def login_register(self, login_title='Login', register_title='Register new user'):
         """
         Rendert die Authentifizierungsoberfläche.
-        
         Zeigt das Login-Formular und optional das Registrierungsformular an. Verarbeitet die Benutzeranmeldung
         und den Registrierungsablauf. Stoppt die weitere Ausführung nach dem Rendern.
 
@@ -91,6 +93,9 @@ class LoginManager:
     def login(self, stop=True):
         """
         Rendert das Login-Formular und verarbeitet Authentifizierungsstatusmeldungen.
+
+        Args:
+            stop (bool): Stoppt die Ausführung nach dem Rendern.
         """
         if st.session_state.get("authentication_status") is True:
             self.authenticator.logout()
@@ -106,7 +111,6 @@ class LoginManager:
     def register(self, stop=True):
         """
         Rendert das Registrierungsformular und verarbeitet den Benutzerregistrierungsablauf.
-        
         Zeigt Passwortanforderungen an, verarbeitet Registrierungsversuche und speichert Anmeldedaten
         bei erfolgreicher Registrierung.
 
@@ -117,13 +121,13 @@ class LoginManager:
             self.authenticator.logout()
         else:
             st.markdown("""
-**Das Passwort muss:**
-- 8-20 Zeichen lang sein
-- Mindestens einen **Grossbuchstaben**
-- Mindestens einen **Kleinbuchstaben**
-- Mindestens eine **Ziffer**
-- Mindestens ein **Sonderzeichen** aus `@$!%*?&` enthalten
-""")
+            **Das Passwort muss:**
+            - 8-20 Zeichen lang sein
+            - Mindestens einen **Grossbuchstaben**
+            - Mindestens einen **Kleinbuchstaben**
+            - Mindestens eine **Ziffer**
+            - Mindestens ein **Sonderzeichen** aus `@$!%*?&` enthalten
+            """)
             res = self.authenticator.register_user()
             if res[1] is not None:
                 st.success(f"Benutzer {res[1]} erfolgreich registriert.")
