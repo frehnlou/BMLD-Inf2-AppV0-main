@@ -22,7 +22,7 @@ def blutzucker_werte():
     # Datenbank für den Nutzer laden
     data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
     user_data = data_manager.load_user_data(
-        session_state_key="user_data",
+        session_state_key=f"user_data_{username}",  # Konsistenter Key wie in 3 Blutzucker_Grafik.py
         username=username,  # ✅ Benutzer bekommt seine eigene Datei
         parse_dates=["datum_zeit"]
     )

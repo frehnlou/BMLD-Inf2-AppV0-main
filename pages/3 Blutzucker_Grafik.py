@@ -20,7 +20,7 @@ if not username:
 # Datenbank für den Nutzer laden
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_cblsf_App")
 user_data = data_manager.load_user_data(
-    session_state_key=f"user_data_{username}",
+    session_state_key=f"user_data_{username}",  # Konsistenter Key wie in 2 Blutzucker_Werte.py
     username=username,
     parse_dates=["datum_zeit"]
 )
