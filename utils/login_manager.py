@@ -1,123 +1,86 @@
-import secrets
-import streamlit as st
-import streamlit_authenticator as stauth
-from utils.data_manager import DataManager
+import json, yaml, posixpath
+import pandas as pd
+from io import StringIO
+import logging
 
-class LoginManager:
-    """
-    Verwaltet den Login- und Registrierungsprozess mit Multi-User-Unterstützung.
-    Jeder Benutzer erhält eigene, separate Daten.
-    """
-    def __init__(self, data_manager: DataManager = None,
-                 auth_credentials_file: str = 'credentials.yaml',
-                 auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
-        """
-        Initialisiert das Login-System mit Benutzerverwaltung.
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-        Args:
-            data_manager (DataManager): Instanz von DataManager zur Speicherung von Benutzerdaten.
-            auth_credentials_file (str): Datei für die Benutzerdatenbank.
-            auth_cookie_name (str): Name des Authentifizierungs-Cookies.
-        """
-        if hasattr(self, 'authenticator'):
-            return  # Falls bereits initialisiert, abbrechen
+class DataHandler:
+    def __init__(self, filesystem, root_path):
+        self.filesystem = filesystem
+        self.root_path = root_path
 
-        if data_manager is None:
-            raise ValueError("DataManager-Instanz erforderlich für LoginManager!")
+    def join(self, *args):
+        return posixpath.join(*args)
 
-        # Speichere Datenmanager und Login-Parameter
-        self.data_manager = data_manager
-        self.auth_credentials_file = auth_credentials_file
-        self.auth_cookie_name = auth_cookie_name
-        self.auth_cookie_key = secrets.token_urlsafe(32)
+    def _resolve_path(self, relative_path):
+        return self.join(self.root_path, relative_path)
 
-        # Lade Benutzeranmeldedaten
-        self.auth_credentials = self._load_auth_credentials()
+    def exists(self, relative_path):
+        full_path = self._resolve_path(relative_path)
+        return self.filesystem.exists(full_path)
 
-        # Authentifizierung mit Streamlit-Authenticator
-        self.authenticator = stauth.Authenticate(
-            credentials=self.auth_credentials,
-            cookie_name=self.auth_cookie_name,
-            key=self.auth_cookie_key,
-            cookie_expiry_days=30
-        )
+    def read_text(self, relative_path):
+        full_path = self._resolve_path(relative_path)
+        with self.filesystem.open(full_path, "r") as f:
+            return f.read()
 
-    def _load_auth_credentials(self):
-        """
-        Lädt Benutzeranmeldedaten aus der Datenbank.
+    def read_binary(self, relative_path):
+        full_path = self._resolve_path(relative_path)
+        with self.filesystem.open(full_path, "rb") as f:
+            return f.read()
 
-        Returns:
-            dict: Anmeldedaten der Benutzer.
-        """
-        dh = self.data_manager._get_data_handler()
-        return dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
+    def write_text(self, relative_path, content):
+        full_path = self._resolve_path(relative_path)
+        with self.filesystem.open(full_path, "w") as f:
+            f.write(content)
 
-    def _save_auth_credentials(self):
-        """
-        Speichert aktualisierte Benutzeranmeldedaten.
-        """
-        dh = self.data_manager._get_data_handler()
-        dh.save(self.auth_credentials_file, self.auth_credentials)
+    def write_binary(self, relative_path, content):
+        full_path = self._resolve_path(relative_path)
+        with self.filesystem.open(full_path, "wb") as f:
+            f.write(content)
 
-    def login_register(self):
-        """
-        Zeigt die Login- und Registrierungsseite an.
-        Falls der Benutzer bereits eingeloggt ist, wird ein Logout-Button angezeigt.
-        """
-        if st.session_state.get("authentication_status") is True:
-            self.authenticator.logout("Logout", "sidebar")
-            st.sidebar.success(f"👤 Eingeloggt als **{st.session_state.username}**")
+    def load(self, relative_path, initial_value=None, **load_args):
+        logger.info(f"Loading file: {relative_path}")
+        if not self.exists(relative_path):
+            if initial_value is not None:
+                logger.warning(f"File not found: {relative_path}. Returning initial value.")
+                return initial_value
+            raise FileNotFoundError(f"File does not exist: {relative_path}")
+
+        ext = posixpath.splitext(relative_path)[-1].lower()
+        if ext == ".json":
+            return json.loads(self.read_text(relative_path))
+        elif ext in [".yaml", ".yml"]:
+            return yaml.safe_load(self.read_text(relative_path))
+        elif ext == ".csv":
+            with self.filesystem.open(self._resolve_path(relative_path), "r") as f:
+                return pd.read_csv(f, **load_args)
+        elif ext == ".txt":
+            return self.read_text(relative_path)
         else:
-            login_tab, register_tab = st.tabs(["🔐 Login", "📝 Registrieren"])
-            with login_tab:
-                self.login()
-            with register_tab:
-                self.register()
+            raise ValueError(f"Unsupported file extension: {ext}")
 
-    def login(self):
-        """
-        Zeigt das Login-Formular an und verwaltet die Anmeldung.
-        """
-        name, authentication_status, username = self.authenticator.login("Login", "main")
+    def save(self, relative_path, content):
+        logger.info(f"Saving file: {relative_path}")
+        full_path = self._resolve_path(relative_path)
+        parent_dir = posixpath.dirname(full_path)
 
-        if authentication_status is False:
-            st.error("❌ Falsche Login-Daten!")
-        elif authentication_status is None:
-            st.warning("Bitte Benutzername und Passwort eingeben.")
+        if not self.filesystem.exists(parent_dir):
+            self.filesystem.mkdirs(parent_dir, exist_ok=True)
 
-    def register(self):
-        """
-        Zeigt das Registrierungsformular und verwaltet die Benutzerregistrierung.
-        """
-        st.info("""
-        Das Passwort muss mindestens 8 Zeichen lang sein und
-        eine Kombination aus Großbuchstaben, Kleinbuchstaben, Zahlen und Sonderzeichen enthalten.
-        """)
+        ext = posixpath.splitext(relative_path)[-1].lower()
 
-        try:
-            new_user_registered = self.authenticator.register_user(
-                pre_authorization=False
-            )
-
-            if new_user_registered[1]:
-                st.success(f"✅ Benutzer {new_user_registered[1]} erfolgreich registriert!")
-
-                # Speichere die neuen Anmeldedaten
-                self._save_auth_credentials()
-                st.success("Anmeldedaten gespeichert!")
-        except Exception as e:
-            st.error(f"⚠️ Fehler bei der Registrierung: {e}")
-
-    def go_to_login(self, login_page_py_file="Start.py"):
-        """
-        Falls der Benutzer nicht eingeloggt ist, zur Login-Seite umleiten.
-        Falls eingeloggt, Logout-Button anzeigen.
-
-        Args:
-            login_page_py_file (str): Name der Login-Seite.
-        """
-        if st.session_state.get("authentication_status") is not True:
-            st.switch_page(login_page_py_file)
+        if isinstance(content, pd.DataFrame) and ext == ".csv":
+            self.write_text(relative_path, content.to_csv(index=False))
+        elif isinstance(content, (dict, list)) and ext == ".json":
+            self.write_text(relative_path, json.dumps(content, indent=4))
+        elif isinstance(content, (dict, list)) and ext in [".yaml", ".yml"]:
+            self.write_text(relative_path, yaml.dump(content, default_flow_style=False))
+        elif isinstance(content, str) and ext == ".txt":
+            self.write_text(relative_path, content)
+        elif isinstance(content, bytes):
+            self.write_binary(relative_path, content)
         else:
-            self.authenticator.logout("Logout", "sidebar")
-            st.sidebar.success(f"👤 Eingeloggt als **{st.session_state.username}**")
+            raise ValueError(f"Unsupported content type for extension {ext}")
