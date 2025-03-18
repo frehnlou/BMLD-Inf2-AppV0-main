@@ -102,7 +102,7 @@ class LoginManager:
         else:
             st.info("""
             🔑Das Passwort muss zwischen 8-15 Zeichen lang sein und mindestens enthalten:
-            - Einen Großbuchstaben
+            - Einen Grossbuchstaben
             - Einen Kleinbuchstaben
             - Eine Zahl
             - Ein Sonderzeichen (@$!%*?&)
