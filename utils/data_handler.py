@@ -6,7 +6,7 @@ from io import StringIO
 import logging
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 class DataHandler:
     def _init_(self, filesystem, root_path):
