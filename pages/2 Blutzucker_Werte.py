@@ -28,14 +28,19 @@ def blutzucker_werte():
         parse_dates=["datum_zeit"]
     )
 
-    # Falls Datei neu erstellt wurde, NICHT anzeigen
+    # DEBUGGING: Überprüfen, ob Daten geladen wurden
+    st.write(f"🔍 **Debug: Geladene Daten für Benutzer `{username}`**")
+    st.write(user_data)
+
     if user_data.empty:
         st.warning("⚠️ Noch keine Blutzuckerwerte vorhanden. Bitte neuen Wert eingeben.")
     else:
-        st.markdown("### Gespeicherte Blutzuckerwerte")
+        st.markdown("###  Gespeicherte Blutzuckerwerte")
 
         # Sicherstellen, dass Spalten existieren
-        if all(col in user_data.columns for col in ["datum_zeit", "blutzuckerwert", "zeitpunkt"]):
+        required_columns = {"datum_zeit", "blutzuckerwert", "zeitpunkt"}
+        if required_columns.issubset(user_data.columns):
+            # Tabelle anzeigen
             st.table(user_data[["datum_zeit", "blutzuckerwert", "zeitpunkt"]])
 
             # ✅ Durchschnitt berechnen
