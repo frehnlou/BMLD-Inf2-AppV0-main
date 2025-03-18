@@ -9,7 +9,7 @@ from utils.login_manager import LoginManager
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
-data_manager = DataManager(fs_protocol='local', fs_root_folder="BMLD_CPBLSF_App")
+data_manager = DataManager(fs_protocol='local', fs_root_folder="BMLD_cpblsf_App")
 login_manager = LoginManager(data_manager)
 login_manager.go_to_login('Start.py')
 

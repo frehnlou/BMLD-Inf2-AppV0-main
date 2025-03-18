@@ -1,46 +1,45 @@
 import streamlit as st
-import sys
-import os
-
-# Füge das Hauptverzeichnis zum Modulpfad hinzu, falls erforderlich
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 from utils.data_manager import DataManager
 from utils.login_manager import LoginManager
 
-# Seitenkonfiguration
+# ✅ Direkt zur Login-Seite
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
+# ====== Login Block ======
 # Initialisiere DataManager
-data_manager = DataManager(fs_protocol='local', fs_root_folder="BMLD_CPBLSF_App")
+data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_CPBLSF_App")
 
-# Debugging: Überprüfen Sie die Anmeldedaten
-print("Anmeldedaten:", data_manager.get_credentials())
+# Initialisiere LoginManager und zeige Login/Register direkt
+login_manager = LoginManager(data_manager)
+login_manager.login_register()  # Login-/Registrierungsseite anzeigen
 
-# Initialisiere LoginManager
-try:
-    login_manager = LoginManager(data_manager)
-except Exception as e:
-    st.error("Ein Fehler ist bei der Initialisierung des LoginManagers aufgetreten.")
-    print(f"Fehler bei LoginManager-Initialisierung: {e}")
+# Falls der Benutzer nicht eingeloggt ist, stoppe den weiteren Code
+if "authentication_status" not in st.session_state or not st.session_state["authentication_status"]:
     st.stop()
 
-# Fehlerbehandlung für Login/Register
-try:
-    login_manager.login_register()
-except Exception as e:
-    st.error("Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.")
-    print(f"Fehler in login_register: {e}")
+# ====== Startseite nach erfolgreicher Anmeldung ======
 
-# Benutzerinfo
-if st.session_state.get("authentication_status"):
-    st.info(f" 👋 Eingeloggt als: {st.session_state.username}")
+st.markdown("## 🩸 Blutzucker-Tracker für Diabetiker")
+
+st.write("""
+Willkommen zum Blutzucker-Tracker! Diese App unterstützt Sie dabei, Ihre Blutzuckerwerte einfach zu erfassen, zu speichern und zu analysieren. So behalten Sie Ihre Werte stets im Blick und können langfristige Trends erkennen.
+""")
+
+# 👤 Benutzerinfo
+st.info(f"👋 Eingeloggt als: {st.session_state.username}")
+
+# Infobox
+st.markdown("""
+<div style="border-left: 4px solid #4CAF50; background-color: #F0FFF0; padding: 10px; border-radius: 5px;">
+Nutzen Sie die App regelmässig, um Ihre Blutzuckerwerte besser im Blick zu behalten und langfristige Muster zu erkennen.
+</div>
+""", unsafe_allow_html=True)
 
 # Autoreninfo
 st.write("""
 ### Autoren  
 Diese App wurde im Rahmen des Moduls BMLD Informatik 2 an der ZHAW entwickelt von:
 
-- Cristiana Pereira Bastos (pereicri@students.zhaw.ch)  
+- Cristiana Bastos (pereicri@students.zhaw.ch)  
 - Lou-Salomé Frehner (frehnlou@students.zhaw.ch)
 """)
