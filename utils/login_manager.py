@@ -43,7 +43,24 @@ class LoginManager:
 
     def _load_auth_credentials(self):
         dh = self.data_manager._get_data_handler()
-        return dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
+        creds = dh.load(self.auth_credentials_file, initial_value={"usernames": {}})
+        
+        # Falls die Datei leer ist oder nicht existiert, erstelle eine neue
+        if not creds.get("usernames"):
+            st.warning("credentials.yaml wurde nicht gefunden oder ist leer. Eine neue Datei wird erstellt...")
+            creds = {
+                "usernames": {
+                    "admin": {
+                        "email": "admin@example.com",
+                        "hashed_password": "$2b$12$..."  # Ersetze mit generiertem Hash
+                    }
+                }
+            }
+            dh.save(self.auth_credentials_file, creds)
+            st.success("Neue credentials.yaml wurde erstellt. Bitte ersetze das Passwort mit einem sicheren Hash.")
+        
+        st.write("Geladene Benutzer-Credentials:", creds)
+        return creds
 
     def _save_auth_credentials(self):
         dh = self.data_manager._get_data_handler()
@@ -67,13 +84,12 @@ class LoginManager:
             self.authenticator.logout("Logout", "sidebar")
         else:
             try:
-                # DEBUG: Überprüfung der location-Werte
-                location_value = "main"  # Teste auch "unrendered" oder "sidebar"
-                st.write("Login attempt with location:", location_value)
+                location_value = "main"
+                st.write(f"Teste Login-Formular mit location='{location_value}'")
                 
                 name, authentication_status, username = self.authenticator.login("Login", location_value)
                 
-                st.write(f"Name: {name}, Authenticated: {authentication_status}, Username: {username}")
+                st.write(f"Login Ergebnis: Name={name}, Status={authentication_status}, Benutzername={username}")
                 
                 if authentication_status:
                     st.success(f"Willkommen {name}!")
