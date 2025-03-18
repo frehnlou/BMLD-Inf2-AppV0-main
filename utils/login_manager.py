@@ -101,8 +101,7 @@ class LoginManager:
             self.authenticator.logout()
         else:
             st.info("""
-            🔑
-            - Das Passwort muss zwischen 8-15 Zeichen lang sein und mindestens enthalten:
+            🔑Das Passwort muss zwischen 8-15 Zeichen lang sein und mindestens enthalten:
             - Einen Großbuchstaben
             - Einen Kleinbuchstaben
             - Eine Zahl
