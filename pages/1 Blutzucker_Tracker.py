@@ -56,7 +56,7 @@ with col4:
 def startseite():
     st.markdown("## 🏠 Willkommen auf der Startseite!")
     st.write("""
-    Liebe Diabetikerinnen und Diabetiker 🩸,
+    Liebe Diabetikerinnen und Diabetiker 🩸
 
     Mit dieser App können Sie:
     - Ihre Blutzuckerwerte einfach eingeben und speichern.
