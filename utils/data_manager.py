@@ -12,28 +12,15 @@ class DataManager:
             os.makedirs(self.fs_root_folder)
 
     def _get_data_handler(self):
-        """
-        Gibt einen Daten-Handler zurück, der für das Laden und Speichern von Daten verwendet wird.
-        """
-        return self  # Der DataManager selbst fungiert als Handler
+        return self
 
     def load(self, file_name, initial_value=None):
-        """
-        Lädt Daten aus einer Datei.
-        """
         file_path = os.path.join(self.fs_root_folder, file_name)
         try:
-            with open(file_path, 'r') as file:
-                return pd.read_csv(file)  # Beispiel: CSV-Datei laden
+            return pd.read_csv(file_path)
         except FileNotFoundError:
             return initial_value
 
     def save(self, file_name, data):
-        """
-        Speichert Daten in einer Datei.
-        """
         file_path = os.path.join(self.fs_root_folder, file_name)
-        try:
-            data.to_csv(file_path, index=False)
-        except Exception as e:
-            st.error(f"Fehler beim Speichern der Datei {file_name}: {e}")
+        data.to_csv(file_path, index=False)
