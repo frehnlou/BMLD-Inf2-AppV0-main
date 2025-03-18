@@ -16,7 +16,14 @@ data_manager = DataManager(fs_protocol='local', fs_root_folder="shared_folder")
 
 # Initialisiere LoginManager
 login_manager = LoginManager(data_manager)
-login_manager.login_register()
+
+# Fehlerbehandlung für Login/Register
+try:
+    login_manager.login_register()
+except Exception as e:
+    st.error("Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.")
+    # Fehlerdetails für Debugging ausgeben
+    print(f"Fehler in login_register: {e}")
 
 # Benutzerinfo
 if st.session_state.get("authentication_status"):
