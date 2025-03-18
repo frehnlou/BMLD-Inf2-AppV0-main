@@ -54,6 +54,19 @@ with col4:
 def blutzucker_tracker():
     st.markdown("## 🩸 Blutzucker-Tracker")
 
+    st.write("""
+    Liebe Diabetikerinnen und Diabetiker 🩸,
+
+    Mit dieser App können Sie:
+    - Ihre Blutzuckerwerte einfach eingeben und speichern.
+    - Den Messzeitpunkt auswählen (z. B. Nüchtern oder nach dem Essen).
+    - Ihre Werte in einer übersichtlichen Tabelle anzeigen lassen.
+    - Den Durchschnitt Ihrer Blutzuckerwerte berechnen.
+    - Ihre Werte in einer anschaulichen Grafik analysieren.
+
+    Behalten Sie Ihre Gesundheit im Blick und erkennen Sie langfristige Muster!
+    """)
+
     with st.form(key='blutzucker_form'):
         blutzuckerwert = st.number_input("Blutzuckerwert (mg/dL)", min_value=0, step=1)
         zeitpunkt = st.selectbox("Zeitpunkt", ["Nüchtern", "Nach dem Essen"])
@@ -66,14 +79,23 @@ def blutzucker_tracker():
             "blutzuckerwert": blutzuckerwert,
             "zeitpunkt": zeitpunkt
         }])
-        st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
 
-        # Speichert die Werte nur für den aktuellen Benutzer
+        # Aktualisiere die Daten im Session-State
+        if "user_data" in st.session_state:
+            st.session_state.user_data = pd.concat([st.session_state.user_data, new_entry], ignore_index=True)
+        else:
+            st.session_state.user_data = new_entry
+
+        # Speichere die Daten für den aktuellen Benutzer
         data_manager.save_user_data("user_data", username)
 
+        # Zeige eine Erfolgsmeldung an
         st.success("Eintrag hinzugefügt!")
-        st.experimental_rerun()
 
+        # Aktualisiere die Tabelle direkt
+        user_data = st.session_state.user_data
+
+    # Zeige die gespeicherten Werte an
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
         st.table(user_data.drop(columns=["username"], errors="ignore").reset_index(drop=True))
