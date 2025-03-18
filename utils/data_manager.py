@@ -67,9 +67,6 @@ class DataManager:
             st.error("⚠️ Kein Benutzername gefunden! Anmeldung erforderlich.")
             return pd.DataFrame()
 
-        # Debugging-Ausgabe
-        st.write(f"Lade Benutzerdaten für: {username}")
-
         # Dateiname für die Benutzerdaten
         file_name = posixpath.join(self.fs_root_folder, f"{username}_data.csv")
         dh = self._get_data_handler()
@@ -77,7 +74,6 @@ class DataManager:
         # Prüfen, ob die Datei existiert
         try:
             if not self.fs.exists(file_name):
-                st.write(f"Datei {file_name} existiert nicht. Erstelle neue Datei.")
                 df = initial_value if initial_value is not None else pd.DataFrame()
                 dh.save(file_name, df)
                 return df
