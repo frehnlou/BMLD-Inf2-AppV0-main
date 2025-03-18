@@ -1,4 +1,6 @@
-import json, yaml, posixpath
+import json
+import yaml
+import posixpath
 import pandas as pd
 from io import StringIO
 import logging
@@ -8,46 +10,119 @@ logger = logging.getLogger(__name__)
 
 class DataHandler:
     def __init__(self, filesystem, root_path):
+        """
+        Initialisiert den DataHandler.
+
+        Args:
+            filesystem: Das Dateisystemobjekt (z. B. fsspec).
+            root_path: Der Root-Pfad für alle Dateioperationen.
+        """
         self.filesystem = filesystem
         self.root_path = root_path
 
     def join(self, *args):
+        """
+        Verbindet Pfade mit posixpath.
+
+        Returns:
+            str: Der verbundene Pfad.
+        """
         return posixpath.join(*args)
 
     def _resolve_path(self, relative_path):
+        """
+        Löst den relativen Pfad in einen absoluten Pfad auf.
+
+        Args:
+            relative_path: Der relative Pfad.
+
+        Returns:
+            str: Der absolute Pfad.
+        """
         return self.join(self.root_path, relative_path)
 
     def exists(self, relative_path):
+        """
+        Überprüft, ob eine Datei oder ein Verzeichnis existiert.
+
+        Args:
+            relative_path: Der relative Pfad.
+
+        Returns:
+            bool: True, wenn die Datei existiert, sonst False.
+        """
         full_path = self._resolve_path(relative_path)
         return self.filesystem.exists(full_path)
 
     def read_text(self, relative_path):
+        """
+        Liest den Inhalt einer Textdatei.
+
+        Args:
+            relative_path: Der relative Pfad.
+
+        Returns:
+            str: Der Inhalt der Datei.
+        """
         full_path = self._resolve_path(relative_path)
         with self.filesystem.open(full_path, "r") as f:
             return f.read()
 
     def read_binary(self, relative_path):
+        """
+        Liest den Inhalt einer Binärdatei.
+
+        Args:
+            relative_path: Der relative Pfad.
+
+        Returns:
+            bytes: Der Inhalt der Datei.
+        """
         full_path = self._resolve_path(relative_path)
         with self.filesystem.open(full_path, "rb") as f:
             return f.read()
 
     def write_text(self, relative_path, content):
+        """
+        Schreibt Textinhalt in eine Datei.
+
+        Args:
+            relative_path: Der relative Pfad.
+            content: Der zu schreibende Textinhalt.
+        """
         full_path = self._resolve_path(relative_path)
         with self.filesystem.open(full_path, "w") as f:
             f.write(content)
 
     def write_binary(self, relative_path, content):
+        """
+        Schreibt Binärinhalt in eine Datei.
+
+        Args:
+            relative_path: Der relative Pfad.
+            content: Der zu schreibende Binärinhalt.
+        """
         full_path = self._resolve_path(relative_path)
         with self.filesystem.open(full_path, "wb") as f:
             f.write(content)
 
     def load(self, relative_path, initial_value=None, **load_args):
-        logger.info(f"Loading file: {relative_path}")
+        """
+        Lädt den Inhalt einer Datei basierend auf der Dateiendung.
+
+        Args:
+            relative_path: Der relative Pfad.
+            initial_value: Der Standardwert, falls die Datei nicht existiert.
+
+        Returns:
+            Der geladene Inhalt der Datei.
+        """
+        logger.info(f"Lade Datei: {relative_path}")
         if not self.exists(relative_path):
             if initial_value is not None:
-                logger.warning(f"File not found: {relative_path}. Returning initial value.")
+                logger.warning(f"Datei nicht gefunden: {relative_path}. Rückgabe des Standardwerts.")
                 return initial_value
-            raise FileNotFoundError(f"File does not exist: {relative_path}")
+            raise FileNotFoundError(f"Datei existiert nicht: {relative_path}")
 
         ext = posixpath.splitext(relative_path)[-1].lower()
         if ext == ".json":
@@ -60,10 +135,17 @@ class DataHandler:
         elif ext == ".txt":
             return self.read_text(relative_path)
         else:
-            raise ValueError(f"Unsupported file extension: {ext}")
+            raise ValueError(f"Nicht unterstützte Dateiendung: {ext}")
 
     def save(self, relative_path, content):
-        logger.info(f"Saving file: {relative_path}")
+        """
+        Speichert den Inhalt in einer Datei basierend auf der Dateiendung.
+
+        Args:
+            relative_path: Der relative Pfad.
+            content: Der zu speichernde Inhalt.
+        """
+        logger.info(f"Speichere Datei: {relative_path}")
         full_path = self._resolve_path(relative_path)
         parent_dir = posixpath.dirname(full_path)
 
@@ -83,4 +165,4 @@ class DataHandler:
         elif isinstance(content, bytes):
             self.write_binary(relative_path, content)
         else:
-            raise ValueError(f"Unsupported content type for extension {ext}")
+            raise ValueError(f"Nicht unterstützter Inhaltstyp für Dateiendung {ext}")
