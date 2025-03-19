@@ -11,16 +11,29 @@ data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_CPBLSF_App
 login_manager = LoginManager(data_manager)
 login_manager.login_register()
 
-# load the data from the persistent storage into the session state
-data_manager.load_user_data(
-    session_state_key='data_df', 
-    file_name='data.csv', 
-    initial_value = pd.DataFrame(), 
-    parse_dates = ['timestamp']
+# Daten laden mit Fehlerbehandlung
+try:
+    data_manager.load_user_data(
+        session_state_key='data_df', 
+        file_name='data.csv', 
+        initial_value=pd.DataFrame(columns=["timestamp", "blutzuckerwert", "zeitpunkt"]), 
+        parse_dates=['timestamp']
     )
+except FileNotFoundError:
+    st.warning("Die Datei 'data.csv' wurde nicht gefunden. Ein neues leeres DataFrame wird erstellt.")
+    st.session_state['data_df'] = pd.DataFrame(columns=["timestamp", "blutzuckerwert", "zeitpunkt"])
+except ValueError as e:
+    st.error(f"Fehler beim Laden der Daten: {e}")
+    st.stop()
 
 # Falls der Benutzer nicht eingeloggt ist, stoppe den weiteren Code
 if "authentication_status" not in st.session_state or not st.session_state["authentication_status"]:
+    st.error("⚠️ Sie sind nicht eingeloggt. Bitte melden Sie sich an.")
+    st.stop()
+
+# Überprüfen, ob der Benutzername im Session-State vorhanden ist
+if "username" not in st.session_state:
+    st.error("⚠️ Benutzername fehlt im Session-State. Bitte melden Sie sich erneut an.")
     st.stop()
 
 # Startseite nach erfolgreicher Anmeldung

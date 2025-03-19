@@ -19,14 +19,9 @@ if not username:
     st.error("⚠️ Kein Benutzer eingeloggt! Anmeldung erforderlich.")
     st.stop()
 
-# Benutzerspezifische Daten initialisieren
-# if f"user_data_{username}" not in st.session_state:
-#     st.session_state[f"user_data_{username}"] = data_manager.load_user_data(
-#         session_state_key=f"user_data_{username}",
-#         username=username,
-#         initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]),
-#         parse_dates=["datum_zeit"]
-#     )
+# Initialisiere den Schlüssel 'data_df', falls er nicht existiert
+if 'data_df' not in st.session_state:
+    st.session_state['data_df'] = pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"])
 
 # Zugriff auf die Benutzerdaten
 user_data = st.session_state.get(f"user_data_{username}", pd.DataFrame())
