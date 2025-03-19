@@ -93,7 +93,7 @@ def blutzucker_tracker():
 
         # Aktualisiere den DataFrame und speichere die Daten
         st.session_state[f"user_data_{username}"] = pd.DataFrame(st.session_state["temp_data"])
-        DataManager().append_record(session_state_key='data_df', record=new_entry)
+        DataManager().append_record(session_state_key='data_df', record_dict=new_entry)
     # Zeige die gespeicherten Werte in einer Tabelle an
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
