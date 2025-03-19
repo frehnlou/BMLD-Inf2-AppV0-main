@@ -10,8 +10,7 @@ import os
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
-login_manager = LoginManager(data_manager)
-login_manager.go_to_login('Start.py')
+LoginManager().go_to_login('Start.py')
 
 # Nutzername aus dem Session-State holen
 username = st.session_state.get("username")
