@@ -8,11 +8,7 @@ st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # Initialisiere DataManager
 data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_CPBLSF_App")
-
-# Initialisiere LoginManager
 login_manager = LoginManager(data_manager)
-
-# Login- oder Registrierungsseite anzeigen
 login_manager.login_register()
 
 # load the data from the persistent storage into the session state
