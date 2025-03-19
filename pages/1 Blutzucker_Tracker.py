@@ -10,7 +10,6 @@ import os
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
 # ====== Login-Check ======
-data_manager = DataManager(fs_protocol='file', fs_root_folder="BMLD_CPBLSF_App")
 login_manager = LoginManager(data_manager)
 login_manager.go_to_login('Start.py')
 
@@ -95,8 +94,7 @@ def blutzucker_tracker():
 
         # Aktualisiere den DataFrame und speichere die Daten
         st.session_state[f"user_data_{username}"] = pd.DataFrame(st.session_state["temp_data"])
-        data_manager.save_user_data(f"user_data_{username}", username)
-
+        DataManager().append_record(session_state_key='data_df', record=new_entry)
     # Zeige die gespeicherten Werte in einer Tabelle an
     if not user_data.empty:
         st.markdown("### Gespeicherte Blutzuckerwerte")
