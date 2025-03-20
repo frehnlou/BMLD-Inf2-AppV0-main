@@ -125,15 +125,25 @@ class DataHandler:
             raise FileNotFoundError(f"Datei existiert nicht: {relative_path}")
 
         ext = posixpath.splitext(relative_path)[-1].lower()
+        print(f"DEBUG: Lade Datei mit Endung {ext}")
+
         if ext == ".json":
-            return json.loads(self.read_text(relative_path))
+            data = json.loads(self.read_text(relative_path))
+            print(f"DEBUG: Geladene JSON-Daten: {data}")
+            return data
         elif ext in [".yaml", ".yml"]:
-            return yaml.safe_load(self.read_text(relative_path))
+            data = yaml.safe_load(self.read_text(relative_path))
+            print(f"DEBUG: Geladene YAML-Daten: {data}")
+            return data
         elif ext == ".csv":
             with self.filesystem.open(self._resolve_path(relative_path), "r") as f:
-                return pd.read_csv(f, **load_args)
+                data = pd.read_csv(f, **load_args)
+                print(f"DEBUG: Geladene CSV-Daten:\n{data}")
+                return data
         elif ext == ".txt":
-            return self.read_text(relative_path)
+            data = self.read_text(relative_path)
+            print(f"DEBUG: Geladener Textinhalt: {data}")
+            return data
         else:
             raise ValueError(f"Nicht unterstützte Dateiendung: {ext}")
 
@@ -150,20 +160,26 @@ class DataHandler:
         parent_dir = posixpath.dirname(full_path)
 
         if not self.filesystem.exists(parent_dir):
+            print(f"DEBUG: Erstelle Verzeichnis {parent_dir}")
             self.filesystem.mkdirs(parent_dir, exist_ok=True)
 
         ext = posixpath.splitext(relative_path)[-1].lower()
+        print(f"DEBUG: Speichere Datei mit Endung {ext}")
 
         if isinstance(content, pd.DataFrame) and ext == ".csv":
+            print(f"DEBUG: Zu speichernde CSV-Daten:\n{content}")
             self.write_text(relative_path, content.to_csv(index=False))
         elif isinstance(content, (dict, list)) and ext == ".json":
+            print(f"DEBUG: Zu speichernde JSON-Daten: {content}")
             self.write_text(relative_path, json.dumps(content, indent=4))
         elif isinstance(content, (dict, list)) and ext in [".yaml", ".yml"]:
+            print(f"DEBUG: Zu speichernde YAML-Daten: {content}")
             self.write_text(relative_path, yaml.dump(content, default_flow_style=False))
         elif isinstance(content, str) and ext == ".txt":
+            print(f"DEBUG: Zu speichernder Textinhalt: {content}")
             self.write_text(relative_path, content)
         elif isinstance(content, bytes):
+            print(f"DEBUG: Zu speichernder Binärinhalt")
             self.write_binary(relative_path, content)
         else:
             raise ValueError(f"Nicht unterstützter Inhaltstyp für Dateiendung {ext}")
-
