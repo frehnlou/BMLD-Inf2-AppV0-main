@@ -105,7 +105,6 @@ def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
     if st.session_state["data_df"]:
-        st.warning("Noch keine Werte vorhanden.")
     else:
         st.markdown("### Verlauf der Blutzuckerwerte")
         chart_data = st.session_state["data_df"].set_index("datum_zeit")[["blutzuckerwert"]]
