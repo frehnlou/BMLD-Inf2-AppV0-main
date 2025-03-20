@@ -27,7 +27,6 @@ class DataManager:
 
     @staticmethod
     def _init_filesystem(protocol: str):
-        print(f"DEBUG: Initializing filesystem with protocol {protocol}")
         if protocol == 'webdav':
             secrets = st.secrets['webdav']
             return fsspec.filesystem('webdav', 
@@ -45,50 +44,73 @@ class DataManager:
             return DataHandler(self.fs, posixpath.join(self.fs_root_folder, subfolder))
 
     def load_app_data(self, session_state_key, file_name, initial_value=None, **load_args):
-        print(f"DEBUG: load_app_data called with session_state_key={session_state_key}, file_name={file_name}")
         if session_state_key in st.session_state:
-            print(f"DEBUG: session_state_key {session_state_key} already in session_state")
             return
         
         dh = self._get_data_handler()
         data = dh.load(file_name, initial_value, **load_args)
         st.session_state[session_state_key] = data
         self.app_data_reg[session_state_key] = file_name
-        print(f"DEBUG: Loaded data for {session_state_key}: {data}")
+
+    def load_user_data(self, session_state_key, file_name, initial_value=None, **load_args):
+        username = st.session_state.get('username', None)
+        if username is None:
+            for key in self.user_data_reg:  # delete all user data
+                st.session_state.pop(key, None)
+            self.user_data_reg = {}
+            st.error(f"DataManager: No user logged in, cannot load file `{file_name}` into session state with key `{session_state_key}`")
+            return
+        elif session_state_key in st.session_state:
+            return
+
+        user_data_folder = 'user_data_' + username
+        dh = self._get_data_handler(user_data_folder)
+        data = dh.load(file_name, initial_value, **load_args)
+        st.session_state[session_state_key] = data
+        self.user_data_reg[session_state_key] = dh.join(user_data_folder, file_name)
+
+    @property
+    def data_reg(self):
+        return {**self.app_data_reg, **self.user_data_reg}
 
     def save_data(self, session_state_key):
         """
         Saves data from session state to persistent storage using the registered data handler.
         """
-        print(f"DEBUG: save_data called with session_state_key={session_state_key}")
-        print(f"DEBUG: Current data_reg: {self.data_reg}")
-        print(f"DEBUG: Current session_state keys: {st.session_state.keys()}")
-
+        # Registriere den Schlüssel in data_reg, falls er nicht existiert
         if session_state_key not in self.data_reg:
             self.app_data_reg[session_state_key] = f"{session_state_key}.csv"
 
+        # Überprüfen, ob der Schlüssel im Session-State existiert
         if session_state_key not in st.session_state:
             raise ValueError(f"DataManager: Key {session_state_key} not found in session state")
         
+        # Speichere die Daten
         dh = self._get_data_handler()
-        print(f"DEBUG: Saving data to {self.data_reg[session_state_key]}")
         dh.save(self.data_reg[session_state_key], st.session_state[session_state_key])
+
+    def save_all_data(self):
+        """
+        Saves all valid data from the session state to the persistent storage.
+        """
+        keys = [key for key in self.data_reg.keys() if key in st.session_state]
+        for key in keys:
+            self.save_data(key)
 
     def append_record(self, session_state_key, record_dict):
         """
         Append a new record to a value stored in the session state. The value must be either a list or a DataFrame.
         """
-        print(f"DEBUG: append_record called with session_state_key={session_state_key}")
-        print(f"DEBUG: Current data_reg: {self.data_reg}")
-        print(f"DEBUG: Current session_state keys: {st.session_state.keys()}")
-
+        # Initialisiere den Schlüssel im Session-State, falls er nicht existiert
         if session_state_key not in st.session_state:
             st.session_state[session_state_key] = pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"])
-            print(f"DEBUG: Initialized session_state[{session_state_key}] as empty DataFrame")
+            st.warning(f"Session state key '{session_state_key}' wurde initialisiert.")
 
+        # Registriere den Schlüssel in data_reg, falls er nicht existiert
         if session_state_key not in self.data_reg:
             self.app_data_reg[session_state_key] = f"{session_state_key}.csv"
 
+        # Füge den neuen Datensatz hinzu
         data_value = st.session_state[session_state_key]
         
         if not isinstance(record_dict, dict):
@@ -101,10 +123,6 @@ class DataManager:
         else:
             raise ValueError(f"DataManager: The session state value for key '{session_state_key}' must be a DataFrame or a list")
         
+        # Aktualisiere den Session-State und speichere die Daten
         st.session_state[session_state_key] = data_value
-        print(f"DEBUG: Updated session_state[{session_state_key}] = {st.session_state[session_state_key]}")
         self.save_data(session_state_key)
-
-    @property
-    def data_reg(self):
-        return {**self.app_data_reg, **self.user_data_reg}
