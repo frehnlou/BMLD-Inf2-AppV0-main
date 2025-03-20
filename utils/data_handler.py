@@ -1,97 +1,128 @@
-import json
-import yaml
-import posixpath
+import fsspec, posixpath
+import streamlit as st
 import pandas as pd
-from io import StringIO
-import logging
+from utils.data_handler import DataHandler
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+class DataManager:
+    """
+    A singleton class for managing application data persistence and user-specific storage.
+    """
 
-class DataHandler:
-    def __init__(self, filesystem, root_path):
-        """
-        Initialisiert den DataHandler.
-
-        Args:
-            filesystem: Das Dateisystemobjekt (z. B. fsspec).
-            root_path: Der Root-Pfad für alle Dateioperationen.
-        """
-        self.filesystem = filesystem
-        self.root_path = root_path
-
-    def join(self, *args):
-        """ Verbindet Pfade mit posixpath. """
-        return posixpath.join(*args)
-
-    def _resolve_path(self, relative_path):
-        """ Löst den relativen Pfad in einen absoluten Pfad auf. """
-        return self.join(self.root_path, relative_path)
-
-    def exists(self, relative_path):
-        """ Überprüft, ob eine Datei oder ein Verzeichnis existiert. """
-        full_path = self._resolve_path(relative_path)
-        return self.filesystem.exists(full_path)
-
-    def read_text(self, relative_path):
-        """ Liest den Inhalt einer Textdatei. """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "r") as f:
-            return f.read()
-
-    def read_binary(self, relative_path):
-        """ Liest den Inhalt einer Binärdatei. """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "rb") as f:
-            return f.read()
-
-    def load(self, relative_path, initial_value=None, **load_args):
-        """
-        Lädt den Inhalt einer Datei basierend auf der Dateiendung.
-
-        Args:
-            relative_path: Der relative Pfad.
-            initial_value: Der Standardwert, falls die Datei nicht existiert.
-
-        Returns:
-            Der geladene Inhalt der Datei.
-        """
-        logger.info(f"Lade Datei: {relative_path}")
-
-        if not self.exists(relative_path):
-            if initial_value is not None:
-                logger.warning(f"Datei nicht gefunden: {relative_path}. Rückgabe des Standardwerts.")
-                return initial_value
-            raise FileNotFoundError(f"Datei existiert nicht: {relative_path}")
-
-        ext = posixpath.splitext(relative_path)[-1].lower()
-
-        if ext == ".json":
-            return json.loads(self.read_text(relative_path))
-        elif ext in [".yaml", ".yml"]:
-            return yaml.safe_load(self.read_text(relative_path))
-        elif ext == ".csv":
-            with self.filesystem.open(self._resolve_path(relative_path), "r") as f:
-                df = pd.read_csv(f, **load_args)
-                
-                # Debugging: Zeigt die Spalten der geladenen Datei
-                print(f"Geladene Spalten in {relative_path}: {df.columns.tolist()}")
-
-                if df.empty:
-                    raise ValueError(f"Die Datei {relative_path} ist leer!")
-
-                # Prüft, ob 'timestamp' existiert
-                if 'timestamp' not in df.columns:
-                    alternative_date_columns = [col for col in df.columns if 'date' in col.lower() or 'time' in col.lower()]
-                    if alternative_date_columns:
-                        # Nimmt die erste gefundene alternative Datums-Spalte
-                        df[alternative_date_columns[0]] = pd.to_datetime(df[alternative_date_columns[0]])
-                        print(f"⚠️ 'timestamp' nicht gefunden. Verwende stattdessen '{alternative_date_columns[0]}' als Datums-Spalte.")
-                    else:
-                        print("❌ 'timestamp' oder eine alternative Datumsspalte konnte nicht gefunden werden!")
-                
-                return df
-        elif ext == ".txt":
-            return self.read_text(relative_path)
+    def __new__(cls, *args, **kwargs):
+        if 'data_manager' in st.session_state:
+            return st.session_state.data_manager
         else:
-            raise ValueError(f"Nicht unterstützte Dateiendung: {ext}")
+            instance = super(DataManager, cls).__new__(cls)
+            st.session_state.data_manager = instance
+            return instance
+    
+    def __init__(self, fs_protocol='file', fs_root_folder='app_data'):
+        if hasattr(self, 'fs'):  # check if instance is already initialized
+            return
+            
+        self.fs_root_folder = fs_root_folder
+        self.fs = self._init_filesystem(fs_protocol)
+        self.app_data_reg = {}
+        self.user_data_reg = {}
+
+    @staticmethod
+    def _init_filesystem(protocol: str):
+        if protocol == 'webdav':
+            secrets = st.secrets['webdav']
+            return fsspec.filesystem('webdav', 
+                                     base_url=secrets['base_url'], 
+                                     auth=(secrets['username'], secrets['password']))
+        elif protocol == 'file':
+            return fsspec.filesystem('file')
+        else:
+            raise ValueError(f"AppManager: Invalid filesystem protocol: {protocol}")
+
+    def _get_data_handler(self, subfolder: str = None):
+        if subfolder is None:
+            return DataHandler(self.fs, self.fs_root_folder)
+        else:
+            return DataHandler(self.fs, posixpath.join(self.fs_root_folder, subfolder))
+
+    def load_app_data(self, session_state_key, file_name, initial_value=None, **load_args):
+        if session_state_key in st.session_state:
+            return
+        
+        dh = self._get_data_handler()
+        data = dh.load(file_name, initial_value, **load_args)
+        st.session_state[session_state_key] = data
+        self.app_data_reg[session_state_key] = file_name
+
+    def load_user_data(self, session_state_key, file_name, initial_value=None, **load_args):
+        username = st.session_state.get('username', None)
+        if username is None:
+            for key in self.user_data_reg:  # delete all user data
+                st.session_state.pop(key, None)
+            self.user_data_reg = {}
+            st.error(f"DataManager: No user logged in, cannot load file `{file_name}` into session state with key `{session_state_key}`")
+            return
+        elif session_state_key in st.session_state:
+            return
+
+        user_data_folder = 'user_data_' + username
+        dh = self._get_data_handler(user_data_folder)
+        data = dh.load(file_name, initial_value, **load_args)
+        st.session_state[session_state_key] = data
+        self.user_data_reg[session_state_key] = dh.join(user_data_folder, file_name)
+
+    @property
+    def data_reg(self):
+        return {**self.app_data_reg, **self.user_data_reg}
+
+    def save_data(self, session_state_key):
+        """
+        Saves data from session state to persistent storage using the registered data handler.
+        """
+        # Registriere den Schlüssel in data_reg, falls er nicht existiert
+        if session_state_key not in self.data_reg:
+            self.app_data_reg[session_state_key] = f"{session_state_key}.csv"
+
+        # Überprüfen, ob der Schlüssel im Session-State existiert
+        if session_state_key not in st.session_state:
+            raise ValueError(f"DataManager: Key {session_state_key} not found in session state")
+        
+        # Speichere die Daten
+        dh = self._get_data_handler()
+        dh.save(self.data_reg[session_state_key], st.session_state[session_state_key])
+
+    def save_all_data(self):
+        """
+        Saves all valid data from the session state to the persistent storage.
+        """
+        keys = [key for key in self.data_reg.keys() if key in st.session_state]
+        for key in keys:
+            self.save_data(key)
+
+    def append_record(self, session_state_key, record_dict):
+        """
+        Append a new record to a value stored in the session state. The value must be either a list or a DataFrame.
+        """
+        # Initialisiere den Schlüssel im Session-State, falls er nicht existiert
+        if session_state_key not in st.session_state:
+            st.session_state[session_state_key] = pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"])
+            st.warning(f"Session state key '{session_state_key}' wurde initialisiert.")
+
+        # Registriere den Schlüssel in data_reg, falls er nicht existiert
+        if session_state_key not in self.data_reg:
+            self.app_data_reg[session_state_key] = f"{session_state_key}.csv"
+
+        # Füge den neuen Datensatz hinzu
+        data_value = st.session_state[session_state_key]
+        
+        if not isinstance(record_dict, dict):
+            raise ValueError(f"DataManager: The record_dict must be a dictionary")
+        
+        if isinstance(data_value, pd.DataFrame):
+            data_value = pd.concat([data_value, pd.DataFrame([record_dict])], ignore_index=True)
+        elif isinstance(data_value, list):
+            data_value.append(record_dict)
+        else:
+            raise ValueError(f"DataManager: The session state value for key '{session_state_key}' must be a DataFrame or a list")
+        
+        # Aktualisiere den Session-State und speichere die Daten
+        st.session_state[session_state_key] = data_value
+        self.save_data(session_state_key)
