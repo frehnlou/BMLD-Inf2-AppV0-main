@@ -56,27 +56,6 @@ class DataManager:
         self.app_data_reg[session_state_key] = file_name
         print(f"DEBUG: Loaded data for {session_state_key}: {data}")
 
-    def load_user_data(self, session_state_key, file_name, initial_value=None, **load_args):
-        username = st.session_state.get('username', None)
-        if username is None:
-            for key in self.user_data_reg:  # delete all user data
-                st.session_state.pop(key, None)
-            self.user_data_reg = {}
-            st.error(f"DataManager: No user logged in, cannot load file `{file_name}` into session state with key `{session_state_key}`")
-            return
-        elif session_state_key in st.session_state:
-            return
-
-        user_data_folder = 'user_data_' + username
-        dh = self._get_data_handler(user_data_folder)
-        data = dh.load(file_name, initial_value, **load_args)
-        st.session_state[session_state_key] = data
-        self.user_data_reg[session_state_key] = dh.join(user_data_folder, file_name)
-
-    @property
-    def data_reg(self):
-        return {**self.app_data_reg, **self.user_data_reg}
-
     def save_data(self, session_state_key):
         """
         Saves data from session state to persistent storage using the registered data handler.
@@ -94,14 +73,6 @@ class DataManager:
         dh = self._get_data_handler()
         print(f"DEBUG: Saving data to {self.data_reg[session_state_key]}")
         dh.save(self.data_reg[session_state_key], st.session_state[session_state_key])
-
-    def save_all_data(self):
-        """
-        Saves all valid data from the session state to the persistent storage.
-        """
-        keys = [key for key in self.data_reg.keys() if key in st.session_state]
-        for key in keys:
-            self.save_data(key)
 
     def append_record(self, session_state_key, record_dict):
         """
@@ -133,3 +104,7 @@ class DataManager:
         st.session_state[session_state_key] = data_value
         print(f"DEBUG: Updated session_state[{session_state_key}] = {st.session_state[session_state_key]}")
         self.save_data(session_state_key)
+
+    @property
+    def data_reg(self):
+        return {**self.app_data_reg, **self.user_data_reg}
