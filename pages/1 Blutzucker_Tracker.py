@@ -104,11 +104,16 @@ def blutzucker_werte():
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
-    if st.session_state["data_df"]:
-    else:
-        st.markdown("### Verlauf der Blutzuckerwerte")
-        chart_data = st.session_state["data_df"].set_index("datum_zeit")[["blutzuckerwert"]]
-        st.line_chart(chart_data)
+    # Prüfen, ob Daten vorhanden sind
+    if "data_df" not in st.session_state or st.session_state["data_df"].empty:
+        st.info("Keine Blutzucker-Daten vorhanden. Bitte fügen Sie Werte auf der Startseite hinzu.")
+        st.stop()
+
+    # Verlauf der Blutzuckerwerte
+    st.line_chart(data=st.session_state["data_df"].set_index("datum_zeit")["blutzuckerwert"],
+                  use_container_width=True)
+    st.caption("Blutzuckerwerte über Zeit (mg/dL)")
+
 
 # ====== Seitenwechsel ======
 if "seite" not in st.session_state:
