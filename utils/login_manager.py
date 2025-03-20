@@ -92,7 +92,7 @@ class LoginManager:
             self.authenticator.logout()
         else:
             st.info("""
-            Das Passwort muss 8-20 Zeichen lang sein und mindestens einen Großbuchstaben, 
+            Das Passwort muss 8-20 Zeichen lang sein und mindestens einen Grossbuchstaben, 
             einen Kleinbuchstaben, eine Ziffer und ein Sonderzeichen aus @$!%*?& enthalten.
             """)
             res = self.authenticator.register_user()
