@@ -54,58 +54,6 @@ class DataHandler:
         full_path = self._resolve_path(relative_path)
         return self.filesystem.exists(full_path)
 
-    def read_text(self, relative_path):
-        """
-        Liest den Inhalt einer Textdatei.
-
-        Args:
-            relative_path: Der relative Pfad.
-
-        Returns:
-            str: Der Inhalt der Datei.
-        """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "r") as f:
-            return f.read()
-
-    def read_binary(self, relative_path):
-        """
-        Liest den Inhalt einer Binärdatei.
-
-        Args:
-            relative_path: Der relative Pfad.
-
-        Returns:
-            bytes: Der Inhalt der Datei.
-        """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "rb") as f:
-            return f.read()
-
-    def write_text(self, relative_path, content):
-        """
-        Schreibt Textinhalt in eine Datei.
-
-        Args:
-            relative_path: Der relative Pfad.
-            content: Der zu schreibende Textinhalt.
-        """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "w") as f:
-            f.write(content)
-
-    def write_binary(self, relative_path, content):
-        """
-        Schreibt Binärinhalt in eine Datei.
-
-        Args:
-            relative_path: Der relative Pfad.
-            content: Der zu schreibende Binärinhalt.
-        """
-        full_path = self._resolve_path(relative_path)
-        with self.filesystem.open(full_path, "wb") as f:
-            f.write(content)
-
     def load(self, relative_path, initial_value=None, **load_args):
         """
         Lädt den Inhalt einer Datei basierend auf der Dateiendung.
@@ -125,15 +73,13 @@ class DataHandler:
             raise FileNotFoundError(f"Datei existiert nicht: {relative_path}")
 
         ext = posixpath.splitext(relative_path)[-1].lower()
-        if ext == ".json":
-            return json.loads(self.read_text(relative_path))
-        elif ext in [".yaml", ".yml"]:
-            return yaml.safe_load(self.read_text(relative_path))
-        elif ext == ".csv":
+        print(f"DEBUG: Lade Datei mit Endung {ext}")
+
+        if ext == ".csv":
             with self.filesystem.open(self._resolve_path(relative_path), "r") as f:
                 return pd.read_csv(f, **load_args)
-        elif ext == ".txt":
-            return self.read_text(relative_path)
+        elif ext == ".json":
+            return json.loads(self.read_text(relative_path))
         else:
             raise ValueError(f"Nicht unterstützte Dateiendung: {ext}")
 
@@ -150,19 +96,15 @@ class DataHandler:
         parent_dir = posixpath.dirname(full_path)
 
         if not self.filesystem.exists(parent_dir):
+            print(f"DEBUG: Erstelle Verzeichnis {parent_dir}")
             self.filesystem.mkdirs(parent_dir, exist_ok=True)
 
         ext = posixpath.splitext(relative_path)[-1].lower()
+        print(f"DEBUG: Speichere Datei mit Endung {ext}")
 
         if isinstance(content, pd.DataFrame) and ext == ".csv":
             self.write_text(relative_path, content.to_csv(index=False))
         elif isinstance(content, (dict, list)) and ext == ".json":
             self.write_text(relative_path, json.dumps(content, indent=4))
-        elif isinstance(content, (dict, list)) and ext in [".yaml", ".yml"]:
-            self.write_text(relative_path, yaml.dump(content, default_flow_style=False))
-        elif isinstance(content, str) and ext == ".txt":
-            self.write_text(relative_path, content)
-        elif isinstance(content, bytes):
-            self.write_binary(relative_path, content)
         else:
             raise ValueError(f"Nicht unterstützter Inhaltstyp für Dateiendung {ext}")
