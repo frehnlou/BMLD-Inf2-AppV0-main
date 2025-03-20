@@ -19,13 +19,6 @@ if not username:
     st.error("⚠️ Kein Benutzer eingeloggt! Anmeldung erforderlich.")
     st.stop()
 
-# Initialisiere den Schlüssel 'data_df', falls er nicht existiert
-if 'data_df' not in st.session_state:
-    st.session_state['data_df'] = pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"])
-
-# Zugriff auf die Benutzerdaten
-user_data = st.session_state.get(f"user_data_{username}", pd.DataFrame())
-
 # ====== Navigation ======
 col1, col2, col3, col4 = st.columns(4)
 
@@ -79,48 +72,43 @@ def blutzucker_tracker():
             "zeitpunkt": zeitpunkt
         }
 
-        # Temporäre Speicherung der neuen Daten
-        if "temp_data" not in st.session_state:
-            st.session_state["temp_data"] = []
-
-        st.session_state["temp_data"].append(new_entry)
         st.success("Eintrag erfolgreich hinzugefügt!")
 
         # Aktualisiere den DataFrame und speichere die Daten
-        st.session_state[f"user_data_{username}"] = pd.DataFrame(st.session_state["temp_data"])
+
+        #st.write(st.session_state)
+        #st.write(new_entry)
         DataManager().append_record(session_state_key='data_df', record_dict=new_entry)
-    # Zeige die gespeicherten Werte in einer Tabelle an
-    if not user_data.empty:
-        st.markdown("### Gespeicherte Blutzuckerwerte")
-        st.table(user_data)
+        #st.write(st.session_state)
+
 
 # ====== Blutzucker-Werte ======
 def blutzucker_werte():
     st.markdown("## 📋 Blutzucker-Werte")
 
-    if user_data.empty:
+    if "data_df" not in st.session_state:
         st.warning("Noch keine Werte gespeichert.")
     else:
         st.markdown("### Gespeicherte Blutzuckerwerte")
-        renamed_data = user_data.rename(columns={
+        renamed_data = st.session_state["data_df"].rename(columns={
             "datum_zeit": "Datum & Uhrzeit",
             "blutzuckerwert": "Blutzuckerwert (mg/dL)",
             "zeitpunkt": "Zeitpunkt"
         })
         st.table(renamed_data[["Datum & Uhrzeit", "Blutzuckerwert (mg/dL)", "Zeitpunkt"]])
 
-        durchschnitt = user_data["blutzuckerwert"].mean()
+        durchschnitt = st.session_state["data_df"]["blutzuckerwert"].mean()
         st.markdown(f"**Durchschnittlicher Blutzuckerwert:** {durchschnitt:.2f} mg/dL")
 
 # ====== Blutzucker-Grafik ======
 def blutzucker_grafik():
     st.markdown("## 📊 Blutzucker-Grafik")
 
-    if user_data.empty:
+    if st.session_state["data_df"]:
         st.warning("Noch keine Werte vorhanden.")
     else:
         st.markdown("### Verlauf der Blutzuckerwerte")
-        chart_data = user_data.set_index("datum_zeit")[["blutzuckerwert"]]
+        chart_data = st.session_state["data_df"].set_index("datum_zeit")[["blutzuckerwert"]]
         st.line_chart(chart_data)
 
 # ====== Seitenwechsel ======
