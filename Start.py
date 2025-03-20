@@ -16,12 +16,12 @@ try:
     data_manager.load_user_data(
         session_state_key='data_df', 
         file_name='data.csv', 
-        initial_value=pd.DataFrame(columns=["timestamp", "blutzuckerwert", "zeitpunkt"]), 
-        parse_dates=['timestamp']
+        initial_value=pd.DataFrame(columns=["datum_zeit", "blutzuckerwert", "zeitpunkt"]), 
+        parse_dates=['datum_zeit']
     )
 except FileNotFoundError:
     st.warning("Die Datei 'data.csv' wurde nicht gefunden. Ein neues leeres DataFrame wird erstellt.")
-    st.session_state['data_df'] = pd.DataFrame(columns=["timestamp", "blutzuckerwert", "zeitpunkt"])
+    st.session_state['data_df'] = pd.DataFrame(columns=["timesdatum_zeit", "blutzuckerwert", "zeitpunkt"])
 except ValueError as e:
     st.error(f"Fehler beim Laden der Daten: {e}")
     st.stop()
