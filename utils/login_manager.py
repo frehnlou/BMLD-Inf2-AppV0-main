@@ -12,7 +12,7 @@ class LoginManager:
         if 'login_manager' in st.session_state:
             return st.session_state.login_manager
         else:
-            instance = super(LoginManager, cls).__new__(cls)
+            instance = super(LoginManager, cls)._new_(cls)
             st.session_state.login_manager = instance
             return instance
 
@@ -34,13 +34,6 @@ class LoginManager:
         self.auth_cookie_key = secrets.token_urlsafe(32)
         self.auth_credentials = self._load_auth_credentials()
 
-        # Debugging-Ausgabe
-        st.write(f"Geladene Anmeldedaten: {self.auth_credentials}")
-
-        self.authenticator = stauth.Authenticate(self.auth_credentials, self.auth_cookie_name, self.auth_cookie_key)
-
-        # Debugging-Ausgabe
-        st.write(f"Authenticator initialisiert: {self.authenticator}")
 
     def _load_auth_credentials(self):
         """
