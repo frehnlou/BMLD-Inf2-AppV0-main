@@ -16,7 +16,7 @@ class LoginManager:
             st.session_state.login_manager = instance
             return instance
 
-    def __init__(self, data_manager: DataManager = None,
+    def _init_(self, data_manager: DataManager = None,
                  auth_credentials_file: str = 'credentials.yaml',
                  auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
         """
