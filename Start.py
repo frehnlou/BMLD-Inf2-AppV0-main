@@ -6,10 +6,6 @@ from utils.login_manager import LoginManager
 # Seitenkonfiguration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
-# Initialisiere DataManager
-data_manager = DataManager(fs_protocol='webdav', fs_root_folder="BMLD_CPBLSF_App")
-login_manager = LoginManager(data_manager)
-login_manager.login_register()
 
 # Daten laden mit Fehlerbehandlung
 try:
