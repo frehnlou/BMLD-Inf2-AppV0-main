@@ -8,15 +8,15 @@ class LoginManager:
     """
     Singleton-Klasse, die den Anwendungszustand, die Speicherung und die Benutzer-Authentifizierung verwaltet.
     """
-    def __new__(cls, *args, **kwargs):
+    def _new_(cls, *args, **kwargs):
         if 'login_manager' in st.session_state:
             return st.session_state.login_manager
         else:
-            instance = super(LoginManager, cls).__new__(cls)
+            instance = super(LoginManager, cls)._new_(cls)
             st.session_state.login_manager = instance
             return instance
 
-    def __init__(self, data_manager: DataManager = None,
+    def _init_(self, data_manager: DataManager = None,
                  auth_credentials_file: str = 'credentials.yaml',
                  auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
         """
@@ -33,7 +33,15 @@ class LoginManager:
         self.auth_cookie_name = auth_cookie_name
         self.auth_cookie_key = secrets.token_urlsafe(32)
         self.auth_credentials = self._load_auth_credentials()
-        
+
+        # Debugging-Ausgabe
+        st.write(f"Geladene Anmeldedaten: {self.auth_credentials}")
+
+        self.authenticator = stauth.Authenticate(self.auth_credentials, self.auth_cookie_name, self.auth_cookie_key)
+
+        # Debugging-Ausgabe
+        st.write(f"Authenticator initialisiert: {self.authenticator}")
+
     def _load_auth_credentials(self):
         """
         Lädt die Benutzeranmeldedaten aus der konfigurierten Datei.
