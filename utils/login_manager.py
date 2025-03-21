@@ -12,7 +12,7 @@ class LoginManager:
         if 'login_manager' in st.session_state:
             return st.session_state.login_manager
         else:
-            instance = super(LoginManager, cls)._new_(cls)
+            instance = super(LoginManager, cls).__new__(cls)
             st.session_state.login_manager = instance
             return instance
 
