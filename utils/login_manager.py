@@ -34,6 +34,11 @@ class LoginManager:
         self.auth_cookie_key = secrets.token_urlsafe(32)
         self.auth_credentials = self._load_auth_credentials()
 
+        self.authenticator = stauth.Authenticator(
+            self.auth_credentials['usernames'],
+            self.auth_cookie_name,
+            self.auth_cookie_key
+        )
 
     def _load_auth_credentials(self):
         """
