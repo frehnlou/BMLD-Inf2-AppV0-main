@@ -6,7 +6,6 @@ from utils.login_manager import LoginManager
 # Seitenkonfiguration
 st.set_page_config(page_title="Blutzucker Tracker", layout="wide")
 
-
 # Daten laden mit Fehlerbehandlung
 try:
     data_manager.load_user_data(
