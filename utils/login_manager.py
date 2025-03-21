@@ -8,7 +8,7 @@ class LoginManager:
     """
     Singleton-Klasse, die den Anwendungszustand, die Speicherung und die Benutzer-Authentifizierung verwaltet.
     """
-    def _new_(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
         if 'login_manager' in st.session_state:
             return st.session_state.login_manager
         else:
@@ -16,7 +16,7 @@ class LoginManager:
             st.session_state.login_manager = instance
             return instance
 
-    def _init_(self, data_manager: DataManager = None,
+    def __init__(self, data_manager: DataManager = None,
                  auth_credentials_file: str = 'credentials.yaml',
                  auth_cookie_name: str = 'bmld_inf2_streamlit_app'):
         """
