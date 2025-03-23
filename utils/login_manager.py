@@ -35,12 +35,12 @@ class LoginManager:
         self.auth_credentials = self._load_auth_credentials()
 
         # Debugging-Ausgabe
-        st.write(f"Geladene Anmeldedaten: {self.auth_credentials}")
+        # st.write(f"Geladene Anmeldedaten: {self.auth_credentials}")
 
         self.authenticator = stauth.Authenticate(self.auth_credentials, self.auth_cookie_name, self.auth_cookie_key)
 
         # Debugging-Ausgabe
-        st.write(f"Authenticator initialisiert: {self.authenticator}")
+        # st.write(f"Authenticator initialisiert: {self.authenticator}")
 
     def _load_auth_credentials(self):
         """
