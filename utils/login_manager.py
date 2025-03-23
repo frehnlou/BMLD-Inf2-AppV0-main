@@ -34,13 +34,11 @@ class LoginManager:
         self.auth_cookie_key = secrets.token_urlsafe(32)
         self.auth_credentials = self._load_auth_credentials()
 
-        # Debugging-Ausgabe
-        # st.write(f"Geladene Anmeldedaten: {self.auth_credentials}")
-
-        self.authenticator = stauth.Authenticate(self.auth_credentials, self.auth_cookie_name, self.auth_cookie_key)
-
-        # Debugging-Ausgabe
-        # st.write(f"Authenticator initialisiert: {self.authenticator}")
+        self.authenticator = stauth.Authenticate(
+            self.auth_credentials,
+            self.auth_cookie_name,
+            self.auth_cookie_key
+        )
 
     def _load_auth_credentials(self):
         """
@@ -100,17 +98,29 @@ class LoginManager:
                 st.success(f"Benutzer {res[1]} erfolgreich registriert.")
                 try:
                     self._save_auth_credentials()
+
+                    # Authentifizierungsdaten neu laden
+                    self.auth_credentials = self._load_auth_credentials()
+                    self.authenticator = stauth.Authenticate(
+                        self.auth_credentials,
+                        self.auth_cookie_name,
+                        self.auth_cookie_key
+                    )
+
                     st.success("Anmeldedaten erfolgreich gespeichert.")
+
+                    # Sauberer Logout + Hinweis
+                    st.info("Sie wurden ausgeloggt. Bitte loggen Sie sich jetzt mit Ihrem neuen Benutzer ein.")
+                    self.authenticator.logout()
+                    st.stop()
+
                 except Exception as e:
                     st.error(f"Fehler beim Speichern der Anmeldedaten: {e}")
-            if stop:
-                st.stop()
+        if stop:
+            st.stop()
 
     def go_to_login(self, login_page_py_file):
         """
         Leitet den Benutzer zur Anmeldeseite weiter, wenn er nicht eingeloggt ist.
         """
-        if st.session_state.get("authentication_status") is not True:
-            st.switch_page(login_page_py_file)
-        else:
-            self.authenticator.logout()
+       
